@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "cdk:synth": "cdk synth",
-    "cdk:deploy": "cdk deploy"
+    "cdk:deploy": "cdk deploy",
+    "dev": "serverless dev",
+    "invoke": "serverless invoke local --function hello-lambda",
+    "sam:local": "sam local start-api --template cdk.out/BeStack.template.json"
   },
   "dependencies": {}
 }

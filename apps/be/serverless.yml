@@ -1,0 +1,39 @@
+service: be-stack
+
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+
+  environment:
+    STAGE: ${self:provider.stage}
+
+functions:
+  hello-lambda:
+    handler: src/helloLambda.helloHandler
+    runtime: nodejs22.x
+    events:
+      - http:
+          path: hello
+          method: GET
+          cors: true
+
+# For local development and testing only (invoke local doesn't need CDK resources)
+# When deploying, use: npm run cdk:deploy for CDK or integrate CDK resources if needed
+
+# Define resources from your CDK stack (optional for serverless deploy)
+# Uncomment below if you want to deploy via serverless instead of cdk deploy
+# resources:
+#   Resources: ${file(./cdk.out/be-stack.template.json):Resources}
+#   Outputs: ${file(./cdk.out/be-stack.template.json):Outputs}
+
+# Package configuration
+package:
+  individually: true
+  patterns:
+    - '!node_modules/**'
+    - '!.git/**'
+    - '!.serverless/**'
+    - '!cdk.out/**'

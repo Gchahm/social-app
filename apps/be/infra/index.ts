@@ -2,4 +2,4 @@ import { App } from 'aws-cdk-lib';
 import { BeStack } from './be-stack';
 
 const app = new App();
-new BeStack(app, 'be-stack');
+new BeStack(app, 'BEStack');

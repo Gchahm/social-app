@@ -12,12 +12,14 @@ export class AuthConstruct extends Construct {
     this.userPool = this.createUserPool();
     this.userPoolClient = this.createUserPoolClient();
 
-    new CfnOutput(this, 'SpaceUserPoolId', {
+    new CfnOutput(this, 'UserPoolId', {
       value: this.userPool.userPoolId,
+      exportName: 'UserPoolId',
     });
 
-    new CfnOutput(this, 'SpaceUserPoolClientId', {
+    new CfnOutput(this, 'UserPoolClientId', {
       value: this.userPoolClient.userPoolClientId,
+      exportName: 'UserPoolClientId',
     });
   }
 

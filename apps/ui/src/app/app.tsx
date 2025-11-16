@@ -2,6 +2,7 @@ import NxWelcome from './nx-welcome';
 import '../styles.css';
 
 import { Route, Routes, Link } from 'react-router-dom';
+import { LoginForm } from '../components/LoginForm';
 
 export function App() {
   return (
@@ -20,6 +21,9 @@ export function App() {
             <Link to="/">Home</Link>
           </li>
           <li>
+            <Link to="/login">Login</Link>
+          </li>
+          <li>
             <Link to="/page-2">Page 2</Link>
           </li>
         </ul>
@@ -30,9 +34,13 @@ export function App() {
           element={
             <div>
               This is the generated root route.{' '}
-              <Link to="/page-2">Click here for page 2.</Link>
+              <Link to="/login">Click here to login.</Link>
             </div>
           }
+        />
+        <Route
+          path="/login"
+          element={<LoginForm />}
         />
         <Route
           path="/page-2"

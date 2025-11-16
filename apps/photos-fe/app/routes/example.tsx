@@ -3,7 +3,7 @@ import { SidebarInset, SidebarProvider } from '@chahm/ui-components';
 import { AppSidebar, Navbar, LoginForm, RegisterForm } from '../components';
 import { useState } from 'react';
 
-export function App() {
+export function Example() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
 
   return (
@@ -65,4 +65,4 @@ export function App() {
   );
 }
 
-export default App;
+export default Example;

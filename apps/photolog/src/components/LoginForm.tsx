@@ -18,7 +18,7 @@ export function LoginForm() {
 
     try {
       const result = await authService.login(username, password);
-      
+
       if (result) {
         setSuccess(true);
         console.log('Login successful:', result);
@@ -36,10 +36,20 @@ export function LoginForm() {
   return (
     <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px' }}>
       <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Login</h2>
-      
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}
+      >
         <div>
-          <label htmlFor="username" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          <label
+            htmlFor="username"
+            style={{
+              display: 'block',
+              marginBottom: '5px',
+              fontWeight: 'bold',
+            }}
+          >
             Username
           </label>
           <input
@@ -54,13 +64,20 @@ export function LoginForm() {
               padding: '10px',
               border: '1px solid #ccc',
               borderRadius: '4px',
-              fontSize: '16px'
+              fontSize: '16px',
             }}
           />
         </div>
 
         <div>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          <label
+            htmlFor="password"
+            style={{
+              display: 'block',
+              marginBottom: '5px',
+              fontWeight: 'bold',
+            }}
+          >
             Password
           </label>
           <input
@@ -75,31 +92,35 @@ export function LoginForm() {
               padding: '10px',
               border: '1px solid #ccc',
               borderRadius: '4px',
-              fontSize: '16px'
+              fontSize: '16px',
             }}
           />
         </div>
 
         {error && (
-          <div style={{ 
-            padding: '10px', 
-            backgroundColor: '#fee', 
-            color: '#c00', 
-            borderRadius: '4px',
-            fontSize: '14px'
-          }}>
+          <div
+            style={{
+              padding: '10px',
+              backgroundColor: '#fee',
+              color: '#c00',
+              borderRadius: '4px',
+              fontSize: '14px',
+            }}
+          >
             {error}
           </div>
         )}
 
         {success && (
-          <div style={{ 
-            padding: '10px', 
-            backgroundColor: '#efe', 
-            color: '#0a0', 
-            borderRadius: '4px',
-            fontSize: '14px'
-          }}>
+          <div
+            style={{
+              padding: '10px',
+              backgroundColor: '#efe',
+              color: '#0a0',
+              borderRadius: '4px',
+              fontSize: '14px',
+            }}
+          >
             Login successful!
           </div>
         )}
@@ -116,7 +137,7 @@ export function LoginForm() {
             fontSize: '16px',
             fontWeight: 'bold',
             cursor: loading ? 'not-allowed' : 'pointer',
-            transition: 'background-color 0.2s'
+            transition: 'background-color 0.2s',
           }}
         >
           {loading ? 'Logging in...' : 'Login'}

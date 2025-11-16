@@ -8,7 +8,7 @@
     "dev": "sam local start-api --template cdk.out/be-stack.template.json"
   },
   "nx": {
-    "name": "ui",
+    "name": "@chahm/photolog",
     "tags": [
       "app",
       "ui"

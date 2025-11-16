@@ -1,5 +1,5 @@
 import NxWelcome from './nx-welcome';
-import '../styles.css';
+import '@chahm/ui-components/styles/globals.css';
 
 import { Route, Routes, Link } from 'react-router-dom';
 import { LoginForm } from '../components/LoginForm';
@@ -38,10 +38,7 @@ export function App() {
             </div>
           }
         />
-        <Route
-          path="/login"
-          element={<LoginForm />}
-        />
+        <Route path="/login" element={<LoginForm />} />
         <Route
           path="/page-2"
           element={

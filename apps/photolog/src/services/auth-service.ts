@@ -1,5 +1,5 @@
 import { Amplify } from 'aws-amplify';
-import { signIn, SignInOutput } from '@aws-amplify/auth';
+import { signIn, SignInOutput, signUp, SignUpOutput, confirmSignUp, ConfirmSignUpOutput } from '@aws-amplify/auth';
 import { BEStack } from '../../outputs.json';
 
 Amplify.configure({
@@ -27,6 +27,44 @@ export class AuthService {
         },
       });
       return this.user;
+    } catch (error) {
+      console.error(error);
+      return undefined;
+    }
+  }
+
+  public async register(
+    userName: string,
+    password: string,
+    email: string
+  ): Promise<SignUpOutput | undefined> {
+    try {
+      const result = await signUp({
+        username: userName,
+        password: password,
+        options: {
+          userAttributes: {
+            email: email,
+          },
+        },
+      });
+      return result;
+    } catch (error) {
+      console.error(error);
+      return undefined;
+    }
+  }
+
+  public async confirmRegistration(
+    userName: string,
+    confirmationCode: string
+  ): Promise<ConfirmSignUpOutput | undefined> {
+    try {
+      const result = await confirmSignUp({
+        username: userName,
+        confirmationCode: confirmationCode,
+      });
+      return result;
     } catch (error) {
       console.error(error);
       return undefined;

@@ -17,6 +17,7 @@
     "paths": {
       "@chahm/ui-components": ["libs/ui-components/src/index.ts"],
       "@chahm/ui-components/*": ["libs/ui-components/src/*"],
+      "@chahm/ui-logic": ["libs/ui-logic/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

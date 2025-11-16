@@ -1,55 +1,16 @@
-import NxWelcome from './nx-welcome';
 import '@chahm/ui-components/styles/globals.css';
-
-import { Route, Routes, Link } from 'react-router-dom';
-import { LoginForm } from '../components/LoginForm';
+import { SidebarInset, SidebarProvider } from '@chahm/ui-components';
+import { AppSidebar, Navbar } from '../components';
 
 export function App() {
   return (
-    <div>
-      <NxWelcome title="ui" />
-
-      {/* START: routes */}
-      {/* These routes and navigation have been generated for you */}
-      {/* Feel free to move and update them to fit your needs */}
-      <br />
-      <hr />
-      <br />
-      <div role="navigation">
-        <ul>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-          <li>
-            <Link to="/login">Login</Link>
-          </li>
-          <li>
-            <Link to="/page-2">Page 2</Link>
-          </li>
-        </ul>
-      </div>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <div>
-              This is the generated root route.{' '}
-              <Link to="/login">Click here to login.</Link>
-            </div>
-          }
-        />
-        <Route path="/login" element={<LoginForm />} />
-        <Route
-          path="/page-2"
-          element={
-            <div>
-              <Link to="/">Click here to go back to root page.</Link>
-            </div>
-          }
-        />
-      </Routes>
-      {/* END: routes */}
-    </div>
+    <SidebarProvider defaultOpen={true} className="h-full">
+      <AppSidebar />
+      <SidebarInset className="h-full">
+        <Navbar />
+        <div className="flex flex-col gap-4 p-4 overflow-auto">nothing</div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
 

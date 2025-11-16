@@ -9,16 +9,17 @@ export class BeStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const database = new DatabaseConstruct(this, 'DatabaseConstruct');
+    const databaseConstruct = new DatabaseConstruct(this, 'DatabaseConstruct');
 
-    const lambdaStack = new LambdaConstruct(this, 'LambdaConstruct', {
-      table: database.table,
+    const lambdaConstruct = new LambdaConstruct(this, 'LambdaConstruct', {
+      table: databaseConstruct.table,
     });
 
-    new AuthConstruct(this, 'AuthConstruct');
+    const authConstruct = new AuthConstruct(this, 'AuthConstruct');
 
     new ApiConstruct(this, 'ApiConstruct', {
-      helloIntegration: lambdaStack.helloIntegration,
+      helloIntegration: lambdaConstruct.helloIntegration,
+      userPool: authConstruct.userPool,
     });
   }
 }

@@ -3,7 +3,7 @@ import { UserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
 import { CfnOutput } from 'aws-cdk-lib';
 
 export class AuthConstruct extends Construct {
-  private userPool: UserPool;
+  public userPool: UserPool;
   private userPoolClient: UserPoolClient;
 
   constructor(scope: Construct, id: string) {

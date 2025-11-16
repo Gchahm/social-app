@@ -2,6 +2,7 @@ import '@chahm/ui-components/styles/globals.css';
 import { SidebarInset, SidebarProvider } from '@chahm/ui-components';
 import { AppSidebar, Navbar, LoginForm, RegisterForm } from '../components';
 import { useState } from 'react';
+import { Authenticator } from '@aws-amplify/ui-react';
 
 export function Example() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -56,8 +57,7 @@ export function Example() {
                 Register
               </button>
             </div>
-
-            {activeTab === 'login' ? <LoginForm /> : <RegisterForm />}
+              {activeTab === 'login' ? <LoginForm /> : <RegisterForm />}
           </div>
         </div>
       </SidebarInset>

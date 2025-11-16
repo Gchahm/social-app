@@ -1,15 +1,14 @@
 import '@chahm/ui-components/styles/globals.css';
 import {
   Links,
+  type LinksFunction,
   Meta,
+  type MetaFunction,
   Outlet,
   Scripts,
   ScrollRestoration,
-  type MetaFunction,
-  type LinksFunction,
 } from 'react-router';
-
-import { AppNav } from './app-nav';
+import { Authenticator } from '@aws-amplify/ui-react';
 
 export const meta: MetaFunction = () => [
   {
@@ -40,7 +39,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <AppNav />
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -50,5 +48,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <Authenticator>
+      <Outlet />
+    </Authenticator>
+  );
 }

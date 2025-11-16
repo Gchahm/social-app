@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@chahm/ui-components';
 import { Bell, LogOut, Settings, User } from 'lucide-react';
+import { useAuthenticator } from '@aws-amplify/ui-react';
 
 // Fake user data
 const fakeUser = {
@@ -22,8 +23,10 @@ const fakeUser = {
 };
 
 export function Navbar() {
+  const { user, signOut } = useAuthenticator();
+
   const handleLogout = () => {
-    // router.push('/login');
+    signOut();
   };
 
   return (
@@ -43,7 +46,7 @@ export function Navbar() {
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 rounded-md hover:bg-accent p-1 transition-colors">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={fakeUser.avatar} alt={fakeUser.name} />
+                  <AvatarImage src={fakeUser.avatar} alt={user.username} />
                   <AvatarFallback>{fakeUser.initials}</AvatarFallback>
                 </Avatar>
                 <div className="hidden md:flex md:flex-col md:items-start text-sm">

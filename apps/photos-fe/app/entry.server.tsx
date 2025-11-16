@@ -12,6 +12,33 @@ import { ServerRouter } from 'react-router';
 import { isbot } from 'isbot';
 import type { RenderToPipeableStreamOptions } from 'react-dom/server';
 import { renderToPipeableStream } from 'react-dom/server';
+import { BEStack } from '../outputs.json';
+import { Amplify } from 'aws-amplify';
+
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      userPoolId: BEStack.AuthConstructUserPoolIdE22F6EE5,
+      userPoolClientId: BEStack.AuthConstructUserPoolClientIdA88338FC,
+      loginWith: {
+        email: true,
+      },
+      signUpVerificationMethod: 'code',
+      userAttributes: {
+        email: {
+          required: true,
+        },
+      },
+      passwordFormat: {
+        minLength: 8,
+        requireLowercase: true,
+        requireUppercase: true,
+        requireNumbers: true,
+        requireSpecialCharacters: true,
+      },
+    },
+  },
+});
 
 export const streamTimeout = 5_000;
 

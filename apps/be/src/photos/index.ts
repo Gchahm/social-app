@@ -1,4 +1,3 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   APIGatewayProxyEvent,
   APIGatewayProxyResult,
@@ -7,10 +6,11 @@ import {
 import { addCorsHeader } from './utils';
 import { post } from './post';
 import { get } from './get';
-import { S3Client } from '@aws-sdk/client-s3';
+import { S3 } from '@aws-sdk/client-s3';
+import { DynamoDB } from '@aws-sdk/client-dynamodb';
 
-const ddbClient = new DynamoDBClient({});
-const s3Client = new S3Client();
+const dynamoDB = new DynamoDB();
+const s3 = new S3();
 
 async function handler(
   event: APIGatewayProxyEvent,
@@ -21,10 +21,10 @@ async function handler(
   try {
     switch (event.httpMethod) {
       case 'GET':
-        response = await get(event, ddbClient);
+        response = await get(event, dynamoDB);
         break;
       case 'POST':
-        response = await post(event, ddbClient, s3Client);
+        response = await post(event, dynamoDB, s3);
         break;
       case 'PUT':
         // const putResponse = await updateSpace(event, ddbClient);

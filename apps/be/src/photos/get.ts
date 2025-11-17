@@ -1,6 +1,6 @@
 import * as zod from 'zod';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDB } from '@aws-sdk/client-dynamodb';
 
 const RequestValidator = zod.object({
   id: zod.string(),
@@ -8,7 +8,7 @@ const RequestValidator = zod.object({
 
 export async function get(
   event: APIGatewayProxyEvent,
-  ddbClient: DynamoDBClient
+  db: DynamoDB,
 ): Promise<APIGatewayProxyResult> {
   const parsedRequest = RequestValidator.parse(event.queryStringParameters);
 

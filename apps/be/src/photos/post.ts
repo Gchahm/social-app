@@ -1,4 +1,4 @@
-import { DynamoDB } from '@aws-sdk/client-dynamodb';
+import { AttributeValue, DynamoDB } from '@aws-sdk/client-dynamodb';
 import { S3 } from '@aws-sdk/client-s3';
 import { uploadPhotoSchema } from '@chahm/types';
 import { v4 } from 'uuid';
@@ -11,7 +11,7 @@ import httpEventNormalizerMiddleware from '@middy/http-event-normalizer';
 import { parser } from '@aws-lambda-powertools/parser/middleware';
 import { addCorsHeader } from './utils';
 
-const dynamoDB = new DynamoDB();
+const db = new DynamoDB();
 const s3 = new S3();
 
 const schema = APIGatewayProxyEventSchema.extend({
@@ -23,7 +23,7 @@ export const handler = middy()
   .use(httpJsonBodyParserMiddleware())
   .use(parser({ schema }))
   .use(httpErrorHandler())
-  .handler(async (event, db) => {
+  .handler(async (event, context) => {
     const payload = event.body;
 
     console.log('Payload:', payload);
@@ -51,10 +51,33 @@ export const handler = middy()
         ContentType: contentType,
       });
 
-      // await db.putItem({
-      //   TableName: process.env.TABLE_NAME,
-      //   Item: imageToDynamoDBItem(image),
-      // });
+      console.log(
+        'Image uploaded to S3 successfully with key:',
+        image.originalS3Key
+      );
+
+      console.log(`Saving image to DynamoDB... ${process.env.TABLE_NAME}`);
+      const result = await db.putItem({
+        TableName: process.env.TABLE_NAME,
+        Item: imageToDynamoDBItem(image),
+      });
+
+      console.log('Image saved to DynamoDB successfully:', result);
+
+      const response = {
+        statusCode: 201,
+        body: JSON.stringify({
+          imageId: image.imageId,
+          key: image.originalS3Key,
+          contentType,
+          message: 'Image uploaded and saved successfully',
+        }),
+      };
+
+      //TODO: Need to eventually use this in middly
+      addCorsHeader(response);
+
+      return response;
     } catch (error) {
       console.error('Error uploading image to S3 or DynamoDB:', error);
 
@@ -67,20 +90,6 @@ export const handler = middy()
         }),
       };
     }
-
-    const response = {
-      statusCode: 201,
-      body: JSON.stringify({
-        key: image.originalS3Key,
-        contentType,
-        message: 'Image uploaded and saved successfully',
-      }),
-    };
-
-    //TODO: Need to eventually use this in middly
-    addCorsHeader(response);
-
-    return response;
   });
 
 function getFileExtension(fileName: string): string | undefined {
@@ -92,13 +101,13 @@ function getFileExtension(fileName: string): string | undefined {
 
 function imageToDynamoDBItem(image: Image): DynamoDBItem {
   return {
-    PK: `USER#${image.userId}`,
-    SK: `IMAGE#${image.imageId}`,
-    GSI1PK: `IMAGE#${image.imageId}`,
-    entityType: 'IMAGE',
-    userId: image.userId,
-    imageId: image.imageId,
-    originalS3Key: image.originalS3Key,
-    createdAt: image.createdAt,
+    PK: { S: `USER#${image.userId}` },
+    SK: { S: `IMAGE#${image.imageId}` },
+    GSI1PK: { S: `IMAGE#${image.imageId}` },
+    entityType: { S: 'IMAGE' },
+    userId: { S: image.userId },
+    imageId: { S: image.imageId },
+    originalS3Key: { S: image.originalS3Key },
+    createdAt: { S: image.createdAt },
   };
 }

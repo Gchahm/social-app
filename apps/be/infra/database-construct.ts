@@ -1,5 +1,11 @@
 import { Construct } from 'constructs';
-import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
+import {
+  AttributeType,
+  BillingMode,
+  Table,
+  TableEncryption,
+} from 'aws-cdk-lib/aws-dynamodb';
+import { RemovalPolicy } from 'aws-cdk-lib';
 
 export class DatabaseConstruct extends Construct {
   public table: Table;
@@ -7,11 +13,19 @@ export class DatabaseConstruct extends Construct {
   constructor(scope: Construct, id: string) {
     super(scope, id);
 
-    this.table = new Table(this, 'BeTable', {
+    this.table = new Table(this, 'PhotosTable', {
+      tableName: 'photos-table',
       partitionKey: {
-        name: 'id',
+        name: 'PK',
         type: AttributeType.STRING,
       },
+      sortKey: {
+        name: 'SK',
+        type: AttributeType.STRING,
+      },
+      billingMode: BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY, // Use RETAIN for production
+      encryption: TableEncryption.AWS_MANAGED,
     });
   }
 }

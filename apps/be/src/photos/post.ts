@@ -19,7 +19,6 @@ export async function post(
     };
   }
 
-  // Support data URLs like: data:image/png;base64,AAA...
   let base64Data = payload.base64;
   let contentType = 'application/octet-stream';
   const dataUrlMatch = /^data:(.*?);base64,(.*)$/.exec(base64Data);
@@ -32,9 +31,9 @@ export async function post(
   const buffer = Buffer.from(base64Data, 'base64');
 
   // Generate an object key
-  const safeTitle = payload.title.replace(/[^a-zA-Z0-9-_]/g, '_');
+  const safaName = payload.fileName.replace(/[^a-zA-Z0-9-_]/g, '_');
   const timestamp = Date.now();
-  const key = `photos/${safeTitle}-${timestamp}`;
+  const key = `photos/${safaName}-${timestamp}`;
 
   let fileExtension = 'jpg';
   if (payload.base64.startsWith('/9j/')) {
@@ -44,7 +43,7 @@ export async function post(
   } else if (payload.base64.startsWith('R0lGOD')) {
     fileExtension = 'gif';
   } else if (payload.base64) {
-    const match = payload.title.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+    const match = payload.fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
     if (match) {
       fileExtension = match[1].toLowerCase();
     }
@@ -61,6 +60,12 @@ export async function post(
 
   return {
     statusCode: 201,
-    body: JSON.stringify({ key, bucket, contentType }),
+    body: JSON.stringify({
+      // imageId,
+      key,
+      bucket,
+      contentType,
+      message: 'Image uploaded and saved successfully',
+    }),
   };
 }

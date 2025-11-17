@@ -2,6 +2,7 @@
   "BEStack": {
     "AuthConstructUserPoolClientIdA88338FC": "4vrhusl0jgv891d35tidepmf9i",
     "AuthConstructUserPoolIdE22F6EE5": "us-east-1_sMrPsSjCv",
-    "ApiConstructbeapiEndpoint53A9443A": "https://arw61nk0bi.execute-api.us-east-1.amazonaws.com/prod/"
+    "ApiConstructbeapiEndpoint53A9443A": "https://arw61nk0bi.execute-api.us-east-1.amazonaws.com/prod/",
+    "ApiEndpoint": "https://arw61nk0bi.execute-api.us-east-1.amazonaws.com/prod/"
   }
 }

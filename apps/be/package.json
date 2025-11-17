@@ -2,10 +2,5 @@
   "name": "@aws-full-stack/be",
   "version": "0.0.1",
   "private": true,
-  "scripts": {
-    "synth": "cdk synth",
-    "deploy": "cdk deploy --all --outputs-file ../ui/outputs.json --require-approval never",
-    "dev": "sam local start-api --template cdk.out/BEStack.template.json"
-  },
   "dependencies": {}
 }

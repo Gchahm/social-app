@@ -1,4 +1,4 @@
-import { Stack, StackProps } from 'aws-cdk-lib';
+import { CfnOutput, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { DatabaseConstruct } from './database-construct';
 import { LambdaConstruct } from './lambda-construct';
@@ -21,9 +21,13 @@ export class BeStack extends Stack {
 
     const authConstruct = new AuthConstruct(this, 'AuthConstruct');
 
-    new ApiConstruct(this, 'ApiConstruct', {
+    const apiConstruct = new ApiConstruct(this, 'ApiConstruct', {
       spacesIntegration: lambdaConstruct.photosIntegration,
       userPool: authConstruct.userPool,
+    });
+
+    new CfnOutput(this, 'ApiEndpoint', {
+      value: apiConstruct.api.url,
     });
   }
 }

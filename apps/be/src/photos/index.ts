@@ -1,4 +1,5 @@
 import {
+  APIGatewayEvent,
   APIGatewayProxyEvent,
   APIGatewayProxyResult,
   Context,
@@ -13,11 +14,12 @@ const dynamoDB = new DynamoDB();
 const s3 = new S3();
 
 async function handler(
-  event: APIGatewayProxyEvent,
+  event: APIGatewayEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> {
   let response: APIGatewayProxyResult;
-
+  event.requestContext.authorizer
+  event.requestContext.authorizer.claims.email
   try {
     switch (event.httpMethod) {
       case 'GET':

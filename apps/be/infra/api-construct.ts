@@ -15,12 +15,15 @@ export interface ApiConstructProps {
 }
 
 export class ApiConstruct extends Construct {
+  public readonly api: RestApi;
+
   constructor(scope: Construct, id: string, props: ApiConstructProps) {
     super(scope, id);
 
     const { spacesIntegration, userPool } = props;
 
     const gateway = new RestApi(this, 'be-api');
+    this.api = gateway;
 
     const authorizer = new CognitoUserPoolsAuthorizer(this, 'authorizer', {
       cognitoUserPools: [userPool],
@@ -42,9 +45,7 @@ export class ApiConstruct extends Construct {
     };
 
     const resource = gateway.root.addResource('photos', optionsWithCors);
-
-    //TODO: protect with authorizer
-    resource.addMethod('GET', spacesIntegration);
-    resource.addMethod('POST', spacesIntegration);
+    resource.addMethod('GET', spacesIntegration, optionsWithAuthorizer);
+    resource.addMethod('POST', spacesIntegration, optionsWithAuthorizer);
   }
 }

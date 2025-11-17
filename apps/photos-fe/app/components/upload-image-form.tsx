@@ -14,6 +14,7 @@ import { useForm } from '@tanstack/react-form';
 import { UploadPhotoPayload, uploadPhotoSchema } from '@chahm/types';
 import { useMutation } from '@tanstack/react-query';
 import { post } from 'aws-amplify/api';
+import { useAuthenticator } from '@aws-amplify/ui-react';
 
 interface UploadResponse {
   key: string;
@@ -30,11 +31,12 @@ const formDefaultValues: UploadPhotoPayload = {
 
 export function UploadImageForm() {
   const [file, setFile] = useState<File | null>(null);
+  const auth = useAuthenticator();
 
   const mutation = useMutation<UploadResponse, Error, UploadPhotoPayload>({
     mutationFn: async (payload) => {
       const restOperation = post({
-        apiName: 'Photos',
+        apiName: 'photos',
         path: 'photos',
         options: {
           body: payload,

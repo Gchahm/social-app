@@ -24,9 +24,8 @@ export const handler = middy()
   .use(parser({ schema }))
   .use(httpErrorHandler())
   .handler(async (event, context) => {
+    console.log('Received event:', event.requestContext.authorizer);
     const payload = event.body;
-
-    console.log('Payload:', payload);
 
     const imageId = v4();
     const image: Image = {

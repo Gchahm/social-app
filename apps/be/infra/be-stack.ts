@@ -18,7 +18,7 @@ export class BeStack extends Stack {
     const authConstruct = new AuthConstruct(this, 'AuthConstruct');
 
     new ApiConstruct(this, 'ApiConstruct', {
-      helloIntegration: lambdaConstruct.helloIntegration,
+      spacesIntegration: lambdaConstruct.spacesIntegration,
       userPool: authConstruct.userPool,
     });
   }

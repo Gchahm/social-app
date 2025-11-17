@@ -9,24 +9,24 @@ export interface LambdaConstructProps {
 }
 
 export class LambdaConstruct extends Construct {
-  public helloIntegration: Integration;
+  public spacesIntegration: Integration;
 
   constructor(scope: Construct, id: string, props: LambdaConstructProps) {
     super(scope, id);
 
     const { table } = props;
 
-    const heloLambda = new NodejsFunction(this, 'hello-lambda', {
+    const spacesLambda = new NodejsFunction(this, 'SpacesLambda', {
       runtime: Runtime.NODEJS_22_X,
-      handler: 'helloHandler',
-      entry: 'src/index.ts',
+      handler: 'handler',
+      entry: 'src/photos/index.ts',
       environment: {
         TABLE_NAME: table.tableName,
       },
     });
 
-    table.grantReadWriteData(heloLambda);
+    table.grantReadWriteData(spacesLambda);
 
-    this.helloIntegration = new LambdaIntegration(heloLambda);
+    this.spacesIntegration = new LambdaIntegration(spacesLambda);
   }
 }

@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import { post } from 'aws-amplify/api';
 import {
   Button,
   Field,
@@ -31,14 +32,31 @@ const formDefaultValues: UploadPhotoPayload = {
 
 export function UploadImageForm() {
   const [file, setFile] = useState<File | null>(null);
+
+  const mutation = useMutation<UploadResponse, Error, UploadPhotoPayload>({
+    mutationFn: async (payload) => {
+      if (!POST_URL) {
+        throw new Error('POST URL is not configured');
+      }
+      const res = await fetch(POST_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => 'Request failed');
+        throw new Error(text || res.statusText);
+      }
+      return res.json() as Promise<UploadResponse>;
+    },
+  });
   const form = useForm({
     defaultValues: formDefaultValues,
     validators: {
       onBlur: uploadPhotoSchema,
     },
     onSubmit: async ({ value }) => {
-      // Do something with form data
-      console.log(value);
+      await mutation.mutateAsync(value);
     },
   });
 
@@ -51,30 +69,16 @@ export function UploadImageForm() {
     });
   }
 
-  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    // try {
-    // const base64 = await fileToDataUrl(file);
-    // const payload = {
-    //   fileName: file.name,
-    //   title: title || file.name,
-    //   description: description || undefined,
-    //   base64, // data URL format supported by backend
-    // };
-
-    // const res = await fetch(POST_URL, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(payload),
-  };
-
   return (
     <div className="max-w-xl w-full border rounded-md p-4 bg-white/50">
       <h3 className="font-semibold text-lg mb-3">Upload Image</h3>
-      <form onSubmit={onSubmit} className="flex flex-col gap-3">
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          await form.handleSubmit();
+        }}
+        className="flex flex-col gap-3"
+      >
         <div>
           <form.Field
             name="title"

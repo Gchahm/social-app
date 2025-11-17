@@ -33,6 +33,13 @@ Amplify.configure({
       },
     },
   },
+  API: {
+    REST: {
+      Photos: {
+        endpoint: BEStack.ApiConstructbeapiEndpoint53A9443A,
+      },
+    },
+  },
 });
 
 startTransition(() => {

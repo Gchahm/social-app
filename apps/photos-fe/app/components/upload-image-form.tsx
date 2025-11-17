@@ -1,27 +1,25 @@
-import { FormEvent, useState } from 'react';
-import { post } from 'aws-amplify/api';
+import { useState } from 'react';
 import {
   Button,
   Field,
+  FieldError,
   FieldLabel,
+  Input,
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
   InputGroupTextarea,
-  Input,
-  FieldError,
 } from '@chahm/ui-components';
 import { useForm } from '@tanstack/react-form';
-import { uploadPhotoSchema, UploadPhotoPayload } from '@chahm/types';
+import { UploadPhotoPayload, uploadPhotoSchema } from '@chahm/types';
 import { useMutation } from '@tanstack/react-query';
+import { post } from 'aws-amplify/api';
 
 interface UploadResponse {
   key: string;
   bucket: string;
   contentType: string;
 }
-
-const POST_URL = import.meta.env.VITE_POST_URL as string | undefined;
 
 const formDefaultValues: UploadPhotoPayload = {
   fileName: '',
@@ -35,19 +33,16 @@ export function UploadImageForm() {
 
   const mutation = useMutation<UploadResponse, Error, UploadPhotoPayload>({
     mutationFn: async (payload) => {
-      if (!POST_URL) {
-        throw new Error('POST URL is not configured');
-      }
-      const res = await fetch(POST_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      const restOperation = post({
+        apiName: 'Photos',
+        path: 'photos',
+        options: {
+          body: payload,
+        },
       });
-      if (!res.ok) {
-        const text = await res.text().catch(() => 'Request failed');
-        throw new Error(text || res.statusText);
-      }
-      return res.json() as Promise<UploadResponse>;
+
+      const { body } = await restOperation.response;
+      return await body.json();
     },
   });
   const form = useForm({
@@ -184,11 +179,6 @@ export function UploadImageForm() {
               </Button>
             )}
           />
-          {!POST_URL && (
-            <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
-              VITE_POST_URL is not set
-            </span>
-          )}
         </div>
       </form>
     </div>

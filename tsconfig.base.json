@@ -10,17 +10,30 @@
     "importHelpers": true,
     "target": "es2015",
     "module": "esnext",
-    "lib": ["es2020", "dom"],
+    "lib": [
+      "es2020",
+      "dom"
+    ],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@chahm/ui-components": ["libs/ui-components/src/index.ts"],
-      "@chahm/ui-components/*": ["libs/ui-components/src/*"],
-      "@chahm/ui-logic": ["libs/ui-logic/src/index.ts"],
-      "@chahm/types": ["libs/types/src/index.ts"],
-      "@chahm/clients": ["libs/clients/src/index.ts"]
+      "@chahm/ui-components": [
+        "libs/ui-components/src/index.ts"
+      ],
+      "@chahm/ui-components/*": [
+        "libs/ui-components/src/*"
+      ],
+      "@chahm/ui-logic": [
+        "libs/ui-logic/src/index.ts"
+      ],
+      "@chahm/types": [
+        "libs/types/src/index.ts"
+      ]
     }
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
 }

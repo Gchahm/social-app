@@ -4,9 +4,5 @@
   "private": true,
   "type": "commonjs",
   "main": "./src/index.js",
-  "types": "./src/index.d.ts",
-  "dependencies": {
-    "@radix-ui/react-label": "^2.1.8",
-    "@radix-ui/react-separator": "^1.1.8"
-  }
+  "types": "./src/index.d.ts"
 }

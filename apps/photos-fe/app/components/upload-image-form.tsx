@@ -12,6 +12,7 @@ import {
 } from '@chahm/ui-components';
 import { useForm } from '@tanstack/react-form';
 import { uploadPhotoSchema, UploadPhotoPayload } from '@chahm/types';
+import { useMutation } from '@tanstack/react-query';
 
 interface UploadResponse {
   key: string;
@@ -30,7 +31,6 @@ const formDefaultValues: UploadPhotoPayload = {
 
 export function UploadImageForm() {
   const [file, setFile] = useState<File | null>(null);
-
   const form = useForm({
     defaultValues: formDefaultValues,
     validators: {
@@ -104,23 +104,28 @@ export function UploadImageForm() {
           <form.Field
             name="description"
             children={(field) => {
+              const isInvalid =
+                field.state.meta.isTouched && !field.state.meta.isValid;
               return (
-                <InputGroup className="h-auto items-start">
-                  <InputGroupAddon align="block-start">
-                    Description
-                  </InputGroupAddon>
-                  <InputGroupTextarea
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    aria-label="Description"
-                    placeholder="Optional description"
-                    rows={3}
-                    // disabled={loading}
-                  />
-                </InputGroup>
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+                  <InputGroup className="h-auto items-start">
+                    <InputGroupTextarea
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={isInvalid}
+                      autoComplete="off"
+                      aria-label="Description"
+                      placeholder="Optional description"
+                      rows={3}
+                      // disabled={loading}
+                    />
+                  </InputGroup>
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                </Field>
               );
             }}
           />
@@ -129,43 +134,42 @@ export function UploadImageForm() {
           <form.Field
             name="base64"
             children={(field) => {
+              const isInvalid =
+                field.state.meta.isTouched && !field.state.meta.isValid;
               return (
-                <>
+                <Field data-invalid={isInvalid}>
                   <InputGroup>
                     <InputGroupAddon>Image file</InputGroupAddon>
                     <InputGroupInput
                       id={field.name}
                       name={field.name}
-                      // value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={async (e) => {
+                        const f = e.currentTarget.files?.[0] ?? null;
+                        setFile(f);
+                        if (!f) {
+                          field.handleChange('');
+                          form.setFieldValue('fileName', '');
+                          return;
+                        }
+                        const dataUrl = await fileToDataUrl(f);
+                        field.handleChange(dataUrl);
+                        form.setFieldValue('fileName', f.name);
+                      }}
                       type="file"
                       aria-label="Image file"
                       accept="image/*"
-                      // disabled={loading}
                     />
                   </InputGroup>
                   {file && (
                     <p className="text-xs text-gray-600 mt-1">
-                      Selected: {file.name}
+                      {/*Selected: {file.name}*/}
                     </p>
                   )}
-                </>
+                </Field>
               );
             }}
           />
         </div>
-
-        {/*{error && (*/}
-        {/*  <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">*/}
-        {/*    {error}*/}
-        {/*  </div>*/}
-        {/*)}*/}
-        {/*{result && (*/}
-        {/*  <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2">*/}
-        {/*    Uploaded! S3 key: <code className="font-mono">{result.key}</code>*/}
-        {/*  </div>*/}
-        {/*)}*/}
 
         <div className="flex gap-2">
           <form.Subscribe

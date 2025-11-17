@@ -18,7 +18,8 @@
       "@chahm/ui-components": ["libs/ui-components/src/index.ts"],
       "@chahm/ui-components/*": ["libs/ui-components/src/*"],
       "@chahm/ui-logic": ["libs/ui-logic/src/index.ts"],
-      "@chahm/types": ["libs/types/src/index.ts"]
+      "@chahm/types": ["libs/types/src/index.ts"],
+      "@chahm/clients": ["libs/clients/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

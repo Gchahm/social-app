@@ -9,6 +9,7 @@ import {
   ScrollRestoration,
 } from 'react-router';
 import { Authenticator } from '@aws-amplify/ui-react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export const meta: MetaFunction = () => [
   {
@@ -47,10 +48,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+const queryClient = new QueryClient();
+
 export default function App() {
   return (
-    <Authenticator>
-      <Outlet />
-    </Authenticator>
+    <QueryClientProvider client={queryClient}>
+      <Authenticator>
+        <Outlet />
+      </Authenticator>
+    </QueryClientProvider>
   );
 }

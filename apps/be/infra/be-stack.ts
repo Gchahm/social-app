@@ -22,7 +22,7 @@ export class BeStack extends Stack {
     const authConstruct = new AuthConstruct(this, 'AuthConstruct');
 
     new ApiConstruct(this, 'ApiConstruct', {
-      spacesIntegration: lambdaConstruct.spacesIntegration,
+      spacesIntegration: lambdaConstruct.photosIntegration,
       userPool: authConstruct.userPool,
     });
   }

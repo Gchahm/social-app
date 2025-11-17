@@ -24,7 +24,6 @@ async function handler(
         response = await get(event, dynamoDB);
         break;
       case 'POST':
-        response = await post(event, dynamoDB, s3);
         break;
       case 'PUT':
         // const putResponse = await updateSpace(event, ddbClient);

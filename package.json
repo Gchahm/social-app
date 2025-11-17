@@ -7,10 +7,13 @@
   "dependencies": {
     "@aws-amplify/auth": "^6.17.0",
     "@aws-amplify/ui-react": "^6.13.1",
+    "@aws-lambda-powertools/parser": "^2.28.1",
     "@aws-sdk/client-s3": "^3.932.0",
     "@aws-sdk/util-dynamodb": "^3.932.0",
     "@middy/core": "^6.4.5",
+    "@middy/http-cors": "^6.4.5",
     "@middy/http-error-handler": "^6.4.5",
+    "@middy/http-event-normalizer": "^6.4.5",
     "@middy/http-json-body-parser": "^6.4.5",
     "@middy/validator": "^6.4.5",
     "@radix-ui/react-avatar": "^1.1.10",

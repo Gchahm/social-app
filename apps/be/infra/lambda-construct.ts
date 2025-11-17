@@ -1,6 +1,6 @@
 import { Construct } from 'constructs';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { IFunction, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { ITable } from 'aws-cdk-lib/aws-dynamodb';
 import { Integration, LambdaIntegration } from 'aws-cdk-lib/aws-apigateway';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
@@ -11,26 +11,26 @@ export interface LambdaConstructProps {
 }
 
 export class LambdaConstruct extends Construct {
-  public spacesIntegration: Integration;
+  public photosIntegration: Integration;
 
   constructor(scope: Construct, id: string, props: LambdaConstructProps) {
     super(scope, id);
 
     const { table, bucket } = props;
 
-    const spacesLambda = new NodejsFunction(this, 'SpacesLambda', {
+    const photos = new NodejsFunction(this, 'PhotosLambda', {
       runtime: Runtime.NODEJS_22_X,
       handler: 'handler',
-      entry: 'src/photos/index.ts',
+      entry: 'src/photos/post.ts',
       environment: {
         TABLE_NAME: table.tableName,
         BUCKET_NAME: bucket.bucketName,
       },
     });
 
-    table.grantReadWriteData(spacesLambda);
-    bucket.grantReadWrite(spacesLambda);
+    table.grantReadWriteData(photos);
+    bucket.grantReadWrite(photos);
 
-    this.spacesIntegration = new LambdaIntegration(spacesLambda);
+    this.photosIntegration = new LambdaIntegration(photos);
   }
 }

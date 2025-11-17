@@ -23,6 +23,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-router/node": "^7.2.0",
     "@react-router/serve": "^7.2.0",
+    "@tanstack/react-form": "^1.25.0",
     "@tanstack/react-table": "^8.21.3",
     "aws-amplify": "^6.15.8",
     "axios": "^1.6.0",

@@ -15,3 +15,5 @@ export * from './calendar-data-table';
 export * from './popover';
 export * from './textarea';
 export * from './input-group';
+export * from './field';
+export * from './label';

@@ -1,14 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import * as zod from 'zod';
-
-const PostPayload = zod.object({
-  fileName: zod.string(),
-  title: zod.string(),
-  description: zod.string().optional(),
-  base64: zod.string(),
-});
+import { uploadPhotoSchema } from '@chahm/types';
 
 export async function post(
   event: APIGatewayProxyEvent,
@@ -16,7 +9,7 @@ export async function post(
   s3Client: S3Client
 ): Promise<APIGatewayProxyResult> {
   const parsedBody = JSON.parse(event.body);
-  const payload = PostPayload.parse(parsedBody);
+  const payload = uploadPhotoSchema.parse(parsedBody);
 
   const bucket = process.env.BUCKET_NAME;
   if (!bucket) {

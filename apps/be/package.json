@@ -5,7 +5,7 @@
   "scripts": {
     "synth": "cdk synth",
     "deploy": "cdk deploy --all --outputs-file ../ui/outputs.json --require-approval never",
-    "dev": "sam local start-api --template cdk.out/be-stack.template.json"
+    "dev": "sam local start-api --template cdk.out/BEStack.template.json"
   },
   "dependencies": {}
 }

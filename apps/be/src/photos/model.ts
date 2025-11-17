@@ -1,6 +1,7 @@
 export interface SpaceEntry {
-  id: string,
-  location: string,
-  name: string,
-  photoUrl?: string
+  userId: string;
+  imageId: string;
+  originalS3Key: string;
+  processedS3Key: string;
+  createdAt: string;
 }

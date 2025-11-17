@@ -78,6 +78,27 @@
           "buildTarget": "be:build:production"
         }
       }
+    },
+    "synth": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/be",
+        "command": "cdk synth"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/be",
+        "command": "cdk deploy --all --outputs-file ../ui/outputs.json --require-approval never"
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/be",
+        "command": "sam local start-api --template cdk.out/BEStack.template.json"
+      }
     }
   }
 }

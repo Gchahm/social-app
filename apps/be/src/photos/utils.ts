@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { JsonError } from './validator';
 import { randomUUID } from 'crypto';
+
+export class JsonError extends Error {}
 
 export function createRandomId() {
   return randomUUID();
@@ -29,3 +30,5 @@ export function hasAdminGroup(event: APIGatewayProxyEvent){
   }
   return false;
 }
+
+

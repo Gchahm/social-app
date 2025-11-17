@@ -1,8 +1,10 @@
 import { Construct } from 'constructs';
 import {
   CognitoUserPoolsAuthorizer,
+  Cors,
   Integration,
   MethodOptions,
+  ResourceOptions,
   RestApi,
 } from 'aws-cdk-lib/aws-apigateway';
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
@@ -32,8 +34,17 @@ export class ApiConstruct extends Construct {
       authorizer,
     };
 
-    const resource = gateway.root.addResource('spaces');
-    resource.addMethod('GET', spacesIntegration, optionsWithAuthorizer);
-    resource.addMethod('POST', spacesIntegration, optionsWithAuthorizer);
+    const optionsWithCors: ResourceOptions = {
+      defaultCorsPreflightOptions: {
+        allowOrigins: Cors.ALL_ORIGINS,
+        allowMethods: Cors.ALL_METHODS,
+      },
+    };
+
+    const resource = gateway.root.addResource('photos', optionsWithCors);
+
+    //TODO: protect with authorizer
+    resource.addMethod('GET', spacesIntegration);
+    resource.addMethod('POST', spacesIntegration);
   }
 }

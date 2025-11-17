@@ -22,5 +22,10 @@
   ],
   "compilerOptions": {
     "types": ["node", "vite/client"]
-  }
+  },
+  "references": [
+    {
+      "path": "../../libs/ui-components"
+    }
+  ]
 }

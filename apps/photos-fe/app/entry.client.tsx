@@ -7,40 +7,7 @@
 import { HydratedRouter } from 'react-router/dom';
 import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
-import { BEStack } from '../outputs.json';
-import { Amplify } from 'aws-amplify';
 
-Amplify.configure({
-  Auth: {
-    Cognito: {
-      userPoolId: BEStack.AuthConstructUserPoolIdE22F6EE5,
-      userPoolClientId: BEStack.AuthConstructUserPoolClientIdA88338FC,
-      loginWith: {
-        email: true,
-      },
-      signUpVerificationMethod: 'code',
-      userAttributes: {
-        email: {
-          required: true,
-        },
-      },
-      passwordFormat: {
-        minLength: 8,
-        requireLowercase: true,
-        requireUppercase: true,
-        requireNumbers: true,
-        requireSpecialCharacters: true,
-      },
-    },
-  },
-  API: {
-    REST: {
-      Photos: {
-        endpoint: BEStack.ApiConstructbeapiEndpoint53A9443A,
-      },
-    },
-  },
-});
 
 startTransition(() => {
   hydrateRoot(

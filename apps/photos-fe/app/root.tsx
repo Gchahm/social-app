@@ -10,6 +10,8 @@ import {
 } from 'react-router';
 import { Authenticator } from '@aws-amplify/ui-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BEStack } from '../outputs.json';
+import { Amplify } from 'aws-amplify';
 
 export const meta: MetaFunction = () => [
   {
@@ -47,6 +49,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
     </html>
   );
 }
+
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      userPoolId: BEStack.AuthConstructUserPoolIdE22F6EE5,
+      userPoolClientId: BEStack.AuthConstructUserPoolClientIdA88338FC,
+      loginWith: {
+        email: true,
+      },
+      signUpVerificationMethod: 'code',
+      userAttributes: {
+        email: {
+          required: true,
+        },
+      },
+      passwordFormat: {
+        minLength: 8,
+        requireLowercase: true,
+        requireUppercase: true,
+        requireNumbers: true,
+        requireSpecialCharacters: true,
+      },
+    },
+  },
+  API: {
+    REST: {
+      Photos: {
+        endpoint: BEStack.ApiConstructbeapiEndpoint53A9443A,
+      },
+    },
+  },
+});
 
 const queryClient = new QueryClient();
 

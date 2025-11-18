@@ -21,7 +21,7 @@ export class LambdaConstruct extends Construct {
     const photos = new NodejsFunction(this, 'PhotosLambda', {
       runtime: Runtime.NODEJS_22_X,
       handler: 'handler',
-      entry: 'src/photos/post.ts',
+      entry: 'src/photos/index.ts',
       environment: {
         TABLE_NAME: table.tableName,
         BUCKET_NAME: bucket.bucketName,

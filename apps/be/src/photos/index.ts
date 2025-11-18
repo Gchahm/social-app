@@ -1,31 +1,19 @@
-import {
-  APIGatewayEvent,
-  APIGatewayProxyEvent,
-  APIGatewayProxyResult,
-  Context,
-} from 'aws-lambda';
+import { postHandler } from './post';
+import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { addCorsHeader } from './utils';
-import { post } from './post';
-import { get } from './get';
-import { S3 } from '@aws-sdk/client-s3';
-import { DynamoDB } from '@aws-sdk/client-dynamodb';
-
-const dynamoDB = new DynamoDB();
-const s3 = new S3();
 
 async function handler(
   event: APIGatewayEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> {
   let response: APIGatewayProxyResult;
-  event.requestContext.authorizer
-  event.requestContext.authorizer.claims.email
+
   try {
     switch (event.httpMethod) {
       case 'GET':
-        response = await get(event, dynamoDB);
         break;
       case 'POST':
+        response = await postHandler(event as any, context);
         break;
       case 'PUT':
         // const putResponse = await updateSpace(event, ddbClient);

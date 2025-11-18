@@ -1,4 +1,6 @@
 import { AttributeValue } from '@aws-sdk/client-dynamodb';
+import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/lib/esm/schemas/api-gateway';
+import { z } from 'zod/index';
 
 export interface User {
   userId: string;
@@ -25,3 +27,5 @@ export interface DynamoDBItem extends Record<string, AttributeValue> {
   originalS3Key: { S: string };
   createdAt: { S: string };
 }
+
+export type ProxyEvent = z.infer<typeof APIGatewayProxyEventSchema>;

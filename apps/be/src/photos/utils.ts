@@ -1,12 +1,7 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { randomUUID } from 'crypto';
-import { ApiGatewayProxyEventType } from './types';
+import { APIGatewayProxyResult } from 'aws-lambda';
+import { ApiGatewayProxyEventType } from '../types';
 
 export class JsonError extends Error {}
-
-export function createRandomId() {
-  return randomUUID();
-}
 
 export function addCorsHeader(arg: APIGatewayProxyResult) {
   if (!arg.headers) {
@@ -14,22 +9,6 @@ export function addCorsHeader(arg: APIGatewayProxyResult) {
   }
   arg.headers['Access-Control-Allow-Origin'] = '*';
   arg.headers['Access-Control-Allow-Methods'] = '*';
-}
-
-export function parseJSON(arg: string) {
-  try {
-    return JSON.parse(arg);
-  } catch (error) {
-    throw new JsonError(error.message);
-  }
-}
-
-export function hasAdminGroup(event: APIGatewayProxyEvent) {
-  const groups = event.requestContext.authorizer?.claims['cognito:groups'];
-  if (groups) {
-    return (groups as string).includes('admins');
-  }
-  return false;
 }
 
 export function getUserId(

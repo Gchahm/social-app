@@ -6,7 +6,7 @@ import { parser } from '@aws-lambda-powertools/parser/middleware';
 import { getUserId } from './utils';
 import { getContext, PhotosContext } from './context';
 import type { APIGatewayProxyResult } from 'aws-lambda';
-import { ApiGatewayProxyEventType, DynamoDBItem, Image } from './types';
+import { ApiGatewayProxyEventType, DynamoDBItem, Image } from '../types';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { ImageDto } from '@chahm/types';

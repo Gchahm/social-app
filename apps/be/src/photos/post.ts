@@ -1,6 +1,6 @@
 import { UploadPhotoResponse, uploadPhotoSchema } from '@chahm/types';
 import { v4 } from 'uuid';
-import { DynamoDBItem, Image } from './types';
+import { DynamoDBItem, Image } from '../types';
 import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schemas/api-gateway';
 import { getUserId } from './utils';
 import { getContext, PhotosContext } from './context';

@@ -1,6 +1,7 @@
 {
   "BEStack": {
     "UserPoolClientId": "6gi3d4q9gjbg5d7cu4jh25il13",
+    "ApiConstructbeapiEndpoint53A9443A": "https://dum2c6px01.execute-api.us-east-1.amazonaws.com/prod/",
     "UserPoolId": "us-east-1_zVYjrwTa4",
     "ApiEndpoint": "https://dum2c6px01.execute-api.us-east-1.amazonaws.com/prod/"
   }

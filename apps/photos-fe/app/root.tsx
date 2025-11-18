@@ -1,4 +1,6 @@
+import '@aws-amplify/ui-react/styles.css';
 import '@chahm/ui-components/styles/globals.css';
+
 import {
   Links,
   type LinksFunction,

@@ -20,12 +20,9 @@ export function Upload() {
     },
   });
   return (
-    <>
-      <Navbar />
-      <div className="flex flex-col gap-4 p-4 overflow-auto">
-        <UploadImageForm onSubmit={mutation.mutateAsync} />
-      </div>
-    </>
+    <div className="flex flex-col gap-4 p-4 overflow-auto">
+      <UploadImageForm onSubmit={mutation.mutateAsync} />
+    </div>
   );
 }
 

@@ -11,8 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@chahm/ui-components';
-import { Bell, LogOut, Settings, User } from 'lucide-react';
+import { Bell, LogOut, Settings, User, Image, Upload } from 'lucide-react';
 import { useAuthenticator } from '@aws-amplify/ui-react';
+import { Link } from 'react-router';
 
 // Fake user data
 const fakeUser = {
@@ -32,6 +33,30 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center gap-4 px-4">
+        {/* Logo/Brand */}
+        <div className="flex items-center gap-2">
+          <Image className="h-6 w-6" />
+          <span className="font-semibold text-lg">Photos App</span>
+        </div>
+
+        {/* Navigation Links */}
+        <nav className="flex items-center gap-2">
+          <Link
+            to="/photos"
+            className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <Image className="h-4 w-4" />
+            Photos
+          </Link>
+          <Link
+            to="/upload"
+            className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <Upload className="h-4 w-4" />
+            Upload
+          </Link>
+        </nav>
+
         <div className="flex flex-1 items-center justify-end gap-4">
           {/* Notifications */}
           <button

@@ -1,4 +1,4 @@
-import { uploadPhotoSchema } from '@chahm/types';
+import { UploadPhotoResponse, uploadPhotoSchema } from '@chahm/types';
 import { v4 } from 'uuid';
 import { DynamoDBItem, Image } from './types';
 import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schemas/api-gateway';
@@ -64,14 +64,16 @@ export async function uploadPhoto(
       Item: imageToDynamoDBItem(image),
     });
 
+    const responseBody: UploadPhotoResponse = {
+      imageId: image.imageId,
+      key: image.originalS3Key,
+      contentType,
+      message: 'Image uploaded and saved successfully',
+    };
+
     const response = {
       statusCode: 201,
-      body: JSON.stringify({
-        imageId: image.imageId,
-        key: image.originalS3Key,
-        contentType,
-        message: 'Image uploaded and saved successfully',
-      }),
+      body: JSON.stringify(responseBody),
     };
 
     return response;

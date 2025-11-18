@@ -17,30 +17,10 @@ async function handler(
       case 'POST':
         response = await postHandler(event as any, context);
         break;
-      case 'PUT':
-        // const putResponse = await updateSpace(event, ddbClient);
-        // response = putResponse;
-        break;
-      case 'DELETE':
-        // const deleteResponse = await deleteSpace(event, ddbClient);
-        // response = deleteResponse;
-        break;
       default:
         break;
     }
   } catch (error) {
-    // if (error instanceof MissingFieldError) {
-    //   return {
-    //     statusCode: 400,
-    //     body: error.message,
-    //   };
-    // }
-    // if (error instanceof JsonError) {
-    //   return {
-    //     statusCode: 400,
-    //     body: error.message,
-    //   };
-    // }
     return {
       statusCode: 500,
       body: error.message,

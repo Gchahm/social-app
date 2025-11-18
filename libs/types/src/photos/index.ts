@@ -10,14 +10,16 @@ export const uploadPhotoSchema = zod.object({
 export type UploadPhotoPayload = zod.infer<typeof uploadPhotoSchema>;
 
 export interface UploadPhotoResponse {
+  imageId: string;
   key: string;
   bucket: string;
   contentType: string;
 }
 
-export interface Image {
+export interface ImageDto {
   userId: string;
   imageId: string;
   originalS3Key: string;
   createdAt: string;
+  url: string;
 }

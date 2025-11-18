@@ -5,19 +5,27 @@ import {
   CardTitle,
   Separator,
 } from '@chahm/ui-components';
-import { Image } from '@chahm/types';
+import { ImageDto } from '@chahm/types';
 import { ImageIcon, Calendar, Hash } from 'lucide-react';
 
 interface PhotoCardProps {
-  image: Image;
+  image: ImageDto;
 }
 
 export function PhotoCard({ image }: PhotoCardProps) {
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
-        <div className="aspect-video bg-muted rounded-md mb-3 flex items-center justify-center">
-          <ImageIcon className="w-12 h-12 text-muted-foreground" />
+        <div className="aspect-video bg-muted rounded-md mb-3 flex items-center justify-center overflow-hidden">
+          {image.url ? (
+            <img
+              src={image.url}
+              alt={image.originalS3Key.split('/').pop() || 'Photo'}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <ImageIcon className="w-12 h-12 text-muted-foreground" />
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-3">

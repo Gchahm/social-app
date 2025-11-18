@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { get } from 'aws-amplify/api';
-import { Image } from '@chahm/types';
+import { ImageDto } from '@chahm/types';
 import type { DefaultError } from '@tanstack/query-core';
 
 export interface GetPhotosResponse {
-  images: Image[];
+  images: ImageDto[];
   count: number;
 }
 

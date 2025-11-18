@@ -1,9 +1,14 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { PhotosContext } from './context';
 import { getPhotos } from './get';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
 import { S3 } from '@aws-sdk/client-s3';
 import type { APIGatewayProxyEvent } from 'aws-lambda';
+
+// Mock the S3 presigner
+vi.mock('@aws-sdk/s3-request-presigner', () => ({
+  getSignedUrl: vi.fn().mockResolvedValue('https://test-bucket.s3.amazonaws.com/signed-url'),
+}));
 
 describe('getPhotos', () => {
   const mockContext: PhotosContext = {
@@ -78,6 +83,7 @@ describe('getPhotos', () => {
       imageId: 'img-1',
       originalS3Key: 'photos/img-1',
       createdAt: '2024-01-01T00:00:00.000Z',
+      url: 'https://test-bucket.s3.amazonaws.com/signed-url',
     });
   });
 

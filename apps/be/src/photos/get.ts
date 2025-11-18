@@ -3,10 +3,13 @@ import httpErrorHandler from '@middy/http-error-handler';
 import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schemas/api-gateway';
 import httpEventNormalizerMiddleware from '@middy/http-event-normalizer';
 import { parser } from '@aws-lambda-powertools/parser/middleware';
-import { addCorsHeader, getUserId } from './utils';
+import { getUserId } from './utils';
 import { getContext, PhotosContext } from './context';
 import type { APIGatewayProxyResult } from 'aws-lambda';
 import { ApiGatewayProxyEventType, DynamoDBItem, Image } from './types';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { ImageDto } from '@chahm/types';
 
 const schema = APIGatewayProxyEventSchema;
 
@@ -23,7 +26,7 @@ export async function getPhotos(
   event: ApiGatewayProxyEventType,
   ctx: PhotosContext
 ): Promise<APIGatewayProxyResult> {
-  const { db, tableName } = ctx;
+  const { db, s3, tableName, bucketName } = ctx;
   const userId = getUserId(event);
 
   if (!userId) {
@@ -50,16 +53,33 @@ export async function getPhotos(
         (img): img is Image => img !== null
       ) || [];
 
+    // Generate pre-signed URLs for each image
+    const imagesWithUrls: ImageDto[] = await Promise.all(
+      images.map(async (image) => {
+        try {
+          const command = new GetObjectCommand({
+            Bucket: bucketName,
+            Key: image.originalS3Key,
+          });
+          const url = await getSignedUrl(s3, command, { expiresIn: 3600 }); // URL expires in 1 hour
+          return { ...image, url };
+        } catch (error) {
+          console.error(
+            `Error generating URL for image ${image.imageId}:`,
+            error
+          );
+          return { ...image, url: '' };
+        }
+      })
+    );
+
     const response = {
       statusCode: 200,
       body: JSON.stringify({
-        images,
-        count: images.length,
+        images: imagesWithUrls,
+        count: imagesWithUrls.length,
       }),
     };
-
-    //TODO: Need to eventually use this in middy
-    addCorsHeader(response);
 
     return response;
   } catch (error) {

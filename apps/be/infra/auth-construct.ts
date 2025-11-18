@@ -4,7 +4,6 @@ import { CfnOutput } from 'aws-cdk-lib';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { ITable } from 'aws-cdk-lib/aws-dynamodb';
-import { ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 
 export interface AuthConstructProps {
   table: ITable;
@@ -21,7 +20,6 @@ export class AuthConstruct extends Construct {
     this.postRegistrationLambda = this.createPostRegistrationLambda(
       props.table
     );
-    props.table.grantWriteData(this.postRegistrationLambda);
 
     // Create user pool with post-confirmation trigger
     this.userPool = this.createUserPool();
@@ -61,7 +59,7 @@ export class AuthConstruct extends Construct {
   }
 
   private createPostRegistrationLambda(table: ITable) {
-    return new NodejsFunction(this, 'PostRegistrationLambda', {
+    const lambda = new NodejsFunction(this, 'PostRegistrationLambda', {
       runtime: Runtime.NODEJS_22_X,
       handler: 'handler',
       entry: 'src/auth/index.ts',
@@ -69,5 +67,9 @@ export class AuthConstruct extends Construct {
         TABLE_NAME: table.tableName,
       },
     });
+
+    table.grantWriteData(lambda);
+
+    return lambda;
   }
 }

@@ -7,8 +7,8 @@ export const configureAmplify = () => {
     {
       Auth: {
         Cognito: {
-          userPoolId: BEStack.AuthConstructUserPoolIdE22F6EE5,
-          userPoolClientId: BEStack.AuthConstructUserPoolClientIdA88338FC,
+          userPoolId: BEStack.UserPoolId,
+          userPoolClientId: BEStack.UserPoolClientId,
           loginWith: {},
           signUpVerificationMethod: 'code',
           userAttributes: {

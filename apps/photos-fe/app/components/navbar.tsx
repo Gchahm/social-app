@@ -2,7 +2,6 @@
 
 import {
   Avatar,
-  AvatarFallback,
   AvatarImage,
   DropdownMenu,
   DropdownMenuContent,
@@ -11,17 +10,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@chahm/ui-components';
-import { Bell, LogOut, Settings, User, Image, Upload } from 'lucide-react';
+import { Bell, Image, LogOut, Settings, Upload, User } from 'lucide-react';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { Link } from 'react-router';
-
-// Fake user data
-const fakeUser = {
-  name: 'John Doe',
-  email: 'john.doe@example.com',
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
-  initials: 'JD',
-};
 
 export function Navbar() {
   const { user, signOut } = useAuthenticator();
@@ -71,29 +62,14 @@ export function Navbar() {
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 rounded-md hover:bg-accent p-1 transition-colors">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={fakeUser.avatar} alt={user.username} />
-                  <AvatarFallback>{fakeUser.initials}</AvatarFallback>
+                  <User />
                 </Avatar>
                 <div className="hidden md:flex md:flex-col md:items-start text-sm">
-                  <span className="font-medium">{fakeUser.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {fakeUser.email}
-                  </span>
+                  <span className="font-medium">{user.username}</span>
                 </div>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>

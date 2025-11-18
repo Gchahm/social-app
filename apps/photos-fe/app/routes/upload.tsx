@@ -1,5 +1,5 @@
 import '@chahm/ui-components/styles/globals.css';
-import { Navbar, UploadImageForm } from '../components';
+import { UploadImageForm } from '../components';
 import { useMutation } from '@tanstack/react-query';
 import { UploadPhotoPayload, UploadPhotoResponse } from '@chahm/types';
 import { post } from 'aws-amplify/api';

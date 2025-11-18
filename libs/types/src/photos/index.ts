@@ -16,7 +16,7 @@ export interface UploadPhotoResponse {
   contentType: string;
 }
 
-export interface Image {
+export interface ImageDto {
   userId: string;
   imageId: string;
   originalS3Key: string;

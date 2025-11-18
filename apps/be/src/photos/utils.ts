@@ -30,3 +30,7 @@ export function hasAdminGroup(event: APIGatewayProxyEvent) {
   }
   return false;
 }
+
+export function getUserId(event: APIGatewayProxyEvent): string | undefined {
+  return event.requestContext.authorizer?.claims.sub;
+}

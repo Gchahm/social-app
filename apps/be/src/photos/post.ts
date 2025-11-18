@@ -9,7 +9,7 @@ import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schema
 import httpJsonBodyParserMiddleware from '@middy/http-json-body-parser';
 import httpEventNormalizerMiddleware from '@middy/http-event-normalizer';
 import { parser } from '@aws-lambda-powertools/parser/middleware';
-import { addCorsHeader } from './utils';
+import { addCorsHeader, getUserId } from './utils';
 
 const db = new DynamoDB();
 const s3 = new S3();
@@ -24,12 +24,11 @@ export const handler = middy()
   .use(parser({ schema }))
   .use(httpErrorHandler())
   .handler(async (event, context) => {
-    console.log('Received event:', event.requestContext.authorizer);
     const payload = event.body;
 
     const imageId = v4();
     const image: Image = {
-      userId: 'anonymous',
+      userId: getUserId(event),
       imageId,
       originalS3Key: `photos/${imageId}`,
       createdAt: new Date().toISOString(),
@@ -40,6 +39,7 @@ export const handler = middy()
       dataUrlMatch ? dataUrlMatch[2] : payload.base64,
       'base64'
     );
+
     const contentType = getFileExtension(payload.fileName);
 
     try {
@@ -50,18 +50,10 @@ export const handler = middy()
         ContentType: contentType,
       });
 
-      console.log(
-        'Image uploaded to S3 successfully with key:',
-        image.originalS3Key
-      );
-
-      console.log(`Saving image to DynamoDB... ${process.env.TABLE_NAME}`);
-      const result = await db.putItem({
+      await db.putItem({
         TableName: process.env.TABLE_NAME,
         Item: imageToDynamoDBItem(image),
       });
-
-      console.log('Image saved to DynamoDB successfully:', result);
 
       const response = {
         statusCode: 201,

@@ -11,16 +11,11 @@ import {
   InputGroupTextarea,
 } from '@chahm/ui-components';
 import { useForm } from '@tanstack/react-form';
-import { UploadPhotoPayload, uploadPhotoSchema } from '@chahm/types';
-import { useMutation } from '@tanstack/react-query';
-import { post } from 'aws-amplify/api';
-import { useAuthenticator } from '@aws-amplify/ui-react';
-
-interface UploadResponse {
-  key: string;
-  bucket: string;
-  contentType: string;
-}
+import {
+  UploadPhotoPayload,
+  UploadPhotoResponse,
+  uploadPhotoSchema,
+} from '@chahm/types';
 
 const formDefaultValues: UploadPhotoPayload = {
   fileName: '',
@@ -29,31 +24,22 @@ const formDefaultValues: UploadPhotoPayload = {
   base64: '',
 };
 
-export function UploadImageForm() {
+type UploadImageFormProps = {
+  onSubmit: (data: UploadPhotoPayload) => Promise<UploadPhotoResponse>;
+};
+
+export function UploadImageForm(props: UploadImageFormProps) {
+  const { onSubmit } = props;
+
   const [file, setFile] = useState<File | null>(null);
-  const auth = useAuthenticator();
 
-  const mutation = useMutation<UploadResponse, Error, UploadPhotoPayload>({
-    mutationFn: async (payload) => {
-      const restOperation = post({
-        apiName: 'photos',
-        path: 'photos',
-        options: {
-          body: payload,
-        },
-      });
-
-      const { body } = await restOperation.response;
-      return await body.json();
-    },
-  });
   const form = useForm({
     defaultValues: formDefaultValues,
     validators: {
       onBlur: uploadPhotoSchema,
     },
     onSubmit: async ({ value }) => {
-      await mutation.mutateAsync(value);
+      await onSubmit(value);
     },
   });
 

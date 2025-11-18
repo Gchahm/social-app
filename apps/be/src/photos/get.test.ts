@@ -31,6 +31,8 @@ describe('getPhotos', () => {
           imageId: { S: 'img-1' },
           originalS3Key: { S: 'photos/img-1' },
           createdAt: { S: '2024-01-01T00:00:00.000Z' },
+          title: { S: 'Test Photo 1' },
+          description: { S: 'A test photo description' },
         },
         {
           PK: { S: 'USER#user-123' },
@@ -41,6 +43,7 @@ describe('getPhotos', () => {
           imageId: { S: 'img-2' },
           originalS3Key: { S: 'photos/img-2' },
           createdAt: { S: '2024-01-02T00:00:00.000Z' },
+          title: { S: 'Test Photo 2' },
         },
       ],
     });
@@ -83,6 +86,8 @@ describe('getPhotos', () => {
       imageId: 'img-1',
       originalS3Key: 'photos/img-1',
       createdAt: '2024-01-01T00:00:00.000Z',
+      title: 'Test Photo 1',
+      description: 'A test photo description',
       url: 'https://test-bucket.s3.amazonaws.com/signed-url',
     });
   });
@@ -173,6 +178,7 @@ describe('getPhotos', () => {
           imageId: { S: 'img-1' },
           originalS3Key: { S: 'photos/img-1' },
           createdAt: { S: '2024-01-01T00:00:00.000Z' },
+          title: { S: 'Test Photo 1' },
         },
         // Invalid item (missing required fields)
         {

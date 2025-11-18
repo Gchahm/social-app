@@ -15,6 +15,9 @@ export interface Image {
   // status: string; // e.g., "uploaded", "processed"
   originalS3Key: string;
   createdAt: string;
+  title: string;
+  description?: string;
+  url?: string;
 }
 
 export interface DynamoDBItem extends Record<string, AttributeValue> {
@@ -26,6 +29,8 @@ export interface DynamoDBItem extends Record<string, AttributeValue> {
   imageId: { S: string };
   originalS3Key: { S: string };
   createdAt: { S: string };
+  title: { S: string };
+  description?: { S: string };
 }
 
 export type ApiGatewayProxyEventType = z.infer<typeof APIGatewayProxyEventSchema>;

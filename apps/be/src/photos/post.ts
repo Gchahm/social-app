@@ -41,6 +41,8 @@ export async function uploadPhoto(
     imageId,
     originalS3Key: `photos/${imageId}`,
     createdAt: new Date().toISOString(),
+    title: payload.title,
+    description: payload.description,
   };
 
   const dataUrlMatch = /^data:(.*?);base64,(.*)$/.exec(payload.base64);
@@ -99,7 +101,7 @@ function getFileExtension(fileName: string): string | undefined {
 }
 
 function imageToDynamoDBItem(image: Image): DynamoDBItem {
-  return {
+  const item: DynamoDBItem = {
     PK: { S: `USER#${image.userId}` },
     SK: { S: `IMAGE#${image.imageId}` },
     GSI1PK: { S: `IMAGE#${image.imageId}` },
@@ -108,5 +110,12 @@ function imageToDynamoDBItem(image: Image): DynamoDBItem {
     imageId: { S: image.imageId },
     originalS3Key: { S: image.originalS3Key },
     createdAt: { S: image.createdAt },
+    title: { S: image.title },
   };
+
+  if (image.description) {
+    item.description = { S: image.description };
+  }
+
+  return item;
 }

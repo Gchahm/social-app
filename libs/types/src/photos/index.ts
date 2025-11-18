@@ -16,10 +16,12 @@ export interface UploadPhotoResponse {
   contentType: string;
 }
 
-export interface ImageDto {
+export interface Image {
   userId: string;
   imageId: string;
   originalS3Key: string;
   createdAt: string;
-  url: string;
+  title: string;
+  description?: string;
+  url?: string;
 }

@@ -29,9 +29,16 @@ export function PhotoCard({ image }: PhotoCardProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        <CardTitle className="text-base truncate">
-          {image.originalS3Key.split('/').pop() || image.originalS3Key}
-        </CardTitle>
+        <div>
+          <CardTitle className="text-base truncate">
+            {image.title}
+          </CardTitle>
+          {image.description && (
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+              {image.description}
+            </p>
+          )}
+        </div>
         <Separator />
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">

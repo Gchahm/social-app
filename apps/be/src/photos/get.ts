@@ -101,6 +101,8 @@ function dynamoDBItemToImage(item: DynamoDBItem): Image | null {
       imageId: item.imageId?.S || '',
       originalS3Key: item.originalS3Key?.S || '',
       createdAt: item.createdAt?.S || '',
+      title: item.title?.S || '',
+      description: item.description?.S,
     };
   } catch (error) {
     console.error('Error parsing DynamoDB item:', error);

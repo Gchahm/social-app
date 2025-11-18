@@ -19,7 +19,9 @@ export class BeStack extends Stack {
       bucket: storageConstruct.bucket,
     });
 
-    const authConstruct = new AuthConstruct(this, 'AuthConstruct');
+    const authConstruct = new AuthConstruct(this, 'AuthConstruct', {
+      table: databaseConstruct.table,
+    });
 
     const apiConstruct = new ApiConstruct(this, 'ApiConstruct', {
       spacesIntegration: lambdaConstruct.photosIntegration,

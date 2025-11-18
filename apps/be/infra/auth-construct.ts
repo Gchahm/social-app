@@ -3,17 +3,25 @@ import { UserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
 import { CfnOutput } from 'aws-cdk-lib';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { ITable } from 'aws-cdk-lib/aws-dynamodb';
+import { IBucket } from 'aws-cdk-lib/aws-s3';
+
+export interface AuthConstructProps {
+  table: ITable;
+}
 
 export class AuthConstruct extends Construct {
   public userPool: UserPool;
   private userPoolClient: UserPoolClient;
   public postRegistrationLambda: NodejsFunction;
 
-  constructor(scope: Construct, id: string) {
+  constructor(scope: Construct, id: string, props: AuthConstructProps) {
     super(scope, id);
 
     // Create Lambda function first
-    this.postRegistrationLambda = this.createPostRegistrationLambda();
+    this.postRegistrationLambda = this.createPostRegistrationLambda(
+      props.table
+    );
 
     // Create user pool with post-confirmation trigger
     this.userPool = this.createUserPool();
@@ -54,14 +62,13 @@ export class AuthConstruct extends Construct {
     });
   }
 
-  private createPostRegistrationLambda() {
+  private createPostRegistrationLambda(table: ITable) {
     return new NodejsFunction(this, 'PostRegistrationLambda', {
       runtime: Runtime.NODEJS_22_X,
       handler: 'handler',
       entry: 'src/auth/post-registration.ts',
       environment: {
-        // Add any environment variables your Lambda needs
-        // TABLE_NAME: table.tableName,
+        TABLE_NAME: table.tableName,
       },
     });
   }

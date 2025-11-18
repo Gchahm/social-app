@@ -28,4 +28,4 @@ export interface DynamoDBItem extends Record<string, AttributeValue> {
   createdAt: { S: string };
 }
 
-export type ProxyEvent = z.infer<typeof APIGatewayProxyEventSchema>;
+export type ApiGatewayProxyEventType = z.infer<typeof APIGatewayProxyEventSchema>;

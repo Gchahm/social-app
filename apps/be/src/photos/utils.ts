@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { randomUUID } from 'crypto';
-import { ProxyEvent } from './types';
+import { ApiGatewayProxyEventType } from './types';
 
 export class JsonError extends Error {}
 
@@ -33,7 +33,7 @@ export function hasAdminGroup(event: APIGatewayProxyEvent) {
 }
 
 export function getUserId(
-  event: Pick<ProxyEvent, 'requestContext'>
+  event: Pick<ApiGatewayProxyEventType, 'requestContext'>
 ): string | undefined {
   return event.requestContext.authorizer['claims']['sub'];
 }

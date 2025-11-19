@@ -25,7 +25,21 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "apps/be",
-        "command": "sam local start-api --template cdk.out/BEStack.template.json"
+        "command": "npx nodemon --watch src --watch infra --ext ts --exec 'cdk synth && sam local start-api --template cdk.out/BEStack.template.json'"
+      }
+    },
+    "dev:watch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/be",
+        "command": "npx nodemon --watch src --watch infra --ext ts --exec 'cdk synth'"
+      }
+    },
+    "dev:serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/be",
+        "command": "sam local start-api --template cdk.out/BEStack.template.json --warm-containers EAGER"
       }
     }
   }

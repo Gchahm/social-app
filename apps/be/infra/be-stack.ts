@@ -38,22 +38,8 @@ export class BeStack extends Stack {
 
     const apiConstruct = new ApiConstruct(this, 'ApiConstruct', {
       userPool: authConstruct.userPool,
-      // Photos integrations
-      requestPhotoUploadUrlIntegration:
-        photosLambdaConstruct.requestUploadUrlIntegration,
-      confirmPhotoUploadIntegration:
-        photosLambdaConstruct.confirmUploadIntegration,
-      // Posts integrations
-      createPostIntegration: postsLambdaConstruct.createPostIntegration,
-      getPostIntegration: postsLambdaConstruct.getPostIntegration,
-      listPostsIntegration: postsLambdaConstruct.listPostsIntegration,
-      updatePostIntegration: postsLambdaConstruct.updatePostIntegration,
-      deletePostIntegration: postsLambdaConstruct.deletePostIntegration,
-      likePostIntegration: postsLambdaConstruct.likePostIntegration,
-      unlikePostIntegration: postsLambdaConstruct.unlikePostIntegration,
-      addCommentIntegration: postsLambdaConstruct.addCommentIntegration,
-      getCommentsIntegration: postsLambdaConstruct.getCommentsIntegration,
-      deleteCommentIntegration: postsLambdaConstruct.deleteCommentIntegration,
+      postsIntegrations: postsLambdaConstruct.postsIntegrations,
+      photosIntegrations: photosLambdaConstruct.integrations,
     });
 
     new CfnOutput(this, 'ApiEndpoint', {

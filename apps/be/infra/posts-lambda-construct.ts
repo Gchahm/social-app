@@ -1,160 +1,111 @@
 import { Construct } from 'constructs';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { ITable } from 'aws-cdk-lib/aws-dynamodb';
-import { Integration, LambdaIntegration } from 'aws-cdk-lib/aws-apigateway';
-import { Duration } from 'aws-cdk-lib';
+import { BaseLambdaConstruct } from './base-lambda-construct';
+import { Integration } from 'aws-cdk-lib/aws-apigateway';
 
 export interface PostsLambdaConstructProps {
   table: ITable;
+}
+
+export interface PostsIntegrations {
+  createPost: Integration;
+  getPost: Integration;
+  listPosts: Integration;
+  updatePost: Integration;
+  deletePost: Integration;
+  likePost: Integration;
+  unlikePost: Integration;
+  addComment: Integration;
+  getComments: Integration;
+  deleteComment: Integration;
 }
 
 /**
  * Construct for managing all Posts-related Lambda functions
  * Includes: CRUD operations, likes, and comments
  */
-export class PostsLambdaConstruct extends Construct {
+export class PostsLambdaConstruct extends BaseLambdaConstruct {
   // Post CRUD operations
-  public readonly createPostIntegration: Integration;
-  public readonly getPostIntegration: Integration;
-  public readonly listPostsIntegration: Integration;
-  public readonly updatePostIntegration: Integration;
-  public readonly deletePostIntegration: Integration;
-
-  // Like operations
-  public readonly likePostIntegration: Integration;
-  public readonly unlikePostIntegration: Integration;
-
-  // Comment operations
-  public readonly addCommentIntegration: Integration;
-  public readonly getCommentsIntegration: Integration;
-  public readonly deleteCommentIntegration: Integration;
+  public readonly postsIntegrations: PostsIntegrations;
 
   constructor(scope: Construct, id: string, props: PostsLambdaConstructProps) {
-    super(scope, id);
+    super(scope, id, props.table);
 
-    const { table } = props;
+    // Create all Lambda integrations using the batch method
+    const integrations = this.createLambdaIntegrations([
+      {
+        id: 'CreatePost',
+        entry: 'src/posts/create.ts',
+        functionName: 'posts-CreatePost',
+        description: 'Posts API: Create a new post',
+      },
+      {
+        id: 'GetPost',
+        entry: 'src/posts/get.ts',
+        functionName: 'posts-GetPost',
+        description: 'Posts API: Get a single post',
+      },
+      {
+        id: 'ListPosts',
+        entry: 'src/posts/list.ts',
+        functionName: 'posts-ListPosts',
+        description: 'Posts API: List posts with filters',
+      },
+      {
+        id: 'UpdatePost',
+        entry: 'src/posts/update.ts',
+        functionName: 'posts-UpdatePost',
+        description: 'Posts API: Update a post',
+      },
+      {
+        id: 'DeletePost',
+        entry: 'src/posts/delete.ts',
+        functionName: 'posts-DeletePost',
+        description: 'Posts API: Delete a post',
+      },
+      {
+        id: 'LikePost',
+        entry: 'src/posts/like.ts',
+        functionName: 'posts-LikePost',
+        description: 'Posts API: Like a post',
+      },
+      {
+        id: 'UnlikePost',
+        entry: 'src/posts/unlike.ts',
+        functionName: 'posts-UnlikePost',
+        description: 'Posts API: Unlike a post',
+      },
+      {
+        id: 'AddComment',
+        entry: 'src/posts/add-comment.ts',
+        functionName: 'posts-AddComment',
+        description: 'Posts API: Add a comment',
+      },
+      {
+        id: 'GetComments',
+        entry: 'src/posts/get-comments.ts',
+        functionName: 'posts-GetComments',
+        description: 'Posts API: Get comments for a post',
+      },
+      {
+        id: 'DeleteComment',
+        entry: 'src/posts/delete-comment.ts',
+        functionName: 'posts-DeleteComment',
+        description: 'Posts API: Delete a comment',
+      },
+    ]);
 
-    // Common Lambda configuration
-    const commonConfig = {
-      runtime: Runtime.NODEJS_22_X,
-      handler: 'handler',
-      timeout: Duration.seconds(30),
-      memorySize: 256,
-      environment: {
-        TABLE_NAME: table.tableName,
-      },
-      bundling: {
-        minify: true,
-        sourceMap: true,
-        externalModules: ['@aws-sdk/*'], // AWS SDK v3 is included in Lambda runtime
-      },
+    this.postsIntegrations = {
+      createPost: integrations.CreatePost,
+      getPost: integrations.GetPost,
+      listPosts: integrations.ListPosts,
+      updatePost: integrations.UpdatePost,
+      deletePost: integrations.DeletePost,
+      likePost: integrations.LikePost,
+      unlikePost: integrations.UnlikePost,
+      addComment: integrations.AddComment,
+      getComments: integrations.GetComments,
+      deleteComment: integrations.DeleteComment,
     };
-
-    // Create Post
-    this.createPostIntegration = this.createPostLambda(
-      'CreatePost',
-      'src/posts/create.ts',
-      table,
-      commonConfig
-    );
-
-    // Get Post
-    this.getPostIntegration = this.createPostLambda(
-      'GetPost',
-      'src/posts/get.ts',
-      table,
-      commonConfig
-    );
-
-    // List Posts
-    this.listPostsIntegration = this.createPostLambda(
-      'ListPosts',
-      'src/posts/list.ts',
-      table,
-      commonConfig
-    );
-
-    // Update Post
-    this.updatePostIntegration = this.createPostLambda(
-      'UpdatePost',
-      'src/posts/update.ts',
-      table,
-      commonConfig
-    );
-
-    // Delete Post
-    this.deletePostIntegration = this.createPostLambda(
-      'DeletePost',
-      'src/posts/delete.ts',
-      table,
-      commonConfig
-    );
-
-    // Like Post
-    this.likePostIntegration = this.createPostLambda(
-      'LikePost',
-      'src/posts/like.ts',
-      table,
-      commonConfig
-    );
-
-    // Unlike Post
-    this.unlikePostIntegration = this.createPostLambda(
-      'UnlikePost',
-      'src/posts/unlike.ts',
-      table,
-      commonConfig
-    );
-
-    // Add Comment
-    this.addCommentIntegration = this.createPostLambda(
-      'AddComment',
-      'src/posts/add-comment.ts',
-      table,
-      commonConfig
-    );
-
-    // Get Comments
-    this.getCommentsIntegration = this.createPostLambda(
-      'GetComments',
-      'src/posts/get-comments.ts',
-      table,
-      commonConfig
-    );
-
-    // Delete Comment
-    this.deleteCommentIntegration = this.createPostLambda(
-      'DeleteComment',
-      'src/posts/delete-comment.ts',
-      table,
-      commonConfig
-    );
-  }
-
-  /**
-   * Helper method to create a Lambda function and integration
-   */
-  private createPostLambda(
-    id: string,
-    entry: string,
-    table: ITable,
-    config: any
-  ): Integration {
-    const lambdaFn = new NodejsFunction(this, id, {
-      ...config,
-      entry,
-      functionName: `posts-${id}`,
-      description: `Posts API: ${id}`,
-    });
-
-    // Grant DynamoDB permissions
-    table.grantReadWriteData(lambdaFn);
-
-    // Create and return API Gateway integration
-    return new LambdaIntegration(lambdaFn, {
-      proxy: true,
-      allowTestInvoke: true,
-    });
   }
 }

@@ -2,29 +2,18 @@ import { Construct } from 'constructs';
 import {
   CognitoUserPoolsAuthorizer,
   Cors,
-  Integration,
   MethodOptions,
   ResourceOptions,
   RestApi,
 } from 'aws-cdk-lib/aws-apigateway';
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
+import { PostsIntegrations } from './posts-lambda-construct';
+import { PhotosIntegrations } from './photos-lambda-construct';
 
 export interface ApiConstructProps {
   userPool: UserPool;
-  // Photos integrations
-  requestPhotoUploadUrlIntegration: Integration;
-  confirmPhotoUploadIntegration: Integration;
-  // Posts integrations
-  createPostIntegration: Integration;
-  getPostIntegration: Integration;
-  listPostsIntegration: Integration;
-  updatePostIntegration: Integration;
-  deletePostIntegration: Integration;
-  likePostIntegration: Integration;
-  unlikePostIntegration: Integration;
-  addCommentIntegration: Integration;
-  getCommentsIntegration: Integration;
-  deleteCommentIntegration: Integration;
+  postsIntegrations?: PostsIntegrations;
+  photosIntegrations?: PhotosIntegrations;
 }
 
 export class ApiConstruct extends Construct {
@@ -33,21 +22,7 @@ export class ApiConstruct extends Construct {
   constructor(scope: Construct, id: string, props: ApiConstructProps) {
     super(scope, id);
 
-    const {
-      userPool,
-      requestPhotoUploadUrlIntegration,
-      confirmPhotoUploadIntegration,
-      createPostIntegration,
-      getPostIntegration,
-      listPostsIntegration,
-      updatePostIntegration,
-      deletePostIntegration,
-      likePostIntegration,
-      unlikePostIntegration,
-      addCommentIntegration,
-      getCommentsIntegration,
-      deleteCommentIntegration,
-    } = props;
+    const { userPool, photosIntegrations, postsIntegrations } = props;
 
     const gateway = new RestApi(this, 'be-api');
     this.api = gateway;
@@ -78,7 +53,7 @@ export class ApiConstruct extends Construct {
     const uploadUrlResource = photosResource.addResource('upload-url');
     uploadUrlResource.addMethod(
       'POST',
-      requestPhotoUploadUrlIntegration,
+      photosIntegrations.requestPhotoUploadUrl,
       optionsWithAuthorizer
     );
 
@@ -86,7 +61,7 @@ export class ApiConstruct extends Construct {
     const confirmResource = photosResource.addResource('confirm');
     confirmResource.addMethod(
       'POST',
-      confirmPhotoUploadIntegration,
+      photosIntegrations.confirmPhotoUpload,
       optionsWithAuthorizer
     );
 
@@ -96,30 +71,30 @@ export class ApiConstruct extends Construct {
     // POST /posts - Create post
     postsResource.addMethod(
       'POST',
-      createPostIntegration,
+      postsIntegrations.createPost,
       optionsWithAuthorizer
     );
 
     // GET /posts - List posts (global feed or by user)
-    postsResource.addMethod('GET', listPostsIntegration);
+    postsResource.addMethod('GET', postsIntegrations.listPosts);
 
     // /posts/:postId
     const postIdResource = postsResource.addResource('{postId}');
 
     // GET /posts/:postId - Get single post
-    postIdResource.addMethod('GET', getPostIntegration);
+    postIdResource.addMethod('GET', postsIntegrations.getPost);
 
     // PUT /posts/:postId - Update post
     postIdResource.addMethod(
       'PUT',
-      updatePostIntegration,
+      postsIntegrations.updatePost,
       optionsWithAuthorizer
     );
 
     // DELETE /posts/:postId - Delete post
     postIdResource.addMethod(
       'DELETE',
-      deletePostIntegration,
+      postsIntegrations.deletePost,
       optionsWithAuthorizer
     );
 
@@ -127,12 +102,16 @@ export class ApiConstruct extends Construct {
     const likeResource = postIdResource.addResource('like');
 
     // POST /posts/:postId/like - Like post
-    likeResource.addMethod('POST', likePostIntegration, optionsWithAuthorizer);
+    likeResource.addMethod(
+      'POST',
+      postsIntegrations.likePost,
+      optionsWithAuthorizer
+    );
 
     // DELETE /posts/:postId/like - Unlike post
     likeResource.addMethod(
       'DELETE',
-      unlikePostIntegration,
+      postsIntegrations.unlikePost,
       optionsWithAuthorizer
     );
 
@@ -142,12 +121,12 @@ export class ApiConstruct extends Construct {
     // POST /posts/:postId/comments - Add comment
     commentsResource.addMethod(
       'POST',
-      addCommentIntegration,
+      postsIntegrations.addComment,
       optionsWithAuthorizer
     );
 
     // GET /posts/:postId/comments - Get comments
-    commentsResource.addMethod('GET', getCommentsIntegration);
+    commentsResource.addMethod('GET', postsIntegrations.getComments);
 
     // /posts/:postId/comments/:commentId
     const commentIdResource = commentsResource.addResource('{commentId}');
@@ -155,7 +134,7 @@ export class ApiConstruct extends Construct {
     // DELETE /posts/:postId/comments/:commentId - Delete comment
     commentIdResource.addMethod(
       'DELETE',
-      deleteCommentIntegration,
+      postsIntegrations.deleteComment,
       optionsWithAuthorizer
     );
   }

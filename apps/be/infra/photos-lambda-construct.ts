@@ -1,106 +1,50 @@
 import { Construct } from 'constructs';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { ITable } from 'aws-cdk-lib/aws-dynamodb';
-import { Integration, LambdaIntegration } from 'aws-cdk-lib/aws-apigateway';
+import { Integration } from 'aws-cdk-lib/aws-apigateway';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
-import { Duration } from 'aws-cdk-lib';
+import { BaseLambdaConstruct } from './base-lambda-construct';
 
 export interface PhotosLambdaConstructProps {
   table: ITable;
   bucket: IBucket;
 }
 
+export interface PhotosIntegrations {
+  requestPhotoUploadUrl: Integration;
+  confirmPhotoUpload: Integration;
+}
+
 /**
  * Construct for managing all Photos-related Lambda functions
  * Uses presigned URL flow for direct S3 uploads
  */
-export class PhotosLambdaConstruct extends Construct {
+export class PhotosLambdaConstruct extends BaseLambdaConstruct {
   // Presigned URL flow
-  public readonly requestUploadUrlIntegration: Integration;
+  public readonly integrations: PhotosIntegrations;
   public readonly confirmUploadIntegration: Integration;
 
   constructor(scope: Construct, id: string, props: PhotosLambdaConstructProps) {
-    super(scope, id);
+    super(scope, id, props.table, props.bucket);
 
-    const { table, bucket } = props;
-
-    // Common environment variables
-    const commonEnv = {
-      TABLE_NAME: table.tableName,
-      BUCKET_NAME: bucket.bucketName,
+    this.integrations = {
+      requestPhotoUploadUrl: this.createLambdaIntegration(
+        'RequestUploadUrl',
+        'src/photos/request-upload-url.ts',
+        {
+          functionName: 'photos-RequestUploadUrl',
+          description: 'Photos API: Request presigned URL for upload',
+          grantS3Write: true, // Needs permission to generate presigned URLs
+        }
+      ),
+      confirmPhotoUpload: this.createLambdaIntegration(
+        'ConfirmUpload',
+        'src/photos/confirm-upload.ts',
+        {
+          functionName: 'photos-ConfirmUpload',
+          description: 'Photos API: Confirm upload and save metadata',
+          // Only needs DynamoDB write (no S3 permissions)
+        }
+      ),
     };
-
-    // Common Lambda configuration
-    const commonConfig = {
-      runtime: Runtime.NODEJS_22_X,
-      handler: 'handler',
-      timeout: Duration.seconds(30),
-      memorySize: 256,
-      environment: commonEnv,
-      bundling: {
-        minify: true,
-        sourceMap: true,
-        externalModules: ['@aws-sdk/*'],
-      },
-    };
-
-    // Request Upload URL (Presigned URL)
-    this.requestUploadUrlIntegration = this.createPhotoLambda(
-      'RequestUploadUrl',
-      'src/photos/request-upload-url.ts',
-      table,
-      bucket,
-      commonConfig,
-      { needsS3Read: false, needsS3Write: true } // Only needs permission to generate presigned URLs
-    );
-
-    // Confirm Upload (Save metadata after upload)
-    this.confirmUploadIntegration = this.createPhotoLambda(
-      'ConfirmUpload',
-      'src/photos/confirm-upload.ts',
-      table,
-      bucket,
-      commonConfig,
-      { needsS3Read: false, needsS3Write: false } // Only needs DynamoDB write
-    );
-  }
-
-  /**
-   * Helper method to create a Lambda function and integration
-   */
-  private createPhotoLambda(
-    id: string,
-    entry: string,
-    table: ITable,
-    bucket: IBucket,
-    config: any,
-    permissions: { needsS3Read: boolean; needsS3Write: boolean }
-  ): Integration {
-    const lambdaFn = new NodejsFunction(this, id, {
-      ...config,
-      entry,
-      functionName: `photos-${id}`,
-      description: `Photos API: ${id}`,
-    });
-
-    // Grant DynamoDB permissions
-    table.grantReadWriteData(lambdaFn);
-
-    // Grant S3 permissions based on needs
-    if (permissions.needsS3Read && permissions.needsS3Write) {
-      bucket.grantReadWrite(lambdaFn);
-    } else if (permissions.needsS3Read) {
-      bucket.grantRead(lambdaFn);
-    } else if (permissions.needsS3Write) {
-      bucket.grantWrite(lambdaFn);
-      bucket.grantPutAcl(lambdaFn); // For presigned URLs
-    }
-
-    // Create and return API Gateway integration
-    return new LambdaIntegration(lambdaFn, {
-      proxy: true,
-      allowTestInvoke: true,
-    });
   }
 }

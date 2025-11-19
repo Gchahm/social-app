@@ -25,3 +25,11 @@ export interface ImageDto {
   description?: string;
   url?: string;
 }
+
+export type GetPhotosResponse = {
+  images: ImageDto[];
+  count: number;
+  total: number;
+  skip: number;
+  take: number;
+};

@@ -3,14 +3,12 @@ import httpErrorHandler from '@middy/http-error-handler';
 import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schemas/api-gateway';
 import httpEventNormalizerMiddleware from '@middy/http-event-normalizer';
 import { parser } from '@aws-lambda-powertools/parser/middleware';
-import { getUserId } from './utils';
 import { getContext, PhotosContext } from './context';
 import type { APIGatewayProxyResult } from 'aws-lambda';
 import { ApiGatewayProxyEventType, DynamoDBItem, Image } from '../types';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
-import { ImageDto } from '@chahm/types';
-
+import { GetPhotosResponse, ImageDto } from '@chahm/types';
 const schema = APIGatewayProxyEventSchema;
 
 export const getHandler = middy()
@@ -27,35 +25,41 @@ export async function getPhotos(
   ctx: PhotosContext
 ): Promise<APIGatewayProxyResult> {
   const { db, s3, tableName, bucketName } = ctx;
-  const userId = getUserId(event);
-
-  if (!userId) {
-    return {
-      statusCode: 401,
-      body: JSON.stringify({
-        message: 'Unauthorized: User ID not found',
-      }),
-    };
-  }
+  // Extract query parameters
+  const queryParams = event.queryStringParameters || {};
+  const targetUserId = queryParams.userId;
+  const skip = parseInt(queryParams.skip || '0', 10);
+  const take = parseInt(queryParams.take || '10', 10);
 
   try {
-    const result = await db.query({
-      TableName: tableName,
-      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
-      ExpressionAttributeValues: {
-        ':pk': { S: `USER#${userId}` },
-        ':sk': { S: 'IMAGE#' },
-      },
-    });
+    const result = targetUserId
+      ? await db.query({
+          TableName: tableName,
+          KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
+          ExpressionAttributeValues: {
+            ':pk': { S: `USER#${targetUserId}` },
+            ':sk': { S: 'IMAGE#' },
+          },
+        })
+      : await db.scan({
+          TableName: tableName,
+          FilterExpression: 'begins_with(SK, :sk)',
+          ExpressionAttributeValues: {
+            ':sk': { S: 'IMAGE#' },
+          },
+        });
 
     const images: Image[] =
       result.Items?.map(dynamoDBItemToImage).filter(
         (img): img is Image => img !== null
       ) || [];
 
+    // Apply pagination
+    const paginatedImages = images.slice(skip, skip + take);
+
     // Generate pre-signed URLs for each image
     const imagesWithUrls: ImageDto[] = await Promise.all(
-      images.map(async (image) => {
+      paginatedImages.map(async (image) => {
         try {
           const command = new GetObjectCommand({
             Bucket: bucketName,
@@ -73,15 +77,18 @@ export async function getPhotos(
       })
     );
 
-    const response = {
-      statusCode: 200,
-      body: JSON.stringify({
-        images: imagesWithUrls,
-        count: imagesWithUrls.length,
-      }),
+    const dto: GetPhotosResponse = {
+      images: imagesWithUrls,
+      count: imagesWithUrls.length,
+      total: images.length,
+      skip,
+      take,
     };
 
-    return response;
+    return {
+      statusCode: 200,
+      body: JSON.stringify(dto),
+    };
   } catch (error) {
     console.error('Error fetching images from DynamoDB:', error);
 

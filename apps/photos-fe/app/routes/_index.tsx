@@ -1,22 +1,22 @@
 import '@chahm/ui-components/styles/globals.css';
-import { EmptyState, ErrorMessage, Loading, PhotosList } from '../components';
-import { usePhotos } from '../hooks';
+import { EmptyState, ErrorMessage, Loading, PostsList } from '../components';
+import { usePosts } from '../hooks';
 
 export function _index() {
-  const { data, isPending, error, refetch } = usePhotos();
+  const { data, isPending, error, refetch } = usePosts();
 
   return (
     <div className="flex flex-col gap-4 p-4 overflow-auto">
-      {isPending && <Loading message="Loading photos..." />}
+      {isPending && <Loading message="Loading posts..." />}
 
       {error && <ErrorMessage error={error} onRetry={refetch} />}
 
       {!isPending && !error && data.count === 0 && (
-        <EmptyState message="No photos yet. Upload your first photo!" />
+        <EmptyState message="No posts yet. Create your first post!" />
       )}
 
       {!isPending && !error && data && data.count > 0 && (
-        <PhotosList data={data} onRefresh={refetch} />
+        <PostsList data={data} onRefresh={refetch} />
       )}
     </div>
   );

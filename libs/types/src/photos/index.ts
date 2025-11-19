@@ -33,3 +33,45 @@ export type GetPhotosResponse = {
   skip: number;
   take: number;
 };
+
+// Presigned URL upload flow types
+export interface RequestUploadUrlPayload {
+  fileName: string;
+  contentType: string;
+}
+
+export interface RequestUploadUrlResponse {
+  uploadUrl: string;
+  imageKey: string;
+  imageId: string;
+  expiresIn: number;
+}
+
+export interface ConfirmUploadPayload {
+  imageId: string;
+  imageKey: string;
+  title: string;
+  description?: string;
+}
+
+export interface ConfirmUploadResponse {
+  message: string;
+  photo: ImageDto;
+}
+
+// Post types
+export interface CreatePostPayload {
+  imageKey: string;
+  caption?: string;
+}
+
+export interface CreatePostResponse {
+  message: string;
+  post: {
+    userId: string;
+    postId: string;
+    imageKey: string;
+    caption?: string;
+    createdAt: string;
+  };
+}

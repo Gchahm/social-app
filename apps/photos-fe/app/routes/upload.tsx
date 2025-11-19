@@ -1,27 +1,247 @@
 import '@chahm/ui-components/styles/globals.css';
 import { UploadImageForm } from '../components';
 import { useMutation } from '@tanstack/react-query';
-import { UploadPhotoPayload, UploadPhotoResponse } from '@chahm/types';
 import { post } from 'aws-amplify/api';
+import { useState } from 'react';
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+  Textarea,
+  Label,
+} from '@chahm/ui-components';
+import type {
+  RequestUploadUrlResponse,
+  ConfirmUploadPayload,
+  CreatePostPayload,
+} from '@chahm/types';
 
 export function Upload() {
-  const mutation = useMutation<UploadPhotoResponse, Error, UploadPhotoPayload>({
-    mutationFn: async (payload) => {
-      const restOperation = post({
-        apiName: 'photos',
-        path: 'photos',
-        options: {
-          body: payload,
-        },
+  const [uploadedPhoto, setUploadedPhoto] = useState<{
+    imageId: string;
+    imageKey: string;
+  } | null>(null);
+  const [createPostMode, setCreatePostMode] = useState(false);
+  const [caption, setCaption] = useState('');
+
+  // Step 1: Request presigned URL
+  const requestUploadUrl = async (fileName: string, contentType: string) => {
+    const restOperation = post({
+      apiName: 'SocialApp',
+      path: 'photos/upload-url',
+      options: {
+        body: { fileName, contentType },
+      },
+    });
+
+    const { body } = await restOperation.response;
+    return (await body.json()) as RequestUploadUrlResponse;
+  };
+
+  // Step 2: Upload to S3 directly
+  const uploadToS3 = async (file: File, uploadUrl: string) => {
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type,
+      },
+      body: file,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload to S3');
+    }
+  };
+
+  // Step 3: Confirm upload and save metadata
+  const confirmUpload = async (payload: ConfirmUploadPayload) => {
+    const restOperation = post({
+      apiName: 'SocialApp',
+      path: 'photos/confirm',
+      options: {
+        body: payload,
+      },
+    });
+
+    const { body } = await restOperation.response;
+    return await body.json();
+  };
+
+  // Step 4: Create post (optional)
+  const createPost = async (payload: CreatePostPayload) => {
+    const restOperation = post({
+      apiName: 'SocialApp',
+      path: 'posts',
+      options: {
+        body: payload,
+      },
+    });
+
+    const { body } = await restOperation.response;
+    return await body.json();
+  };
+
+  // Combined upload mutation
+  const uploadMutation = useMutation({
+    mutationFn: async (payload: {
+      file: File;
+      title: string;
+      description?: string;
+    }) => {
+      // Step 1: Get presigned URL
+      const { uploadUrl, imageKey, imageId } = await requestUploadUrl(
+        payload.file.name,
+        payload.file.type
+      );
+
+      // Step 2: Upload to S3
+      await uploadToS3(payload.file, uploadUrl);
+
+      // Step 3: Confirm upload
+      await confirmUpload({
+        imageId,
+        imageKey,
+        title: payload.title,
+        description: payload.description,
       });
 
-      const { body } = await restOperation.response;
-      return await body.json();
+      return { imageId, imageKey };
+    },
+    onSuccess: (data) => {
+      setUploadedPhoto(data);
+    },
+    onError: (error) => {
+      console.error('Upload failed:', error);
     },
   });
+
+  // Create post mutation
+  const postMutation = useMutation({
+    mutationFn: async () => {
+      if (!uploadedPhoto) throw new Error('No photo uploaded');
+
+      return await createPost({
+        imageKey: uploadedPhoto.imageKey,
+        caption: caption || undefined,
+      });
+    },
+    onSuccess: () => {
+      // Reset state
+      setUploadedPhoto(null);
+      setCreatePostMode(false);
+      setCaption('');
+    },
+    onError: (error) => {
+      console.error('Failed to create post:', error);
+    },
+  });
+
+  // Handle form submission
+  const handleUpload = async (formData: {
+    base64: string;
+    fileName: string;
+    title: string;
+    description?: string;
+  }) => {
+    // Convert base64 to File
+    const base64Data = formData.base64.split(',')[1] || formData.base64;
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'image/jpeg' });
+    const file = new File([blob], formData.fileName, { type: 'image/jpeg' });
+
+    await uploadMutation.mutateAsync({
+      file,
+      title: formData.title,
+      description: formData.description,
+    });
+  };
+
   return (
-    <div className="flex flex-col gap-4 p-4 overflow-auto">
-      <UploadImageForm onSubmit={mutation.mutateAsync} />
+    <div className="flex flex-col gap-4 p-4 overflow-auto max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold">Upload Photo</h1>
+
+      {!uploadedPhoto ? (
+        // Upload form
+        <UploadImageForm onSubmit={handleUpload} />
+      ) : !createPostMode ? (
+        // Post-upload options
+        <Card>
+          <CardHeader>
+            <CardTitle>Photo uploaded successfully!</CardTitle>
+            <CardDescription>
+              Your photo has been saved to your library. Would you like to
+              create a post with this photo?
+            </CardDescription>
+          </CardHeader>
+          <CardFooter className="gap-3">
+            <Button onClick={() => setCreatePostMode(true)}>Create Post</Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setUploadedPhoto(null);
+                setCaption('');
+              }}
+            >
+              Upload Another Photo
+            </Button>
+          </CardFooter>
+        </Card>
+      ) : (
+        // Create post form
+        <Card>
+          <CardHeader>
+            <CardTitle>Create Post</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="caption">Caption (optional)</Label>
+              <Textarea
+                id="caption"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                placeholder="Write a caption for your post..."
+                disabled={postMutation.isPending}
+              />
+            </div>
+          </CardContent>
+          <CardFooter className="gap-3">
+            <Button
+              onClick={() => postMutation.mutate()}
+              disabled={postMutation.isPending}
+            >
+              {postMutation.isPending ? 'Creating Post...' : 'Create Post'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCreatePostMode(false);
+                setCaption('');
+              }}
+              disabled={postMutation.isPending}
+            >
+              Cancel
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
+
+      {/* Loading state */}
+      {uploadMutation.isPending && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <Card className="p-6">
+            <p className="text-lg">Uploading photo...</p>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

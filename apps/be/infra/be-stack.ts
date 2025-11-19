@@ -43,8 +43,6 @@ export class BeStack extends Stack {
         photosLambdaConstruct.requestUploadUrlIntegration,
       confirmPhotoUploadIntegration:
         photosLambdaConstruct.confirmUploadIntegration,
-      getPhotosIntegration: photosLambdaConstruct.getPhotosIntegration,
-      uploadPhotoIntegration: photosLambdaConstruct.uploadPhotoIntegration,
       // Posts integrations
       createPostIntegration: postsLambdaConstruct.createPostIntegration,
       getPostIntegration: postsLambdaConstruct.getPostIntegration,

@@ -14,8 +14,6 @@ export interface ApiConstructProps {
   // Photos integrations
   requestPhotoUploadUrlIntegration: Integration;
   confirmPhotoUploadIntegration: Integration;
-  getPhotosIntegration: Integration;
-  uploadPhotoIntegration: Integration;
   // Posts integrations
   createPostIntegration: Integration;
   getPostIntegration: Integration;
@@ -39,8 +37,6 @@ export class ApiConstruct extends Construct {
       userPool,
       requestPhotoUploadUrlIntegration,
       confirmPhotoUploadIntegration,
-      getPhotosIntegration,
-      uploadPhotoIntegration,
       createPostIntegration,
       getPostIntegration,
       listPostsIntegration,
@@ -78,7 +74,7 @@ export class ApiConstruct extends Construct {
     // Photos endpoints
     const photosResource = gateway.root.addResource('photos', optionsWithCors);
 
-    // POST /photos/upload-url - Request presigned URL (recommended flow)
+    // POST /photos/upload-url - Request presigned URL
     const uploadUrlResource = photosResource.addResource('upload-url');
     uploadUrlResource.addMethod(
       'POST',
@@ -93,12 +89,6 @@ export class ApiConstruct extends Construct {
       confirmPhotoUploadIntegration,
       optionsWithAuthorizer
     );
-
-    // GET /photos - List/get photos
-    photosResource.addMethod('GET', getPhotosIntegration, optionsWithAuthorizer);
-
-    // POST /photos - Direct upload (legacy, for backward compatibility)
-    photosResource.addMethod('POST', uploadPhotoIntegration, optionsWithAuthorizer);
 
     // Posts endpoints
     const postsResource = gateway.root.addResource('posts', optionsWithCors);

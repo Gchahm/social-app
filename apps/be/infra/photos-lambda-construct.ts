@@ -13,16 +13,12 @@ export interface PhotosLambdaConstructProps {
 
 /**
  * Construct for managing all Photos-related Lambda functions
- * Supports both presigned URL uploads (recommended) and legacy direct uploads
+ * Uses presigned URL flow for direct S3 uploads
  */
 export class PhotosLambdaConstruct extends Construct {
-  // Presigned URL flow (recommended)
+  // Presigned URL flow
   public readonly requestUploadUrlIntegration: Integration;
   public readonly confirmUploadIntegration: Integration;
-
-  // Legacy handlers (for backward compatibility)
-  public readonly getPhotosIntegration: Integration;
-  public readonly uploadPhotoIntegration: Integration;
 
   constructor(scope: Construct, id: string, props: PhotosLambdaConstructProps) {
     super(scope, id);
@@ -33,7 +29,6 @@ export class PhotosLambdaConstruct extends Construct {
     const commonEnv = {
       TABLE_NAME: table.tableName,
       BUCKET_NAME: bucket.bucketName,
-      AWS_REGION: process.env.CDK_DEFAULT_REGION || 'us-east-1',
     };
 
     // Common Lambda configuration
@@ -68,26 +63,6 @@ export class PhotosLambdaConstruct extends Construct {
       bucket,
       commonConfig,
       { needsS3Read: false, needsS3Write: false } // Only needs DynamoDB write
-    );
-
-    // Get Photos (List/retrieve photos)
-    this.getPhotosIntegration = this.createPhotoLambda(
-      'GetPhotos',
-      'src/photos/get.ts',
-      table,
-      bucket,
-      commonConfig,
-      { needsS3Read: true, needsS3Write: false }
-    );
-
-    // Upload Photo (Legacy direct upload)
-    this.uploadPhotoIntegration = this.createPhotoLambda(
-      'UploadPhoto',
-      'src/photos/post.ts',
-      table,
-      bucket,
-      commonConfig,
-      { needsS3Read: false, needsS3Write: true }
     );
   }
 

@@ -2,6 +2,7 @@ import { CfnOutput, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { DatabaseConstruct } from './database-construct';
 import { LambdaConstruct } from './lambda-construct';
+import { PostsLambdaConstruct } from './posts-lambda-construct';
 import { ApiConstruct } from './api-construct';
 import { AuthConstruct } from './auth-construct';
 import { StorageConstruct } from './storage-construct';
@@ -19,6 +20,14 @@ export class BeStack extends Stack {
       bucket: storageConstruct.bucket,
     });
 
+    const postsLambdaConstruct = new PostsLambdaConstruct(
+      this,
+      'PostsLambdaConstruct',
+      {
+        table: databaseConstruct.table,
+      }
+    );
+
     const authConstruct = new AuthConstruct(this, 'AuthConstruct', {
       table: databaseConstruct.table,
     });
@@ -26,6 +35,17 @@ export class BeStack extends Stack {
     const apiConstruct = new ApiConstruct(this, 'ApiConstruct', {
       spacesIntegration: lambdaConstruct.photosIntegration,
       userPool: authConstruct.userPool,
+      // Posts integrations
+      createPostIntegration: postsLambdaConstruct.createPostIntegration,
+      getPostIntegration: postsLambdaConstruct.getPostIntegration,
+      listPostsIntegration: postsLambdaConstruct.listPostsIntegration,
+      updatePostIntegration: postsLambdaConstruct.updatePostIntegration,
+      deletePostIntegration: postsLambdaConstruct.deletePostIntegration,
+      likePostIntegration: postsLambdaConstruct.likePostIntegration,
+      unlikePostIntegration: postsLambdaConstruct.unlikePostIntegration,
+      addCommentIntegration: postsLambdaConstruct.addCommentIntegration,
+      getCommentsIntegration: postsLambdaConstruct.getCommentsIntegration,
+      deleteCommentIntegration: postsLambdaConstruct.deleteCommentIntegration,
     });
 
     new CfnOutput(this, 'ApiEndpoint', {

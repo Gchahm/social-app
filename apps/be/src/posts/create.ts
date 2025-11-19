@@ -34,8 +34,8 @@ export async function handler(
       imageUrl = body.imageUrl;
     } else if (body.imageKey) {
       // Construct URL from S3 key
-      const bucketName = process.env.BUCKET_NAME || 'your-bucket-name';
-      const region = process.env.AWS_REGION || 'us-east-1';
+      const bucketName = process.env.BUCKET_NAME;
+      const region = process.env.AWS_REGION;
       imageUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${body.imageKey}`;
     } else {
       return errorResponse('Either imageUrl or imageKey is required', 400);

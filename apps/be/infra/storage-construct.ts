@@ -1,5 +1,5 @@
 import { Construct } from 'constructs';
-import { Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
+import { Bucket, HttpMethods, BlockPublicAccess } from 'aws-cdk-lib/aws-s3';
 
 export class StorageConstruct extends Construct {
   public bucket: Bucket;
@@ -8,6 +8,9 @@ export class StorageConstruct extends Construct {
     super(scope, id);
 
     this.bucket = new Bucket(this, 'PhotosBucket', {
+      // Allow public read access to uploaded images
+      publicReadAccess: true,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ACLS_ONLY,
       cors: [
         {
           allowedOrigins: ['*'],

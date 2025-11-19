@@ -57,14 +57,6 @@ export class ApiConstruct extends Construct {
       optionsWithAuthorizer
     );
 
-    // POST /photos/confirm - Confirm upload and save metadata
-    const confirmResource = photosResource.addResource('confirm');
-    confirmResource.addMethod(
-      'POST',
-      photosIntegrations.confirmPhotoUpload,
-      optionsWithAuthorizer
-    );
-
     // Posts endpoints
     const postsResource = gateway.root.addResource('posts', optionsWithCors);
 

@@ -1,6 +1,6 @@
 import { Construct } from 'constructs';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { IFunction, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { ITable } from 'aws-cdk-lib/aws-dynamodb';
 import { Integration, LambdaIntegration } from 'aws-cdk-lib/aws-apigateway';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
@@ -15,17 +15,24 @@ export interface BaseLambdaConfig {
   sourceMap?: boolean;
 }
 
+export interface BaseLambdaConstructProps {
+  table: ITable;
+  bucket: IBucket;
+}
+
 /**
  * Base construct for creating Lambda functions with common configuration
  * Provides reusable patterns for creating Lambdas with API Gateway integrations
  */
 export abstract class BaseLambdaConstruct extends Construct {
   protected readonly table: ITable;
-  protected readonly bucket?: IBucket;
+  protected readonly bucket: IBucket;
   protected readonly commonConfig: BaseLambdaConfig;
 
-  constructor(scope: Construct, id: string, table: ITable, bucket?: IBucket) {
+  constructor(scope: Construct, id: string, props: BaseLambdaConstructProps) {
     super(scope, id);
+
+    const { table, bucket } = props;
 
     this.table = table;
     this.bucket = bucket;
@@ -39,7 +46,7 @@ export abstract class BaseLambdaConstruct extends Construct {
       sourceMap: true,
       environment: {
         TABLE_NAME: table.tableName,
-        ...(bucket && { BUCKET_NAME: bucket.bucketName }),
+        BUCKET_NAME: bucket.bucketName,
       },
     };
   }

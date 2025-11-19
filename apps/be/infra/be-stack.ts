@@ -29,6 +29,7 @@ export class BeStack extends Stack {
       'PostsLambdaConstruct',
       {
         table: databaseConstruct.table,
+        bucket: storageConstruct.bucket,
       }
     );
 

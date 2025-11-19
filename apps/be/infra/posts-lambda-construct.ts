@@ -1,11 +1,9 @@
 import { Construct } from 'constructs';
-import { ITable } from 'aws-cdk-lib/aws-dynamodb';
-import { BaseLambdaConstruct } from './base-lambda-construct';
+import {
+  BaseLambdaConstruct,
+  BaseLambdaConstructProps,
+} from './base-lambda-construct';
 import { Integration } from 'aws-cdk-lib/aws-apigateway';
-
-export interface PostsLambdaConstructProps {
-  table: ITable;
-}
 
 export interface PostsIntegrations {
   createPost: Integration;
@@ -28,8 +26,8 @@ export class PostsLambdaConstruct extends BaseLambdaConstruct {
   // Post CRUD operations
   public readonly postsIntegrations: PostsIntegrations;
 
-  constructor(scope: Construct, id: string, props: PostsLambdaConstructProps) {
-    super(scope, id, props.table);
+  constructor(scope: Construct, id: string, props: BaseLambdaConstructProps) {
+    super(scope, id, props);
 
     // Create all Lambda integrations using the batch method
     const integrations = this.createLambdaIntegrations([

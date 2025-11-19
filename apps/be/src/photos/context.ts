@@ -18,11 +18,11 @@ let _s3: S3 | null = null;
  */
 export function getContext(): PhotosContext {
   if (!_db) {
-    _db = new DynamoDB();
+    _db = new DynamoDB({});
   }
 
   if (!_s3) {
-    _s3 = new S3();
+    _s3 = new S3({});
   }
 
   return {

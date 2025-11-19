@@ -1,15 +1,18 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { ApiGatewayProxyEventType } from '../types';
 
 /**
  * Extract user ID from API Gateway event
  * Assumes authentication middleware has set the user ID in requestContext
  * For local development, decodes JWT token directly
  */
-export function getUserId(event: APIGatewayProxyEvent): string {
+export function getUserId(
+  event: APIGatewayProxyEvent | Omit<ApiGatewayProxyEventType, 'body'>
+): string {
   // Try to get from authorizer context first (production)
   let userId =
-    event.requestContext?.authorizer?.claims?.sub ||
-    event.requestContext?.authorizer?.userId;
+    event.requestContext?.authorizer?.['claims']?.sub ||
+    event.requestContext?.authorizer?.['userId'];
 
   // If not found, try to decode JWT from Authorization header (local dev)
   if (!userId) {
@@ -28,7 +31,9 @@ export function getUserId(event: APIGatewayProxyEvent): string {
   return userId;
 }
 
-function getUserIdFromToken(event: APIGatewayProxyEvent): string | undefined {
+function getUserIdFromToken(
+  event: APIGatewayProxyEvent | ApiGatewayProxyEventType
+): string | undefined {
   const authHeader =
     event.headers?.Authorization || event.headers?.authorization;
   if (authHeader?.startsWith('Bearer ')) {
@@ -52,7 +57,7 @@ function getUserIdFromToken(event: APIGatewayProxyEvent): string | undefined {
  */
 export function successResponse(
   data: any,
-  statusCode: number = 200
+  statusCode = 200
 ): APIGatewayProxyResult {
   return {
     statusCode,
@@ -69,7 +74,7 @@ export function successResponse(
  */
 export function errorResponse(
   message: string,
-  statusCode: number = 500,
+  statusCode = 500,
   error?: any
 ): APIGatewayProxyResult {
   console.error('Error:', message, error);

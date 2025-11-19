@@ -1,3 +1,5 @@
+export * from './create';
+
 export interface PostDto {
   postId: string;
   userId: string;

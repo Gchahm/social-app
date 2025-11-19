@@ -57,19 +57,3 @@ export interface ConfirmUploadResponse {
   photo: ImageDto;
 }
 
-// Post types
-export interface CreatePostPayload {
-  imageKey: string;
-  caption?: string;
-}
-
-export interface CreatePostResponse {
-  message: string;
-  post: {
-    userId: string;
-    postId: string;
-    imageKey: string;
-    caption?: string;
-    createdAt: string;
-  };
-}

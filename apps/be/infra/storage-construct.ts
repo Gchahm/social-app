@@ -1,5 +1,5 @@
 import { Construct } from 'constructs';
-import { Bucket } from 'aws-cdk-lib/aws-s3';
+import { Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
 
 export class StorageConstruct extends Construct {
   public bucket: Bucket;
@@ -7,6 +7,21 @@ export class StorageConstruct extends Construct {
   constructor(scope: Construct, id: string) {
     super(scope, id);
 
-    this.bucket = new Bucket(this, 'PhotosBucket');
+    this.bucket = new Bucket(this, 'PhotosBucket', {
+      cors: [
+        {
+          allowedOrigins: ['*'],
+          allowedMethods: [
+            HttpMethods.GET,
+            HttpMethods.PUT,
+            HttpMethods.POST,
+            HttpMethods.DELETE,
+            HttpMethods.HEAD,
+          ],
+          allowedHeaders: ['*'],
+          exposedHeaders: ['ETag'],
+        },
+      ],
+    });
   }
 }

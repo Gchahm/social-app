@@ -31,5 +31,13 @@ export class BeStack extends Stack {
     new CfnOutput(this, 'ApiEndpoint', {
       value: apiConstruct.api.url,
     });
+
+    new CfnOutput(this, 'TableName', {
+      value: databaseConstruct.table.tableName,
+    });
+
+    new CfnOutput(this, 'BucketName', {
+      value: storageConstruct.bucket.bucketName,
+    });
   }
 }

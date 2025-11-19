@@ -24,4 +24,4 @@ export { handler as getComments } from './get-comments';
 export { handler as deleteComment } from './delete-comment';
 
 // Utilities
-export * from './utils';
+export * from '../utils';

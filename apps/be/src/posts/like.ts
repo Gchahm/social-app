@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { likePost } from '../database';
-import { getUserId, successResponse, errorResponse } from './utils';
+import { getUserId, successResponse, errorResponse } from '../utils';
 
 /**
  * POST /posts/:postId/like

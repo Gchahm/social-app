@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { getPostById, updatePost } from '../database';
-import { getUserId, successResponse, errorResponse } from './utils';
+import { getUserId, successResponse, errorResponse } from '../utils';
 
 /**
  * PUT /posts/:postId

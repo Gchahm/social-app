@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { getPostById } from '../database';
-import { successResponse, errorResponse } from './utils';
+import { successResponse, errorResponse } from '../utils';
 
 /**
  * GET /posts/:postId

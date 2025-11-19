@@ -1,7 +1,7 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { getPostById, deletePost } from '../database';
 import { incrementPostCount } from '../database/user';
-import { getUserId, successResponse, errorResponse } from './utils';
+import { getUserId, successResponse, errorResponse } from '../utils';
 
 /**
  * DELETE /posts/:postId

@@ -2,7 +2,7 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { v4 as uuidv4 } from 'uuid';
 import { createPost } from '../database';
 import { incrementPostCount } from '../database/user';
-import { getUserId, successResponse, errorResponse, validateRequiredFields } from './utils';
+import { getUserId, successResponse, errorResponse, validateRequiredFields } from '../utils';
 
 /**
  * POST /posts

@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { removeComment, getCommentsByPost } from '../database';
-import { getUserId, successResponse, errorResponse } from './utils';
+import { getUserId, successResponse, errorResponse } from '../utils';
 
 /**
  * DELETE /posts/:postId/comments/:commentId

@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { unlikePost } from '../database';
-import { getUserId, successResponse, errorResponse } from './utils';
+import { getUserId, successResponse, errorResponse } from '../utils';
 
 /**
  * DELETE /posts/:postId/like

@@ -10,7 +10,6 @@ import {
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
 
 export interface ApiConstructProps {
-  spacesIntegration: Integration;
   userPool: UserPool;
   // Posts integrations
   createPostIntegration: Integration;
@@ -32,7 +31,6 @@ export class ApiConstruct extends Construct {
     super(scope, id);
 
     const {
-      spacesIntegration,
       userPool,
       createPostIntegration,
       getPostIntegration,
@@ -68,16 +66,15 @@ export class ApiConstruct extends Construct {
       },
     };
 
-    // Photos endpoints
-    const photosResource = gateway.root.addResource('photos', optionsWithCors);
-    photosResource.addMethod('GET', spacesIntegration, optionsWithAuthorizer);
-    photosResource.addMethod('POST', spacesIntegration, optionsWithAuthorizer);
-
     // Posts endpoints
     const postsResource = gateway.root.addResource('posts', optionsWithCors);
 
     // POST /posts - Create post
-    postsResource.addMethod('POST', createPostIntegration, optionsWithAuthorizer);
+    postsResource.addMethod(
+      'POST',
+      createPostIntegration,
+      optionsWithAuthorizer
+    );
 
     // GET /posts - List posts (global feed or by user)
     postsResource.addMethod('GET', listPostsIntegration);
@@ -89,10 +86,18 @@ export class ApiConstruct extends Construct {
     postIdResource.addMethod('GET', getPostIntegration);
 
     // PUT /posts/:postId - Update post
-    postIdResource.addMethod('PUT', updatePostIntegration, optionsWithAuthorizer);
+    postIdResource.addMethod(
+      'PUT',
+      updatePostIntegration,
+      optionsWithAuthorizer
+    );
 
     // DELETE /posts/:postId - Delete post
-    postIdResource.addMethod('DELETE', deletePostIntegration, optionsWithAuthorizer);
+    postIdResource.addMethod(
+      'DELETE',
+      deletePostIntegration,
+      optionsWithAuthorizer
+    );
 
     // /posts/:postId/like
     const likeResource = postIdResource.addResource('like');
@@ -101,13 +106,21 @@ export class ApiConstruct extends Construct {
     likeResource.addMethod('POST', likePostIntegration, optionsWithAuthorizer);
 
     // DELETE /posts/:postId/like - Unlike post
-    likeResource.addMethod('DELETE', unlikePostIntegration, optionsWithAuthorizer);
+    likeResource.addMethod(
+      'DELETE',
+      unlikePostIntegration,
+      optionsWithAuthorizer
+    );
 
     // /posts/:postId/comments
     const commentsResource = postIdResource.addResource('comments');
 
     // POST /posts/:postId/comments - Add comment
-    commentsResource.addMethod('POST', addCommentIntegration, optionsWithAuthorizer);
+    commentsResource.addMethod(
+      'POST',
+      addCommentIntegration,
+      optionsWithAuthorizer
+    );
 
     // GET /posts/:postId/comments - Get comments
     commentsResource.addMethod('GET', getCommentsIntegration);
@@ -116,6 +129,10 @@ export class ApiConstruct extends Construct {
     const commentIdResource = commentsResource.addResource('{commentId}');
 
     // DELETE /posts/:postId/comments/:commentId - Delete comment
-    commentIdResource.addMethod('DELETE', deleteCommentIntegration, optionsWithAuthorizer);
+    commentIdResource.addMethod(
+      'DELETE',
+      deleteCommentIntegration,
+      optionsWithAuthorizer
+    );
   }
 }

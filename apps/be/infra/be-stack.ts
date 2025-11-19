@@ -15,11 +15,6 @@ export class BeStack extends Stack {
 
     const storageConstruct = new StorageConstruct(this, 'StorageConstruct');
 
-    const lambdaConstruct = new LambdaConstruct(this, 'LambdaConstruct', {
-      table: databaseConstruct.table,
-      bucket: storageConstruct.bucket,
-    });
-
     const postsLambdaConstruct = new PostsLambdaConstruct(
       this,
       'PostsLambdaConstruct',
@@ -33,7 +28,6 @@ export class BeStack extends Stack {
     });
 
     const apiConstruct = new ApiConstruct(this, 'ApiConstruct', {
-      spacesIntegration: lambdaConstruct.photosIntegration,
       userPool: authConstruct.userPool,
       // Posts integrations
       createPostIntegration: postsLambdaConstruct.createPostIntegration,

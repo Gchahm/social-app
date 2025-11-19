@@ -1,7 +1,6 @@
 import '@chahm/ui-components/styles/globals.css';
 import { UploadImageForm } from '../components';
 import { useMutation } from '@tanstack/react-query';
-import { post } from 'aws-amplify/api';
 import { useState } from 'react';
 import {
   Button,
@@ -14,11 +13,11 @@ import {
   Textarea,
   Label,
 } from '@chahm/ui-components';
-import type {
-  RequestUploadUrlResponse,
-  ConfirmUploadPayload,
-  CreatePostPayload,
-} from '@chahm/types';
+import {
+  useRequestUploadUrl,
+  useConfirmUpload,
+  useCreatePost,
+} from '../hooks';
 
 export function Upload() {
   const [uploadedPhoto, setUploadedPhoto] = useState<{
@@ -28,19 +27,10 @@ export function Upload() {
   const [createPostMode, setCreatePostMode] = useState(false);
   const [caption, setCaption] = useState('');
 
-  // Step 1: Request presigned URL
-  const requestUploadUrl = async (fileName: string, contentType: string) => {
-    const restOperation = post({
-      apiName: 'SocialApp',
-      path: 'photos/upload-url',
-      options: {
-        body: { fileName, contentType },
-      },
-    });
-
-    const { body } = await restOperation.response;
-    return (await body.json()) as RequestUploadUrlResponse;
-  };
+  // Hooks for API calls
+  const requestUploadUrlMutation = useRequestUploadUrl();
+  const confirmUploadMutation = useConfirmUpload();
+  const createPostMutation = useCreatePost();
 
   // Step 2: Upload to S3 directly
   const uploadToS3 = async (file: File, uploadUrl: string) => {
@@ -57,34 +47,6 @@ export function Upload() {
     }
   };
 
-  // Step 3: Confirm upload and save metadata
-  const confirmUpload = async (payload: ConfirmUploadPayload) => {
-    const restOperation = post({
-      apiName: 'SocialApp',
-      path: 'photos/confirm',
-      options: {
-        body: payload,
-      },
-    });
-
-    const { body } = await restOperation.response;
-    return await body.json();
-  };
-
-  // Step 4: Create post (optional)
-  const createPost = async (payload: CreatePostPayload) => {
-    const restOperation = post({
-      apiName: 'SocialApp',
-      path: 'posts',
-      options: {
-        body: payload,
-      },
-    });
-
-    const { body } = await restOperation.response;
-    return await body.json();
-  };
-
   // Combined upload mutation
   const uploadMutation = useMutation({
     mutationFn: async (payload: {
@@ -93,16 +55,16 @@ export function Upload() {
       description?: string;
     }) => {
       // Step 1: Get presigned URL
-      const { uploadUrl, imageKey, imageId } = await requestUploadUrl(
-        payload.file.name,
-        payload.file.type
-      );
+      const { uploadUrl, imageKey, imageId } = await requestUploadUrlMutation.mutateAsync({
+        fileName: payload.file.name,
+        contentType: payload.file.type,
+      });
 
       // Step 2: Upload to S3
       await uploadToS3(payload.file, uploadUrl);
 
       // Step 3: Confirm upload
-      await confirmUpload({
+      await confirmUploadMutation.mutateAsync({
         imageId,
         imageKey,
         title: payload.title,
@@ -119,12 +81,12 @@ export function Upload() {
     },
   });
 
-  // Create post mutation
+  // Create post mutation wrapper
   const postMutation = useMutation({
     mutationFn: async () => {
       if (!uploadedPhoto) throw new Error('No photo uploaded');
 
-      return await createPost({
+      return await createPostMutation.mutateAsync({
         imageKey: uploadedPhoto.imageKey,
         caption: caption || undefined,
       });

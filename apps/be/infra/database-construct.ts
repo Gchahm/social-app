@@ -4,6 +4,7 @@ import {
   BillingMode,
   Table,
   TableEncryption,
+  ProjectionType,
 } from 'aws-cdk-lib/aws-dynamodb';
 import { RemovalPolicy } from 'aws-cdk-lib';
 
@@ -13,8 +14,10 @@ export class DatabaseConstruct extends Construct {
   constructor(scope: Construct, id: string) {
     super(scope, id);
 
-    this.table = new Table(this, 'PhotosTable', {
-      tableName: 'photos-table',
+    // Single-table design for social media application
+    // Stores Users, Posts, Likes, Comments, and Follows
+    this.table = new Table(this, 'SocialMediaTable', {
+      tableName: 'SocialMediaApp',
       partitionKey: {
         name: 'PK',
         type: AttributeType.STRING,
@@ -26,6 +29,61 @@ export class DatabaseConstruct extends Construct {
       billingMode: BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY, // Use RETAIN for production
       encryption: TableEncryption.AWS_MANAGED,
+    });
+
+    // GSI1: User-Entity Index
+    // Purpose: Query entities by user (user's posts, likes, comments, follows)
+    // Access patterns:
+    // - Get all posts by a user
+    // - Get all likes by a user
+    // - Get all comments by a user
+    // - Get all followers of a user
+    this.table.addGlobalSecondaryIndex({
+      indexName: 'GSI1',
+      partitionKey: {
+        name: 'GSI1PK',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'GSI1SK',
+        type: AttributeType.STRING,
+      },
+      projectionType: ProjectionType.ALL,
+    });
+
+    // GSI2: Email/Username Lookup
+    // Purpose: Find users by email or username
+    // Access patterns:
+    // - Get user by email
+    // - Get user by username
+    this.table.addGlobalSecondaryIndex({
+      indexName: 'GSI2',
+      partitionKey: {
+        name: 'GSI2PK',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'GSI2SK',
+        type: AttributeType.STRING,
+      },
+      projectionType: ProjectionType.ALL,
+    });
+
+    // GSI3: Feed Index
+    // Purpose: Global feed of all posts sorted by timestamp
+    // Access patterns:
+    // - Get global feed (all posts, newest first)
+    this.table.addGlobalSecondaryIndex({
+      indexName: 'GSI3',
+      partitionKey: {
+        name: 'GSI3PK',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'GSI3SK',
+        type: AttributeType.STRING,
+      },
+      projectionType: ProjectionType.ALL,
     });
   }
 }

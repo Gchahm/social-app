@@ -27,8 +27,8 @@ export const configureAmplify = () => {
       },
       API: {
         REST: {
-          photos: {
-            endpoint: BEStack.ApiEndpoint,
+          SocialApp: {
+            endpoint: 'http://localhost:3000/',
           },
         },
       },

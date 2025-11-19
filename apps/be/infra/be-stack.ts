@@ -1,7 +1,7 @@
 import { CfnOutput, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { DatabaseConstruct } from './database-construct';
-import { LambdaConstruct } from './lambda-construct';
+import { PhotosLambdaConstruct } from './photos-lambda-construct';
 import { PostsLambdaConstruct } from './posts-lambda-construct';
 import { ApiConstruct } from './api-construct';
 import { AuthConstruct } from './auth-construct';
@@ -14,6 +14,15 @@ export class BeStack extends Stack {
     const databaseConstruct = new DatabaseConstruct(this, 'DatabaseConstruct');
 
     const storageConstruct = new StorageConstruct(this, 'StorageConstruct');
+
+    const photosLambdaConstruct = new PhotosLambdaConstruct(
+      this,
+      'PhotosLambdaConstruct',
+      {
+        table: databaseConstruct.table,
+        bucket: storageConstruct.bucket,
+      }
+    );
 
     const postsLambdaConstruct = new PostsLambdaConstruct(
       this,
@@ -29,6 +38,13 @@ export class BeStack extends Stack {
 
     const apiConstruct = new ApiConstruct(this, 'ApiConstruct', {
       userPool: authConstruct.userPool,
+      // Photos integrations
+      requestPhotoUploadUrlIntegration:
+        photosLambdaConstruct.requestUploadUrlIntegration,
+      confirmPhotoUploadIntegration:
+        photosLambdaConstruct.confirmUploadIntegration,
+      getPhotosIntegration: photosLambdaConstruct.getPhotosIntegration,
+      uploadPhotoIntegration: photosLambdaConstruct.uploadPhotoIntegration,
       // Posts integrations
       createPostIntegration: postsLambdaConstruct.createPostIntegration,
       getPostIntegration: postsLambdaConstruct.getPostIntegration,

@@ -11,6 +11,11 @@ import { UserPool } from 'aws-cdk-lib/aws-cognito';
 
 export interface ApiConstructProps {
   userPool: UserPool;
+  // Photos integrations
+  requestPhotoUploadUrlIntegration: Integration;
+  confirmPhotoUploadIntegration: Integration;
+  getPhotosIntegration: Integration;
+  uploadPhotoIntegration: Integration;
   // Posts integrations
   createPostIntegration: Integration;
   getPostIntegration: Integration;
@@ -32,6 +37,10 @@ export class ApiConstruct extends Construct {
 
     const {
       userPool,
+      requestPhotoUploadUrlIntegration,
+      confirmPhotoUploadIntegration,
+      getPhotosIntegration,
+      uploadPhotoIntegration,
       createPostIntegration,
       getPostIntegration,
       listPostsIntegration,
@@ -65,6 +74,31 @@ export class ApiConstruct extends Construct {
         allowMethods: Cors.ALL_METHODS,
       },
     };
+
+    // Photos endpoints
+    const photosResource = gateway.root.addResource('photos', optionsWithCors);
+
+    // POST /photos/upload-url - Request presigned URL (recommended flow)
+    const uploadUrlResource = photosResource.addResource('upload-url');
+    uploadUrlResource.addMethod(
+      'POST',
+      requestPhotoUploadUrlIntegration,
+      optionsWithAuthorizer
+    );
+
+    // POST /photos/confirm - Confirm upload and save metadata
+    const confirmResource = photosResource.addResource('confirm');
+    confirmResource.addMethod(
+      'POST',
+      confirmPhotoUploadIntegration,
+      optionsWithAuthorizer
+    );
+
+    // GET /photos - List/get photos
+    photosResource.addMethod('GET', getPhotosIntegration, optionsWithAuthorizer);
+
+    // POST /photos - Direct upload (legacy, for backward compatibility)
+    photosResource.addMethod('POST', uploadPhotoIntegration, optionsWithAuthorizer);
 
     // Posts endpoints
     const postsResource = gateway.root.addResource('posts', optionsWithCors);

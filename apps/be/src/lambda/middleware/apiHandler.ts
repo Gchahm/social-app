@@ -7,29 +7,22 @@ import httpResponseSerializerMiddleware from '@middy/http-response-serializer';
 import httpErrorHandler from '@middy/http-error-handler';
 import { parser } from '@aws-lambda-powertools/parser/middleware';
 import { parseErrorHandler } from './parseErrorHandler';
-import { ZodSchema } from 'zod';
-import { Logger } from '@aws-lambda-powertools/logger';
+import { ZodType } from 'zod';
 import { injectLambdaContext } from '@aws-lambda-powertools/logger/middleware';
-import { Metrics } from '@aws-lambda-powertools/metrics';
 import { logMetrics } from '@aws-lambda-powertools/metrics/middleware';
-import { Tracer } from '@aws-lambda-powertools/tracer';
 import { captureLambdaHandler } from '@aws-lambda-powertools/tracer/middleware';
-
-
-const logger = new Logger();
-const tracer = new Tracer();
-const metrics = new Metrics();
+import { getLogger, getMetrics, getTracer } from '../utils';
 
 /**
  * Creates a middy handler with standard middleware pipeline for API endpoints
  * @param schema - Zod schema for validating the API Gateway event (including body)
  * @returns Configured middy instance ready to accept a handler function
  */
-export const createApiHandler = <T extends ZodSchema>(schema: T) => {
+export const createApiHandler = <T extends ZodType>(schema: T) => {
   return middy()
-    .use(captureLambdaHandler(tracer))
-    .use(injectLambdaContext(logger))
-    .use(logMetrics(metrics))
+    .use(captureLambdaHandler(getTracer()))
+    .use(injectLambdaContext(getLogger()))
+    .use(logMetrics(getMetrics()))
     .use(httpEventNormalizerMiddleware())
     .use(httpHeaderNormalizerMiddleware())
     .use(httpJsonBodyParserMiddleware())
@@ -62,9 +55,9 @@ export const createApiHandler = <T extends ZodSchema>(schema: T) => {
  */
 export const createApiHandlerNoBody = () => {
   return middy()
-    .use(captureLambdaHandler(tracer))
-    .use(injectLambdaContext(logger))
-    .use(logMetrics(metrics))
+    .use(captureLambdaHandler(getTracer()))
+    .use(injectLambdaContext(getLogger()))
+    .use(logMetrics(getMetrics()))
     .use(httpEventNormalizerMiddleware())
     .use(httpHeaderNormalizerMiddleware())
     .use(

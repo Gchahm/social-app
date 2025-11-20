@@ -5,7 +5,7 @@ import {
   getUserLikedPostsFromList,
   getUsersByIds,
 } from '../../database';
-import { getOptionalUserId } from '../utils';
+import { getLogger, getOptionalUserId, getTracer } from '../utils';
 import { createApiHandlerNoBody } from '../middleware/apiHandler';
 import { PostDto, postDtoSchema } from '@chahm/types';
 
@@ -20,7 +20,7 @@ import { PostDto, postDtoSchema } from '@chahm/types';
  */
 export const handler = createApiHandlerNoBody().handler(
   async (event: APIGatewayProxyEvent, context) => {
-    console.log('Event:', context);
+    getLogger().info('context', JSON.stringify(context));
     // Get current user (optional - for checking isLiked)
     const currentUserId = getOptionalUserId(event);
 

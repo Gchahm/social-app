@@ -5,6 +5,7 @@ import { ITable } from 'aws-cdk-lib/aws-dynamodb';
 import { Integration, LambdaIntegration } from 'aws-cdk-lib/aws-apigateway';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Duration } from 'aws-cdk-lib';
+import { ILambdaEnvironmentVariables } from './types';
 
 export interface BaseLambdaConfig {
   runtime?: Runtime;
@@ -18,6 +19,7 @@ export interface BaseLambdaConfig {
 export interface BaseLambdaConstructProps {
   table: ITable;
   bucket: IBucket;
+  environment: ILambdaEnvironmentVariables;
 }
 
 /**
@@ -32,7 +34,7 @@ export abstract class BaseLambdaConstruct extends Construct {
   constructor(scope: Construct, id: string, props: BaseLambdaConstructProps) {
     super(scope, id);
 
-    const { table, bucket } = props;
+    const { table, bucket, environment } = props;
 
     this.table = table;
     this.bucket = bucket;
@@ -44,10 +46,7 @@ export abstract class BaseLambdaConstruct extends Construct {
       memorySize: 256,
       minify: true,
       sourceMap: true,
-      environment: {
-        TABLE_NAME: table.tableName,
-        BUCKET_NAME: bucket.bucketName,
-      },
+      environment,
     };
   }
 

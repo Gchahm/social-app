@@ -54,6 +54,7 @@ export class BeStack extends Stack {
         BUCKET_NAME: storageConstruct.bucket.bucketName,
         SERVICE_NAME: stackName,
         ENVIRONMENT: props.environment,
+        CORS_ORIGINS: config.corsOrigins.join(','),
       },
       logRetention: config.logRetentionDays,
       timeout: config.lambdaTimeout,

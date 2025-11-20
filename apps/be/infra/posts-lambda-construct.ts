@@ -3,19 +3,19 @@ import {
   BaseLambdaConstruct,
   BaseLambdaConstructProps,
 } from './base-lambda-construct';
-import { Integration } from 'aws-cdk-lib/aws-apigateway';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 
-export interface PostsIntegrations {
-  createPost: Integration;
-  getPost: Integration;
-  listPosts: Integration;
-  updatePost: Integration;
-  deletePost: Integration;
-  likePost: Integration;
-  unlikePost: Integration;
-  addComment: Integration;
-  getComments: Integration;
-  deleteComment: Integration;
+export interface PostsLambdas {
+  createPost: NodejsFunction;
+  getPost: NodejsFunction;
+  listPosts: NodejsFunction;
+  updatePost: NodejsFunction;
+  deletePost: NodejsFunction;
+  likePost: NodejsFunction;
+  unlikePost: NodejsFunction;
+  addComment: NodejsFunction;
+  getComments: NodejsFunction;
+  deleteComment: NodejsFunction;
 }
 
 /**
@@ -24,13 +24,13 @@ export interface PostsIntegrations {
  */
 export class PostsLambdaConstruct extends BaseLambdaConstruct {
   // Post CRUD operations
-  public readonly postsIntegrations: PostsIntegrations;
+  public readonly lambdas: PostsLambdas;
 
   constructor(scope: Construct, id: string, props: BaseLambdaConstructProps) {
     super(scope, id, props);
 
-    // Create all Lambda integrations using the batch method
-    const integrations = this.createLambdaIntegrations([
+    // Create all Lambda functions using the batch method
+    const functions = this.createLambdaFunctions([
       {
         id: 'CreatePost',
         entry: 'src/lambda/posts/create.ts',
@@ -93,17 +93,17 @@ export class PostsLambdaConstruct extends BaseLambdaConstruct {
       },
     ]);
 
-    this.postsIntegrations = {
-      createPost: integrations.CreatePost,
-      getPost: integrations.GetPost,
-      listPosts: integrations.ListPosts,
-      updatePost: integrations.UpdatePost,
-      deletePost: integrations.DeletePost,
-      likePost: integrations.LikePost,
-      unlikePost: integrations.UnlikePost,
-      addComment: integrations.AddComment,
-      getComments: integrations.GetComments,
-      deleteComment: integrations.DeleteComment,
+    this.lambdas = {
+      createPost: functions.CreatePost,
+      getPost: functions.GetPost,
+      listPosts: functions.ListPosts,
+      updatePost: functions.UpdatePost,
+      deletePost: functions.DeletePost,
+      likePost: functions.LikePost,
+      unlikePost: functions.UnlikePost,
+      addComment: functions.AddComment,
+      getComments: functions.GetComments,
+      deleteComment: functions.DeleteComment,
     };
   }
 }

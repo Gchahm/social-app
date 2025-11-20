@@ -1,12 +1,12 @@
 import { Construct } from 'constructs';
 import { UserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
 import { RemovalPolicy } from 'aws-cdk-lib';
-import { AuthLambdaConstruct } from './auth-lambda-construct';
-import { BaseLambdaConstructProps } from './base-lambda-construct';
 import { Environment } from './be-stack';
+import { IFunction } from 'aws-cdk-lib/aws-lambda';
 
-export interface AuthConstructProps extends BaseLambdaConstructProps {
+export interface AuthConstructProps {
   environment: Environment;
+  postRegistrationLambda: IFunction;
 }
 
 /**
@@ -16,24 +16,22 @@ export interface AuthConstructProps extends BaseLambdaConstructProps {
 export class AuthConstruct extends Construct {
   public userPool: UserPool;
   public userPoolClient: UserPoolClient;
-  public authLambdaConstruct: AuthLambdaConstruct;
 
   constructor(scope: Construct, id: string, props: AuthConstructProps) {
     super(scope, id);
 
-    // Create auth Lambda functions
-    this.authLambdaConstruct = new AuthLambdaConstruct(
-      this,
-      'AuthLambdaConstruct',
-      props
-    );
-
     // Create user pool with post-confirmation trigger
-    this.userPool = this.createUserPool(props.environment);
+    this.userPool = this.createUserPool(
+      props.environment,
+      props.postRegistrationLambda
+    );
     this.userPoolClient = this.createUserPoolClient();
   }
 
-  private createUserPool(environment: Environment) {
+  private createUserPool(
+    environment: Environment,
+    postConfirmation: IFunction
+  ) {
     const removalPolicy =
       environment === 'prod' ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY;
 
@@ -44,7 +42,7 @@ export class AuthConstruct extends Construct {
         email: true,
       },
       lambdaTriggers: {
-        postConfirmation: this.authLambdaConstruct.postRegistrationLambda,
+        postConfirmation,
       },
       removalPolicy,
     });

@@ -5,7 +5,7 @@ import {
 } from './base-lambda-construct';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 
-export interface AuthIntegrations {
+export interface AuthLambdas {
   postRegistration: NodejsFunction;
 }
 
@@ -19,36 +19,14 @@ export class AuthLambdaConstruct extends BaseLambdaConstruct {
   constructor(scope: Construct, id: string, props: BaseLambdaConstructProps) {
     super(scope, id, props);
 
-    // Create post-registration Lambda (used as Cognito trigger)
-    this.postRegistrationLambda = this.createPostRegistrationLambda();
-  }
-
-  private createPostRegistrationLambda(): NodejsFunction {
-    // Note: We don't use createLambdaIntegration here because this Lambda
-    // is used as a Cognito trigger, not an API Gateway integration
-    const baseFunctionName = 'auth-PostRegistration';
-    const functionName = `${baseFunctionName}-${this.envName}`;
-
-    const lambda = new NodejsFunction(this, 'PostRegistrationLambda', {
-      runtime: this.commonConfig.runtime,
-      handler: 'handler',
-      entry: 'src/lambda/auth/post-registration.ts',
-      functionName,
-      description: `Auth: Post-registration trigger (${this.envName})`,
-      timeout: this.commonConfig.timeout,
-      memorySize: this.commonConfig.memorySize,
-      environment: this.commonConfig.environment,
-      logRetention: this.commonConfig.logRetention,
-      bundling: {
-        minify: this.commonConfig.minify,
-        sourceMap: this.commonConfig.sourceMap,
-        externalModules: ['@aws-sdk/*'],
-      },
-    });
-
-    // Grant DynamoDB write permissions for creating user records
-    this.table.grantWriteData(lambda);
-
-    return lambda;
+    // Create post-registration Lambda (used as Cognito trigger, not API Gateway)
+    this.postRegistrationLambda = this.createLambdaFunction(
+      'PostRegistrationLambda',
+      'src/lambda/auth/post-registration.ts',
+      {
+        functionName: 'auth-PostRegistration',
+        description: 'Auth: Post-registration trigger',
+      }
+    );
   }
 }

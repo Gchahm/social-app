@@ -10,6 +10,7 @@ import { BaseLambdaConstructProps } from './base-lambda-construct';
 import { devConfig, EnvironmentConfig } from './configs';
 import { stagingConfig } from './configs/staging';
 import { prodConfig } from './configs/prod';
+import { AuthLambdaConstruct } from './auth-lambda-construct';
 
 export type Environment = 'dev' | 'staging' | 'prod';
 
@@ -74,15 +75,21 @@ export class BeStack extends Stack {
       lambdaProps
     );
 
+    const authLambdaConstruct = new AuthLambdaConstruct(
+      this,
+      'AuthLambdaConstruct',
+      lambdaProps
+    );
+
     const authConstruct = new AuthConstruct(this, 'AuthConstruct', {
-      ...lambdaProps,
       environment: props.environment,
+      postRegistrationLambda: authLambdaConstruct.postRegistrationLambda,
     });
 
     const apiConstruct = new ApiConstruct(this, 'ApiConstruct', {
       userPool: authConstruct.userPool,
-      postsIntegrations: postsLambdaConstruct.postsIntegrations,
-      photosIntegrations: photosLambdaConstruct.integrations,
+      postsLambdas: postsLambdaConstruct.lambdas,
+      photosLambdas: photosLambdaConstruct.lambdas,
       corsOrigins: config.corsOrigins,
       throttleRateLimit: config.throttleRateLimit,
       throttleBurstLimit: config.throttleBurstLimit,

@@ -2,18 +2,19 @@ import { Construct } from 'constructs';
 import {
   CognitoUserPoolsAuthorizer,
   Cors,
+  LambdaIntegration,
   MethodOptions,
   ResourceOptions,
   RestApi,
 } from 'aws-cdk-lib/aws-apigateway';
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
-import { PostsIntegrations } from './posts-lambda-construct';
-import { PhotosIntegrations } from './photos-lambda-construct';
+import { PostsLambdas } from './posts-lambda-construct';
+import { PhotosLambdas } from './photos-lambda-construct';
 
 export interface ApiConstructProps {
   userPool: UserPool;
-  postsIntegrations?: PostsIntegrations;
-  photosIntegrations?: PhotosIntegrations;
+  postsLambdas?: PostsLambdas;
+  photosLambdas?: PhotosLambdas;
   corsOrigins: string[];
   throttleRateLimit: number;
   throttleBurstLimit: number;
@@ -27,8 +28,8 @@ export class ApiConstruct extends Construct {
 
     const {
       userPool,
-      photosIntegrations,
-      postsIntegrations,
+      photosLambdas,
+      postsLambdas,
       corsOrigins,
       throttleRateLimit,
       throttleBurstLimit,
@@ -76,7 +77,7 @@ export class ApiConstruct extends Construct {
     const uploadUrlResource = photosResource.addResource('upload-url');
     uploadUrlResource.addMethod(
       'POST',
-      photosIntegrations.requestPhotoUploadUrl,
+      new LambdaIntegration(photosLambdas.requestPhotoUploadUrl),
       optionsWithAuthorizer
     );
 
@@ -86,30 +87,30 @@ export class ApiConstruct extends Construct {
     // POST /posts - Create post
     postsResource.addMethod(
       'POST',
-      postsIntegrations.createPost,
+      new LambdaIntegration(postsLambdas.createPost),
       optionsWithAuthorizer
     );
 
     // GET /posts - List posts (global feed or by user)
-    postsResource.addMethod('GET', postsIntegrations.listPosts);
+    postsResource.addMethod('GET', new LambdaIntegration(postsLambdas.listPosts));
 
     // /posts/:postId
     const postIdResource = postsResource.addResource('{postId}');
 
     // GET /posts/:postId - Get single post
-    postIdResource.addMethod('GET', postsIntegrations.getPost);
+    postIdResource.addMethod('GET', new LambdaIntegration(postsLambdas.getPost));
 
     // PUT /posts/:postId - Update post
     postIdResource.addMethod(
       'PUT',
-      postsIntegrations.updatePost,
+      new LambdaIntegration(postsLambdas.updatePost),
       optionsWithAuthorizer
     );
 
     // DELETE /posts/:postId - Delete post
     postIdResource.addMethod(
       'DELETE',
-      postsIntegrations.deletePost,
+      new LambdaIntegration(postsLambdas.deletePost),
       optionsWithAuthorizer
     );
 
@@ -119,14 +120,14 @@ export class ApiConstruct extends Construct {
     // POST /posts/:postId/like - Like post
     likeResource.addMethod(
       'POST',
-      postsIntegrations.likePost,
+      new LambdaIntegration(postsLambdas.likePost),
       optionsWithAuthorizer
     );
 
     // DELETE /posts/:postId/like - Unlike post
     likeResource.addMethod(
       'DELETE',
-      postsIntegrations.unlikePost,
+      new LambdaIntegration(postsLambdas.unlikePost),
       optionsWithAuthorizer
     );
 
@@ -136,12 +137,12 @@ export class ApiConstruct extends Construct {
     // POST /posts/:postId/comments - Add comment
     commentsResource.addMethod(
       'POST',
-      postsIntegrations.addComment,
+      new LambdaIntegration(postsLambdas.addComment),
       optionsWithAuthorizer
     );
 
     // GET /posts/:postId/comments - Get comments
-    commentsResource.addMethod('GET', postsIntegrations.getComments);
+    commentsResource.addMethod('GET', new LambdaIntegration(postsLambdas.getComments));
 
     // /posts/:postId/comments/:commentId
     const commentIdResource = commentsResource.addResource('{commentId}');
@@ -149,7 +150,7 @@ export class ApiConstruct extends Construct {
     // DELETE /posts/:postId/comments/:commentId - Delete comment
     commentIdResource.addMethod(
       'DELETE',
-      postsIntegrations.deleteComment,
+      new LambdaIntegration(postsLambdas.deleteComment),
       optionsWithAuthorizer
     );
   }

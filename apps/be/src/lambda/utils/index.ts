@@ -43,7 +43,7 @@ export function getOptionalUserId(
 ): string | undefined {
   try {
     return getUserId(event);
-  } catch (error) {
+  } catch {
     return undefined;
   }
 }
@@ -66,57 +66,5 @@ function getUserIdFromToken(
       getLogger().error('Failed to decode JWT token', { error });
       return undefined;
     }
-  }
-}
-
-/**
- * Create a success response
- */
-export function successResponse(
-  data: any,
-  statusCode = 200
-): APIGatewayProxyResult {
-  return {
-    statusCode,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-    },
-    body: JSON.stringify(data),
-  };
-}
-
-/**
- * Create an error response
- */
-export function errorResponse(
-  message: string,
-  statusCode = 500,
-  error?: any
-): APIGatewayProxyResult {
-  getLogger().error('Error response', { message, statusCode, error });
-  return {
-    statusCode,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-    },
-    body: JSON.stringify({
-      message,
-      error: error?.message || error,
-    }),
-  };
-}
-
-/**
- * Validate required fields in request body
- */
-export function validateRequiredFields(
-  body: any,
-  requiredFields: string[]
-): void {
-  const missingFields = requiredFields.filter((field) => !body[field]);
-  if (missingFields.length > 0) {
-    throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
   }
 }

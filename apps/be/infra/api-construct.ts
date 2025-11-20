@@ -5,7 +5,6 @@ import {
   MethodOptions,
   ResourceOptions,
   RestApi,
-  ThrottleSettings,
 } from 'aws-cdk-lib/aws-apigateway';
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
 import { PostsIntegrations } from './posts-lambda-construct';

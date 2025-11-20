@@ -70,10 +70,10 @@ jobs:
           fi
 
   # ==========================================
-  # Job 2: Lint and test
+  # Job 2: Lint and type check
   # ==========================================
   test:
-    name: Lint & Test
+    name: Lint & Type Check
     runs-on: ubuntu-latest
 
     steps:
@@ -89,17 +89,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
-        continue-on-error: true
+      - name: Lint backend
+        run: npx nx lint be
+
+      - name: Type check backend
+        run: npx nx typecheck be
 
       - name: Run tests
-        run: npm test
-        continue-on-error: true
-
-      - name: Type check
-        run: npm run type-check
-        continue-on-error: true
+        run: npx nx test be
+        continue-on-error: true  # Allow failure if tests aren't fully configured yet
 
   # ==========================================
   # Job 3: Build
@@ -123,11 +121,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build backend
-        run: |
-          cd apps/be
-          npm run build
-
       - name: Synthesize CDK
         env:
           ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
@@ -135,14 +128,11 @@ jobs:
           cd apps/be
           npx cdk synth --context environment=$ENVIRONMENT
 
-      - name: Upload build artifacts
+      - name: Upload CDK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts-${{ github.sha }}
-          path: |
-            apps/be/dist/
-            apps/be/cdk.out/
-            node_modules/
+          name: cdk-artifacts-${{ github.sha }}
+          path: apps/be/cdk.out/
           retention-days: 1
 
   # ==========================================
@@ -168,10 +158,11 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Download build artifacts
+      - name: Download CDK artifacts
         uses: actions/download-artifact@v4
         with:
-          name: build-artifacts-${{ github.sha }}
+          name: cdk-artifacts-${{ github.sha }}
+          path: apps/be/
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

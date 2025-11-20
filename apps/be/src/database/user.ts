@@ -229,7 +229,7 @@ export async function deleteUser(userId: string): Promise<void> {
  */
 export async function incrementFollowerCount(
   userId: string,
-  increment: number = 1
+  increment = 1
 ): Promise<void> {
   await docClient.send(
     new UpdateCommand({
@@ -254,7 +254,7 @@ export async function incrementFollowerCount(
  */
 export async function incrementFollowingCount(
   userId: string,
-  increment: number = 1
+  increment = 1
 ): Promise<void> {
   await docClient.send(
     new UpdateCommand({
@@ -279,7 +279,7 @@ export async function incrementFollowingCount(
  */
 export async function incrementPostCount(
   userId: string,
-  increment: number = 1
+  increment = 1
 ): Promise<void> {
   await docClient.send(
     new UpdateCommand({

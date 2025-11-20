@@ -1,8 +1,6 @@
 export { AppSidebar } from './app-sidebar';
 export { Navbar } from './navbar';
 export { UploadImageForm } from './upload-image-form';
-export { PhotosList } from './photos-list';
-export { PhotoCard } from './photo-card';
 export { PostsList } from './posts-list';
 export { PostCard } from './post-card';
 export { Loading } from './loading';
@@ -13,8 +11,6 @@ export { NotFound } from './not-found';
 export * from './navbar';
 export * from './app-sidebar';
 export * from './upload-image-form';
-export * from './photos-list';
-export * from './photo-card';
 export * from './posts-list';
 export * from './post-card';
 export * from './loading';

@@ -32,6 +32,20 @@ export function getUserId(
   return userId;
 }
 
+/**
+ * Extract user ID from API Gateway event (optional - returns undefined if not authenticated)
+ * Use this for public endpoints that can work with or without authentication
+ */
+export function getOptionalUserId(
+  event: APIGatewayProxyEvent | Omit<ApiGatewayProxyEventType, 'body'>
+): string | undefined {
+  try {
+    return getUserId(event);
+  } catch (error) {
+    return undefined;
+  }
+}
+
 function getUserIdFromToken(
   event: APIGatewayProxyEvent | ApiGatewayProxyEventType
 ): string | undefined {

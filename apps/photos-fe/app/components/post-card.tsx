@@ -1,12 +1,6 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Separator,
-} from '@chahm/ui-components';
+import { Card, CardContent, CardHeader, Separator } from '@chahm/ui-components';
 import { PostDto } from '@chahm/types';
-import { ImageIcon, Calendar, Heart, MessageCircle } from 'lucide-react';
+import { Calendar, Heart, ImageIcon, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useLikePost } from '../hooks';
 
@@ -15,8 +9,7 @@ interface PostCardProps {
 }
 
 export function PostCard({ post }: PostCardProps) {
-  // TODO: Add isLiked field to PostDto from backend to persist liked state across refreshes
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(post.isLiked);
   const { mutate: toggleLike, isPending } = useLikePost();
 
   const handleLikeClick = () => {

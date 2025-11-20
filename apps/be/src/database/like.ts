@@ -6,6 +6,7 @@ import {
   PutCommand,
   DeleteCommand,
   QueryCommand,
+  BatchGetCommand,
 } from "./client";
 import { likeKeys, generateTimestamp } from "./keys";
 import type {
@@ -157,4 +158,52 @@ export async function deleteLike(
       },
     })
   );
+}
+
+/**
+ * Batch check which posts a user has liked from a given list
+ * Returns a Set of postIds that the user has liked
+ * More efficient than checking each post individually
+ *
+ * @throws Error if postIds.length > 100
+ */
+export async function getUserLikedPostsFromList(
+  userId: string,
+  postIds: string[]
+): Promise<Set<string>> {
+  if (postIds.length === 0) {
+    return new Set();
+  }
+
+  // Enforce maximum batch size to prevent excessive queries
+  if (postIds.length > 100) {
+    throw new Error(
+      `getUserLikedPostsFromList: Cannot check more than 100 posts at once. Received ${postIds.length} posts.`
+    );
+  }
+
+  const likedPostIds = new Set<string>();
+
+  const response = await docClient.send(
+    new BatchGetCommand({
+      RequestItems: {
+        [TABLE_NAME]: {
+          Keys: postIds.map(postId => ({
+            PK: likeKeys.pk(postId),
+            SK: likeKeys.sk(userId),
+          })),
+        },
+      },
+    })
+  );
+
+  // Add found likes to the set
+  const items = response.Responses?.[TABLE_NAME] as LikeEntity[] || [];
+  items.forEach(item => {
+    // Extract postId from PK (format: "POST#postId")
+    const postId = item.PK.replace('POST#', '');
+    likedPostIds.add(postId);
+  });
+
+  return likedPostIds;
 }

@@ -63,6 +63,7 @@ export {
   getLikesByPost,
   getLikesByUser,
   deleteLike,
+  getUserLikedPostsFromList,
 } from "./like";
 
 // Comment operations

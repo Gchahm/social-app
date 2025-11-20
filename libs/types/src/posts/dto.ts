@@ -5,6 +5,7 @@ export interface PostDto {
   caption?: string;
   likeCount: number;
   commentCount: number;
+  isLiked: boolean;
   createdAt: string;
   updatedAt: string;
 }

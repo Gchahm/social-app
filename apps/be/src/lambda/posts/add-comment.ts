@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { v4 as uuidv4 } from 'uuid';
-import { addComment } from '../database';
+import { addComment } from '../../database';
 import { getUserId, successResponse, errorResponse, validateRequiredFields } from '../utils';
 
 /**

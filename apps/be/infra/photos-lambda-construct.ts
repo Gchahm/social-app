@@ -23,7 +23,7 @@ export class PhotosLambdaConstruct extends BaseLambdaConstruct {
     this.integrations = {
       requestPhotoUploadUrl: this.createLambdaIntegration(
         'RequestUploadUrl',
-        'src/photos/request-upload-url.ts',
+        'src/lambda/photos/request-upload-url.ts',
         {
           functionName: 'photos-RequestUploadUrl',
           description: 'Photos API: Request presigned URL for upload',

@@ -1,10 +1,10 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { likePost } from '../database';
+import { unlikePost } from '../../database';
 import { getUserId, successResponse, errorResponse } from '../utils';
 
 /**
- * POST /posts/:postId/like
- * Like a post
+ * DELETE /posts/:postId/like
+ * Unlike a post
  */
 export async function handler(
   event: APIGatewayProxyEvent
@@ -17,21 +17,21 @@ export async function handler(
       return errorResponse('Post ID is required', 400);
     }
 
-    // Like the post (automatically updates like count)
-    await likePost({ postId, userId });
+    // Unlike the post (automatically updates like count)
+    await unlikePost(postId, userId);
 
     return successResponse({
-      message: 'Post liked successfully',
+      message: 'Post unliked successfully',
     });
   } catch (error) {
     if (error.message === 'User ID not found in request context') {
       return errorResponse('Unauthorized', 401, error);
     }
 
-    if (error.message === 'Post already liked by user') {
-      return errorResponse('You have already liked this post', 409, error);
+    if (error.message === 'Post not liked by user') {
+      return errorResponse('You have not liked this post', 409, error);
     }
 
-    return errorResponse('Failed to like post', 500, error);
+    return errorResponse('Failed to unlike post', 500, error);
   }
 }

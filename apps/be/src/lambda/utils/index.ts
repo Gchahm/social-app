@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { ApiGatewayProxyEventType } from '../types';
+import { ApiGatewayProxyEventType } from '../../types';
 import createError from 'http-errors';
 
 /**

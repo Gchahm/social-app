@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { getCommentsByPost } from '../database';
+import { getCommentsByPost } from '../../database';
 import { successResponse, errorResponse } from '../utils';
 
 /**

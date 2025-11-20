@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schemas/api-gateway';
 import { z } from 'zod';
 import { getUserId } from '../utils';
-import { createPost, incrementPostCount } from '../database';
+import { createPost, incrementPostCount } from '../../database';
 import { createApiHandler } from '../middleware/apiHandler';
 
 const createPostEvent = APIGatewayProxyEventSchema.extend({

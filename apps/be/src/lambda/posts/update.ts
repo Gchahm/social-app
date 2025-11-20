@@ -1,11 +1,15 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { getPostById, deletePost } from '../database';
-import { incrementPostCount } from '../database/user';
+import { getPostById, updatePost } from '../../database';
 import { getUserId, successResponse, errorResponse } from '../utils';
 
 /**
- * DELETE /posts/:postId
- * Delete a post
+ * PUT /posts/:postId
+ * Update a post (caption only)
+ *
+ * Request body:
+ * {
+ *   "caption": "New caption"
+ * }
  */
 export async function handler(
   event: APIGatewayProxyEvent
@@ -13,6 +17,7 @@ export async function handler(
   try {
     const userId = getUserId(event);
     const postId = event.pathParameters?.postId;
+    const body = JSON.parse(event.body || '{}');
 
     if (!postId) {
       return errorResponse('Post ID is required', 400);
@@ -25,23 +30,24 @@ export async function handler(
     }
 
     if (existingPost.userId !== userId) {
-      return errorResponse('Forbidden: You can only delete your own posts', 403);
+      return errorResponse('Forbidden: You can only update your own posts', 403);
     }
 
-    // Delete the post
-    await deletePost(postId);
-
-    // Decrement user's post count
-    await incrementPostCount(userId, -1);
+    // Update the post
+    const updatedPost = await updatePost({
+      postId,
+      caption: body.caption,
+    });
 
     return successResponse({
-      message: 'Post deleted successfully',
+      message: 'Post updated successfully',
+      post: updatedPost,
     });
   } catch (error) {
     if (error.message === 'User ID not found in request context') {
       return errorResponse('Unauthorized', 401, error);
     }
 
-    return errorResponse('Failed to delete post', 500, error);
+    return errorResponse('Failed to update post', 500, error);
   }
 }

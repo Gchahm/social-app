@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { getPostsByUser, getGlobalFeed } from '../database';
+import { getPostsByUser, getGlobalFeed } from '../../database';
 import { successResponse, errorResponse } from '../utils';
 import { getContext } from '../utils/lambda-utils';
 

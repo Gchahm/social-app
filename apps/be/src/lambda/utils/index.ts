@@ -62,8 +62,8 @@ function getUserIdFromToken(
       );
       return payload.sub;
     } catch (error) {
+      getLogger().error('Failed to decode JWT token', { error });
       return undefined;
-      console.error('Failed to decode JWT token:', error);
     }
   }
 }
@@ -93,7 +93,7 @@ export function errorResponse(
   statusCode = 500,
   error?: any
 ): APIGatewayProxyResult {
-  console.error('Error:', message, error);
+  getLogger().error('Error response', { message, statusCode, error });
   return {
     statusCode,
     headers: {

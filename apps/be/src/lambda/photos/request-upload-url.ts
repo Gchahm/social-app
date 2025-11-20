@@ -2,7 +2,9 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
-import { getUserId } from '../utils';
+import { getUserId, getLogger } from '../utils';
+
+const logger = getLogger();
 
 const s3Client = new S3Client({});
 
@@ -104,7 +106,7 @@ export async function handler(
       }),
     };
   } catch (error) {
-    console.error('Error generating upload URL:', error);
+    logger.error('Error generating upload URL', { error });
 
     return {
       statusCode: 500,

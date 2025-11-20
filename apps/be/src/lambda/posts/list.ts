@@ -1,11 +1,6 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
-import {
-  getPostsByUser,
-  getGlobalFeed,
-  getUserLikedPostsFromList,
-  getUsersByIds,
-} from '../../database';
-import { getLogger, getOptionalUserId, getTracer } from '../utils';
+import { getGlobalFeed, getPostsByUser, getUserLikedPostsFromList, getUsersByIds } from '../../database';
+import { getLogger, getOptionalUserId } from '../utils';
 import { createApiHandlerNoBody } from '../middleware/apiHandler';
 import { PostDto, postDtoSchema } from '@chahm/types';
 

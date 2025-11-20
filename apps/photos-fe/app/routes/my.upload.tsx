@@ -1,4 +1,3 @@
-import '@chahm/ui-components/styles/globals.css';
 import { UploadImageForm } from '../components';
 import {
   Card,

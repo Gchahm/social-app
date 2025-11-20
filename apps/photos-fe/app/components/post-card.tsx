@@ -11,6 +11,7 @@ import {
 import { PostDto } from '@chahm/types';
 import { Calendar, Heart, ImageIcon, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { useLikePost } from '../hooks';
 
 interface PostCardProps {
@@ -46,14 +47,17 @@ export function PostCard({ post }: PostCardProps) {
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
-        <div className="flex items-center gap-2 mb-3">
+        <Link
+          to={`/users/${post.userId}`}
+          className="flex items-center gap-2 mb-3 hover:opacity-80 transition-opacity"
+        >
           <Avatar>
             <AvatarFallback>{getUserInitials(post.username)}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <p className="font-semibold text-sm">{post.username}</p>
           </div>
-        </div>
+        </Link>
         <div className="aspect-square bg-muted rounded-md mb-3 flex items-center justify-center overflow-hidden">
           {post.imageUrl ? (
             <img

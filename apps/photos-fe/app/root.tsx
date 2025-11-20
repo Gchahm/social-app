@@ -1,5 +1,5 @@
-import '@aws-amplify/ui-react/styles.css';
 import '@chahm/ui-components/styles/globals.css';
+import '@aws-amplify/ui-react/styles.css';
 
 import {
   Links,

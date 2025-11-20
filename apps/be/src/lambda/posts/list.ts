@@ -19,7 +19,8 @@ import { PostDto, postDtoSchema } from '@chahm/types';
  * - lastEvaluatedKey: Pagination token (JSON string)
  */
 export const handler = createApiHandlerNoBody().handler(
-  async (event: APIGatewayProxyEvent) => {
+  async (event: APIGatewayProxyEvent, context) => {
+    console.log('Event:', context);
     // Get current user (optional - for checking isLiked)
     const currentUserId = getOptionalUserId(event);
 

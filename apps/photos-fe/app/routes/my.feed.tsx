@@ -1,4 +1,3 @@
-import '@chahm/ui-components/styles/globals.css';
 import { PostsContainer } from '../containers';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 

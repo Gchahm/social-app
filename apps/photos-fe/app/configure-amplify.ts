@@ -2,7 +2,22 @@ import { BEStack } from '../outputs.json';
 import { Amplify } from 'aws-amplify';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
+// Determine API endpoint based on environment
+const getApiEndpoint = () => {
+  // Use localhost in development mode
+  if (import.meta.env?.DEV) {
+    return 'http://localhost:3000/';
+  }
+
+  // Use deployed endpoint in production
+  return BEStack.ApiEndpoint;
+};
+
 export const configureAmplify = () => {
+  const apiEndpoint = getApiEndpoint();
+
+  console.log('Configuring Amplify with API endpoint:', apiEndpoint);
+
   Amplify.configure(
     {
       Auth: {
@@ -28,7 +43,7 @@ export const configureAmplify = () => {
       API: {
         REST: {
           SocialApp: {
-            endpoint: BEStack.ApiEndpoint,
+            endpoint: apiEndpoint,
           },
         },
       },

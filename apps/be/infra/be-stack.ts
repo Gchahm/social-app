@@ -11,6 +11,7 @@ import { devConfig, EnvironmentConfig } from './configs';
 import { stagingConfig } from './configs/staging';
 import { prodConfig } from './configs/prod';
 import { AuthLambdaConstruct } from './auth-lambda-construct';
+import { HealthLambdaConstruct } from './health-lambda-construct';
 
 export type Environment = 'dev' | 'staging' | 'prod';
 
@@ -81,6 +82,12 @@ export class BeStack extends Stack {
       lambdaProps
     );
 
+    const healthLambdaConstruct = new HealthLambdaConstruct(
+      this,
+      'HealthLambdaConstruct',
+      lambdaProps
+    );
+
     const authConstruct = new AuthConstruct(this, 'AuthConstruct', {
       environment: props.environment,
       postRegistrationLambda: authLambdaConstruct.postRegistrationLambda,
@@ -90,6 +97,7 @@ export class BeStack extends Stack {
       userPool: authConstruct.userPool,
       postsLambdas: postsLambdaConstruct.lambdas,
       photosLambdas: photosLambdaConstruct.lambdas,
+      healthLambdas: healthLambdaConstruct.lambdas,
       corsOrigins: config.corsOrigins,
       throttleRateLimit: config.throttleRateLimit,
       throttleBurstLimit: config.throttleBurstLimit,

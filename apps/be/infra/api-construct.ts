@@ -10,11 +10,13 @@ import {
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
 import { PostsLambdas } from './posts-lambda-construct';
 import { PhotosLambdas } from './photos-lambda-construct';
+import { HealthLambdas } from './health-lambda-construct';
 
 export interface ApiConstructProps {
   userPool: UserPool;
   postsLambdas?: PostsLambdas;
   photosLambdas?: PhotosLambdas;
+  healthLambdas?: HealthLambdas;
   corsOrigins: string[];
   throttleRateLimit: number;
   throttleBurstLimit: number;
@@ -30,6 +32,7 @@ export class ApiConstruct extends Construct {
       userPool,
       photosLambdas,
       postsLambdas,
+      healthLambdas,
       corsOrigins,
       throttleRateLimit,
       throttleBurstLimit,
@@ -69,6 +72,10 @@ export class ApiConstruct extends Construct {
         ],
       },
     };
+
+    // Health check endpoint (no authentication required)
+    const healthResource = gateway.root.addResource('health', optionsWithCors);
+    healthResource.addMethod('GET', new LambdaIntegration(healthLambdas.healthCheck));
 
     // Photos endpoints
     const photosResource = gateway.root.addResource('photos', optionsWithCors);

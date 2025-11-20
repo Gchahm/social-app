@@ -1,74 +1,82 @@
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { createPostSchema } from '@chahm/types';
 import { v4 as uuidv4 } from 'uuid';
-import { incrementPostCount, createPost } from '../database';
-import { errorResponse, getUserId, successResponse } from '../utils';
+import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schemas/api-gateway';
+import type { APIGatewayProxyResult } from 'aws-lambda';
+import { z } from 'zod';
+import middy from '@middy/core';
+import httpEventNormalizerMiddleware from '@middy/http-event-normalizer';
+import httpJsonBodyParserMiddleware from '@middy/http-json-body-parser';
+import { parser } from '@aws-lambda-powertools/parser/middleware';
+import httpErrorHandler from '@middy/http-error-handler';
+import { errorResponse, getUserId } from '../utils';
+import { createPost, incrementPostCount } from '../database';
+import httpCorsMiddleware from '@middy/http-cors';
+import httpResponseSerializerMiddleware from '@middy/http-response-serializer';
 
-/**
- * POST /posts
- * Create a new post
- *
- * Request body (Option 1 - Full URL):
- * {
- *   "imageUrl": "https://bucket.s3.amazonaws.com/posts/user123/uuid.jpg",
- *   "caption": "Optional caption"
- * }
- *
- * Request body (Option 2 - S3 Key):
- * {
- *   "imageKey": "posts/user123/uuid.jpg",
- *   "caption": "Optional caption"
- * }
- */
-export async function handler(
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> {
-  try {
-    const userId = getUserId(event);
-    const body = JSON.parse(event.body || '{}');
+const PostPhotoEventSchema = APIGatewayProxyEventSchema.extend({
+  body: createPostSchema,
+});
 
-    // Support both imageUrl and imageKey
-    let imageUrl: string;
+type PostPhotoEventType = z.infer<typeof PostPhotoEventSchema>;
 
-    if (body.imageUrl) {
-      imageUrl = body.imageUrl;
-    } else if (body.imageKey) {
+export const handler = middy()
+  .use(httpEventNormalizerMiddleware())
+  .use(httpJsonBodyParserMiddleware())
+  .use(parser({ schema: PostPhotoEventSchema }))
+  .use(httpErrorHandler())
+  .use(
+    httpCorsMiddleware({
+      origin: '*', // Same as your current Access-Control-Allow-Origin: *
+      credentials: false, // Set to true if you need cookies/auth headers
+    })
+  )
+  .use(
+    httpResponseSerializerMiddleware({
+      serializers: [
+        {
+          regex: /^application\/json$/,
+          serializer: ({ body }) => JSON.stringify(body),
+        },
+      ],
+      defaultContentType: 'application/json',
+    })
+  )
+  .handler(async (event: PostPhotoEventType) => {
+    try {
+      const userId = getUserId(event);
+      const body = event.body;
+
       // Construct URL from S3 key
       const bucketName = process.env.BUCKET_NAME;
       const region = process.env.AWS_REGION;
-      imageUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${body.imageKey}`;
-    } else {
-      return errorResponse('Either imageUrl or imageKey is required', 400);
+      const imageUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${body.imageKey}`;
+
+      const postId = uuidv4();
+
+      // Create the post
+      const post = await createPost({
+        postId,
+        userId,
+        imageUrl,
+        caption: body.caption,
+      });
+
+      // Increment user's post count
+      await incrementPostCount(userId, 1);
+
+      return {
+        body: post,
+        statusCode: 201,
+      };
+    } catch (error) {
+      if (error.message === 'User ID not found in request context') {
+        return errorResponse('Unauthorized', 401, error);
+      }
+
+      if (error.message?.includes('Missing required fields')) {
+        return errorResponse(error.message, 400, error);
+      }
+
+      return errorResponse('Failed to create post', 500, error);
     }
-
-    const postId = uuidv4();
-
-    // Create the post
-    const post = await createPost({
-      postId,
-      userId,
-      imageUrl,
-      caption: body.caption,
-    });
-
-    // Increment user's post count
-    await incrementPostCount(userId, 1);
-
-    return successResponse(
-      {
-        message: 'Post created successfully',
-        post,
-      },
-      201
-    );
-  } catch (error) {
-    if (error.message === 'User ID not found in request context') {
-      return errorResponse('Unauthorized', 401, error);
-    }
-
-    if (error.message?.includes('Missing required fields')) {
-      return errorResponse(error.message, 400, error);
-    }
-
-    return errorResponse('Failed to create post', 500, error);
-  }
-}
+  });

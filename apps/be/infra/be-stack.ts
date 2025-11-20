@@ -6,6 +6,7 @@ import { PostsLambdaConstruct } from './posts-lambda-construct';
 import { ApiConstruct } from './api-construct';
 import { AuthConstruct } from './auth-construct';
 import { StorageConstruct } from './storage-construct';
+import { BaseLambdaConstructProps } from './base-lambda-construct';
 
 export class BeStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -15,22 +16,20 @@ export class BeStack extends Stack {
 
     const storageConstruct = new StorageConstruct(this, 'StorageConstruct');
 
+    const lambdaProps: BaseLambdaConstructProps = {
+      table: databaseConstruct.table,
+      bucket: storageConstruct.bucket,
+    };
     const photosLambdaConstruct = new PhotosLambdaConstruct(
       this,
       'PhotosLambdaConstruct',
-      {
-        table: databaseConstruct.table,
-        bucket: storageConstruct.bucket,
-      }
+      lambdaProps
     );
 
     const postsLambdaConstruct = new PostsLambdaConstruct(
       this,
       'PostsLambdaConstruct',
-      {
-        table: databaseConstruct.table,
-        bucket: storageConstruct.bucket,
-      }
+      lambdaProps
     );
 
     const authConstruct = new AuthConstruct(this, 'AuthConstruct', {

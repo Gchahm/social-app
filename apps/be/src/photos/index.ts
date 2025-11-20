@@ -6,4 +6,3 @@
 
 // Presigned URL upload flow
 export { handler as requestUploadUrl } from './request-upload-url';
-export { handler as confirmUpload } from './confirm-upload';

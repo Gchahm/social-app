@@ -1,6 +1,7 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { getPostsByUser, getGlobalFeed } from '../database';
 import { successResponse, errorResponse } from '../utils';
+import { getContext } from '../utils/lambda-utils';
 
 /**
  * GET /posts
@@ -15,6 +16,7 @@ export async function handler(
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
   try {
+    console.log('list event', getContext());
     const queryParams = event.queryStringParameters || {};
     const userId = queryParams.userId;
     const limit = parseInt(queryParams.limit || '20', 10);

@@ -8,8 +8,9 @@ import {
 } from '@chahm/ui-components';
 import { useCreatePost } from '../hooks';
 import { UploadPhotoPayload } from '@chahm/types';
+import { PostsContainer } from '../containers';
 
-export function Upload() {
+export function MyFeed() {
   // Hooks for API calls
   const createPostMutation = useCreatePost();
 
@@ -23,7 +24,11 @@ export function Upload() {
     <div className="flex flex-col gap-4 p-4 overflow-auto max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold">Upload Photo</h1>
 
-      {!createPostMutation.isSuccess ? (
+      {createPostMutation.isPending ? (
+        <Card className="p-6">
+          <p className="text-lg">Uploading photo...</p>
+        </Card>
+      ) : !createPostMutation.isSuccess ? (
         // Upload form
         <UploadImageForm onSubmit={handleUpload} />
       ) : (
@@ -36,16 +41,9 @@ export function Upload() {
         </Card>
       )}
 
-      {/* Loading state */}
-      {createPostMutation.isPending && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <Card className="p-6">
-            <p className="text-lg">Uploading photo...</p>
-          </Card>
-        </div>
-      )}
+      <PostsContainer />
     </div>
   );
 }
 
-export default Upload;
+export default MyFeed;

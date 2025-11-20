@@ -2,15 +2,12 @@
 
 import {
   Avatar,
-  AvatarImage,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@chahm/ui-components';
-import { Bell, Image, LogOut, Settings, Upload, User } from 'lucide-react';
+import { Bell, Image, LogOut, Upload, User } from 'lucide-react';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { Link } from 'react-router';
 
@@ -40,7 +37,7 @@ export function Navbar() {
             Photos
           </Link>
           <Link
-            to="/upload"
+            to="/my/feed"
             className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
           >
             <Upload className="h-4 w-4" />

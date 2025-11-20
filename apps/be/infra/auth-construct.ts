@@ -1,27 +1,31 @@
 import { Construct } from 'constructs';
 import { UserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
 import { RemovalPolicy } from 'aws-cdk-lib';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
-import { ITable } from 'aws-cdk-lib/aws-dynamodb';
+import { AuthLambdaConstruct } from './auth-lambda-construct';
+import { BaseLambdaConstructProps } from './base-lambda-construct';
 import { Environment } from './be-stack';
 
-export interface AuthConstructProps {
-  table: ITable;
+export interface AuthConstructProps extends BaseLambdaConstructProps {
   environment: Environment;
 }
 
+/**
+ * Construct for managing authentication resources
+ * Includes: Cognito User Pool, User Pool Client, and auth-related Lambdas
+ */
 export class AuthConstruct extends Construct {
   public userPool: UserPool;
   public userPoolClient: UserPoolClient;
-  public postRegistrationLambda: NodejsFunction;
+  public authLambdaConstruct: AuthLambdaConstruct;
 
   constructor(scope: Construct, id: string, props: AuthConstructProps) {
     super(scope, id);
 
-    this.postRegistrationLambda = this.createPostRegistrationLambda(
-      props.table,
-      props.environment
+    // Create auth Lambda functions
+    this.authLambdaConstruct = new AuthLambdaConstruct(
+      this,
+      'AuthLambdaConstruct',
+      props
     );
 
     // Create user pool with post-confirmation trigger
@@ -40,7 +44,7 @@ export class AuthConstruct extends Construct {
         email: true,
       },
       lambdaTriggers: {
-        postConfirmation: this.postRegistrationLambda,
+        postConfirmation: this.authLambdaConstruct.postRegistrationLambda,
       },
       removalPolicy,
     });
@@ -55,22 +59,5 @@ export class AuthConstruct extends Construct {
         userSrp: true,
       },
     });
-  }
-
-  private createPostRegistrationLambda(table: ITable, environment: Environment) {
-    const lambda = new NodejsFunction(this, 'PostRegistrationLambda', {
-      runtime: Runtime.NODEJS_22_X,
-      handler: 'handler',
-      entry: 'src/lambda/auth/post-registration.ts',
-      functionName: `auth-PostRegistration-${environment}`,
-      environment: {
-        TABLE_NAME: table.tableName,
-        ENVIRONMENT: environment,
-      },
-    });
-
-    table.grantWriteData(lambda);
-
-    return lambda;
   }
 }

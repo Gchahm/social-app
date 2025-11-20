@@ -75,7 +75,7 @@ export class BeStack extends Stack {
     );
 
     const authConstruct = new AuthConstruct(this, 'AuthConstruct', {
-      table: databaseConstruct.table,
+      ...lambdaProps,
       environment: props.environment,
     });
 

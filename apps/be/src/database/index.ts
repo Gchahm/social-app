@@ -36,6 +36,7 @@ export {
   getUserById,
   getUserByUsername,
   getUserByEmail,
+  getUsersByIds,
   updateUser,
   deleteUser,
   incrementFollowerCount,

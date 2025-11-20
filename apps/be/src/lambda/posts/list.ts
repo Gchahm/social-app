@@ -3,6 +3,7 @@ import {
   getPostsByUser,
   getGlobalFeed,
   getUserLikedPostsFromList,
+  getUsersByIds,
 } from '../../database';
 import { getOptionalUserId } from '../utils';
 import { createApiHandlerNoBody } from '../middleware/apiHandler';
@@ -34,17 +35,28 @@ export const handler = createApiHandlerNoBody().handler(
       ? await getPostsByUser(userId, { limit, lastEvaluatedKey })
       : await getGlobalFeed({ limit, lastEvaluatedKey });
 
-    const likedPostIds = await getUserLikedPostsFromList(
-      currentUserId,
-      result.items.map((post) => post.postId)
-    );
+    // Batch fetch user data for all post creators
+    const userIds = result.items.map((post) => post.userId);
+    const usersMap = await getUsersByIds(userIds);
 
-    const postsWithLikeStatus: PostDto[] = result.items.map((post) =>
-      postDtoSchema.parse({
+    // Batch check likes if user is authenticated
+    let likedPostIds = new Set<string>();
+    if (currentUserId && result.items.length > 0) {
+      likedPostIds = await getUserLikedPostsFromList(
+        currentUserId,
+        result.items.map((post) => post.postId)
+      );
+    }
+
+    // Map posts with username and isLiked
+    const postsWithLikeStatus: PostDto[] = result.items.map((post) => {
+      const user = usersMap.get(post.userId);
+      return postDtoSchema.parse({
         ...post,
+        username: user?.username || 'unknown',
         isLiked: likedPostIds.has(post.postId),
-      })
-    );
+      });
+    });
 
     return {
       statusCode: 200,

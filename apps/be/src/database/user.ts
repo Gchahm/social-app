@@ -104,6 +104,56 @@ export async function getUserByEmail(email: string): Promise<UserEntity | null> 
 }
 
 /**
+ * Batch get users by their IDs
+ * Returns a Map of userId -> UserEntity for efficient lookup
+ * More efficient than querying each user individually
+ *
+ * @throws Error if userIds.length > 100
+ */
+export async function getUsersByIds(
+  userIds: string[]
+): Promise<Map<string, UserEntity>> {
+  if (userIds.length === 0) {
+    return new Map();
+  }
+
+  // Enforce maximum batch size to prevent excessive queries
+  if (userIds.length > 100) {
+    throw new Error(
+      `getUsersByIds: Cannot fetch more than 100 users at once. Received ${userIds.length} users.`
+    );
+  }
+
+  // Remove duplicates
+  const uniqueUserIds = [...new Set(userIds)];
+
+  const { BatchGetCommand } = await import("@aws-sdk/lib-dynamodb");
+
+  const response = await docClient.send(
+    new BatchGetCommand({
+      RequestItems: {
+        [TABLE_NAME]: {
+          Keys: uniqueUserIds.map(userId => ({
+            PK: userKeys.pk(userId),
+            SK: userKeys.sk(),
+          })),
+        },
+      },
+    })
+  );
+
+  // Build a map for efficient lookup
+  const userMap = new Map<string, UserEntity>();
+  const items = response.Responses?.[TABLE_NAME] as UserEntity[] || [];
+
+  items.forEach(user => {
+    userMap.set(user.userId, user);
+  });
+
+  return userMap;
+}
+
+/**
  * Update user profile
  */
 export async function updateUser(

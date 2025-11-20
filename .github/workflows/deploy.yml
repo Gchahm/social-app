@@ -26,8 +26,6 @@ jobs:
     outputs:
       environment: ${{ steps.set-env.outputs.environment }}
       should-deploy: ${{ steps.set-env.outputs.should-deploy }}
-      aws-role: ${{ steps.set-env.outputs.aws-role }}
-      aws-region: ${{ steps.set-env.outputs.aws-region }}
 
     steps:
       - name: Determine environment from branch
@@ -48,24 +46,15 @@ jobs:
           if [[ $GITHUB_REF == refs/heads/main ]]; then
             echo "environment=prod" >> $GITHUB_OUTPUT
             echo "should-deploy=true" >> $GITHUB_OUTPUT
-            echo "aws-role=${{ secrets.AWS_PROD_ROLE_ARN }}" >> $GITHUB_OUTPUT
-            AWS_REGION="${{ secrets.AWS_PROD_REGION }}"
-            echo "aws-region=${AWS_REGION:-us-east-1}" >> $GITHUB_OUTPUT
-            echo "Deploying to PRODUCTION (region: ${AWS_REGION:-us-east-1})"
+            echo "Deploying to PRODUCTION"
           elif [[ $GITHUB_REF == refs/heads/release/* ]]; then
             echo "environment=staging" >> $GITHUB_OUTPUT
             echo "should-deploy=true" >> $GITHUB_OUTPUT
-            echo "aws-role=${{ secrets.AWS_DEV_ROLE_ARN }}" >> $GITHUB_OUTPUT
-            AWS_REGION="${{ secrets.AWS_DEV_REGION }}"
-            echo "aws-region=${AWS_REGION:-us-east-1}" >> $GITHUB_OUTPUT
-            echo "Deploying to STAGING (region: ${AWS_REGION:-us-east-1})"
+            echo "Deploying to STAGING"
           elif [[ $GITHUB_REF == refs/heads/develop ]]; then
             echo "environment=dev" >> $GITHUB_OUTPUT
             echo "should-deploy=true" >> $GITHUB_OUTPUT
-            echo "aws-role=${{ secrets.AWS_DEV_ROLE_ARN }}" >> $GITHUB_OUTPUT
-            AWS_REGION="${{ secrets.AWS_DEV_REGION }}"
-            echo "aws-region=${AWS_REGION:-us-east-1}" >> $GITHUB_OUTPUT
-            echo "Deploying to DEVELOPMENT (region: ${AWS_REGION:-us-east-1})"
+            echo "Deploying to DEVELOPMENT"
           else
             echo "environment=dev" >> $GITHUB_OUTPUT
             echo "should-deploy=false" >> $GITHUB_OUTPUT
@@ -198,8 +187,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ needs.determine-environment.outputs.aws-role }}
-          aws-region: ${{ needs.determine-environment.outputs.aws-region }}
+          role-to-assume: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_ROLE_ARN || secrets.AWS_DEV_ROLE_ARN }}
+          aws-region: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_REGION || secrets.AWS_DEV_REGION || 'us-east-1' }}
           role-session-name: GitHubActions-${{ github.run_id }}
 
       - name: Deploy CDK stack

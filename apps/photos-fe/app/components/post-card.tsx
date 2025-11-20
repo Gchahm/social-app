@@ -28,6 +28,11 @@ export function PostCard({ post }: PostCardProps) {
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="flex-1">
+            <p className="font-semibold text-sm">{post.username}</p>
+          </div>
+        </div>
         <div className="aspect-square bg-muted rounded-md mb-3 flex items-center justify-center overflow-hidden">
           {post.imageUrl ? (
             <img

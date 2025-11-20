@@ -62,7 +62,7 @@ export class AuthConstruct extends Construct {
     const lambda = new NodejsFunction(this, 'PostRegistrationLambda', {
       runtime: Runtime.NODEJS_22_X,
       handler: 'handler',
-      entry: 'src/auth/index.ts',
+      entry: 'src/lambda/auth/index.ts',
       environment: {
         TABLE_NAME: table.tableName,
       },

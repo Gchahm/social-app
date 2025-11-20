@@ -8,6 +8,7 @@ import {
   UpdateCommand,
   DeleteCommand,
   QueryCommand,
+  BatchGetCommand,
   dynamoDBClient,
 } from './client';
 import { userKeys, generateTimestamp } from "./keys";
@@ -126,8 +127,6 @@ export async function getUsersByIds(
 
   // Remove duplicates
   const uniqueUserIds = [...new Set(userIds)];
-
-  const { BatchGetCommand } = await import("@aws-sdk/lib-dynamodb");
 
   const response = await docClient.send(
     new BatchGetCommand({

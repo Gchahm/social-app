@@ -1,4 +1,4 @@
-import { EnvironmentConfig } from './shared';
+import { customDomain, EnvironmentConfig } from './shared';
 import { BillingMode } from 'aws-cdk-lib/aws-dynamodb';
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
@@ -9,7 +9,7 @@ export const prodConfig: EnvironmentConfig = {
   tableRemovalPolicy: RemovalPolicy.RETAIN, // Never auto-delete production data
   pointInTimeRecoverySpecification: {
     recoveryPeriodInDays: 1,
-    pointInTimeRecoveryEnabled: true
+    pointInTimeRecoveryEnabled: true,
   }, // Critical for production
 
   // Lambda - production settings
@@ -24,4 +24,6 @@ export const prodConfig: EnvironmentConfig = {
   // API Gateway - production limits
   throttleRateLimit: 10000,
   throttleBurstLimit: 20000,
+
+  customDomain: customDomain,
 };

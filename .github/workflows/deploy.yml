@@ -199,6 +199,10 @@ jobs:
       - name: Synthesize CDK
         env:
           ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
+          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+          HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID }}
+          HOSTED_ZONE_NAME: ${{ secrets.HOSTED_ZONE_NAME }}
+          CERTIFICATE_ARN: ${{ secrets.CERTIFICATE_ARN }}
         run: |
           cd apps/be
           npx cdk synth --context environment=$ENVIRONMENT
@@ -262,6 +266,10 @@ jobs:
         id: deploy
         env:
           ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
+          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+          HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID }}
+          HOSTED_ZONE_NAME: ${{ secrets.HOSTED_ZONE_NAME }}
+          CERTIFICATE_ARN: ${{ secrets.CERTIFICATE_ARN }}
         run: |
           cd apps/be
 

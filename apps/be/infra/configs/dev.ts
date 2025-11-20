@@ -1,7 +1,7 @@
 import { BillingMode } from 'aws-cdk-lib/aws-dynamodb';
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
-import { EnvironmentConfig } from './shared';
+import { customDomain, EnvironmentConfig } from './shared';
 
 export const devConfig: EnvironmentConfig = {
   // DynamoDB - cost-optimized for development
@@ -27,4 +27,6 @@ export const devConfig: EnvironmentConfig = {
   // API Gateway - relaxed limits for dev
   throttleRateLimit: 1000,
   throttleBurstLimit: 2000,
+
+  customDomain
 };

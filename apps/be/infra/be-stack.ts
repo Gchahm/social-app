@@ -12,6 +12,7 @@ import { stagingConfig } from './configs/staging';
 import { prodConfig } from './configs/prod';
 import { AuthLambdaConstruct } from './auth-lambda-construct';
 import { HealthLambdaConstruct } from './health-lambda-construct';
+import { DomainConstruct } from './domain-construct';
 
 export type Environment = 'dev' | 'staging' | 'prod';
 
@@ -103,6 +104,12 @@ export class BeStack extends Stack {
       throttleBurstLimit: config.throttleBurstLimit,
     });
 
+    // Custom domain setup (optional, based on configuration)
+    const domainConstruct = new DomainConstruct(this, 'DomainConstruct', {
+      customDomain: config.customDomain,
+      api: apiConstruct.api,
+    });
+
     // Stack outputs with environment-specific export names
     new CfnOutput(this, 'Environment', {
       value: props.environment,
@@ -115,6 +122,15 @@ export class BeStack extends Stack {
       description: 'API Gateway endpoint URL',
       exportName: `${stackName}-ApiEndpoint`,
     });
+
+    // Output custom domain URL if configured
+    if (domainConstruct.domainName && config.customDomain?.domainName) {
+      new CfnOutput(this, 'CustomDomainUrl', {
+        value: `https://${config.customDomain.domainName}`,
+        description: 'Custom domain URL for API',
+        exportName: `${stackName}-CustomDomainUrl`,
+      });
+    }
 
     new CfnOutput(this, 'UserPoolId', {
       value: authConstruct.userPool.userPoolId,

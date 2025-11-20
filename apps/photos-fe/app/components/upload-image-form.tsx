@@ -56,36 +56,6 @@ export function UploadImageForm(props: UploadImageFormProps) {
       >
         <div>
           <form.Field
-            name="description"
-            children={(field) => {
-              const isInvalid =
-                field.state.meta.isTouched && !field.state.meta.isValid;
-              return (
-                <Field data-invalid={isInvalid}>
-                  <FieldLabel htmlFor={field.name}>Description</FieldLabel>
-                  <InputGroup className="h-auto items-start">
-                    <InputGroupTextarea
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      aria-invalid={isInvalid}
-                      autoComplete="off"
-                      aria-label="Description"
-                      placeholder="Optional description"
-                      rows={3}
-                      // disabled={loading}
-                    />
-                  </InputGroup>
-                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                </Field>
-              );
-            }}
-          />
-        </div>
-        <div>
-          <form.Field
             name="file"
             children={(field) => {
               const isInvalid =
@@ -115,15 +85,49 @@ export function UploadImageForm(props: UploadImageFormProps) {
                       accept="image/*"
                     />
                   </InputGroup>
-                  {previewUrl && (
-                    <div className="mt-3">
+                  <div className="mt-3">
+                    {previewUrl ? (
                       <img
                         src={previewUrl}
                         alt="Preview"
                         className="max-w-full h-auto rounded-md border"
                       />
-                    </div>
-                  )}
+                    ) : (
+                      <div className="w-full aspect-video bg-gray-100 rounded-md border border-dashed border-gray-300 flex items-center justify-center text-gray-400">
+                        No image selected
+                      </div>
+                    )}
+                  </div>
+                </Field>
+              );
+            }}
+          />
+        </div>
+        <div>
+          <form.Field
+            name="description"
+            children={(field) => {
+              const isInvalid =
+                field.state.meta.isTouched && !field.state.meta.isValid;
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+                  <InputGroup className="h-auto items-start">
+                    <InputGroupTextarea
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={isInvalid}
+                      autoComplete="off"
+                      aria-label="Description"
+                      placeholder="Optional description"
+                      rows={3}
+                      // disabled={loading}
+                    />
+                  </InputGroup>
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );
             }}

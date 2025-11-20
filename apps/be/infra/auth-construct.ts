@@ -62,6 +62,7 @@ export class AuthConstruct extends Construct {
       runtime: Runtime.NODEJS_22_X,
       handler: 'handler',
       entry: 'src/lambda/auth/post-registration.ts',
+      functionName: `auth-PostRegistration-${environment}`,
       environment: {
         TABLE_NAME: table.tableName,
         ENVIRONMENT: environment,

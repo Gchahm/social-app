@@ -56,6 +56,7 @@ export class BeStack extends Stack {
         ENVIRONMENT: props.environment,
         CORS_ORIGINS: config.corsOrigins.join(','),
       },
+      envName: props.environment,
       logRetention: config.logRetentionDays,
       timeout: config.lambdaTimeout,
       memorySize: config.lambdaMemorySize,

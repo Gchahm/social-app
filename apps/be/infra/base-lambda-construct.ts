@@ -22,6 +22,7 @@ export interface BaseLambdaConstructProps {
   table: ITable;
   bucket: IBucket;
   environment: ILambdaEnvironmentVariables;
+  envName?: string; // Environment name for resource naming (dev/staging/prod)
   logRetention?: RetentionDays;
   timeout?: Duration;
   memorySize?: number;
@@ -35,14 +36,16 @@ export abstract class BaseLambdaConstruct extends Construct {
   protected readonly table: ITable;
   protected readonly bucket: IBucket;
   protected readonly commonConfig: BaseLambdaConfig;
+  protected readonly envName: string;
 
   constructor(scope: Construct, id: string, props: BaseLambdaConstructProps) {
     super(scope, id);
 
-    const { table, bucket, environment, logRetention, timeout, memorySize } = props;
+    const { table, bucket, environment, envName, logRetention, timeout, memorySize } = props;
 
     this.table = table;
     this.bucket = bucket;
+    this.envName = envName || 'dev';
 
     // Default common configuration with environment-specific overrides
     this.commonConfig = {
@@ -78,13 +81,17 @@ export abstract class BaseLambdaConstruct extends Construct {
       ...options?.environment,
     };
 
+    // Create environment-specific function name
+    const baseFunctionName = options?.functionName || id;
+    const functionName = `${baseFunctionName}-${this.envName}`;
+
     // Create Lambda function
     const lambdaFn = new NodejsFunction(this, id, {
       runtime: this.commonConfig.runtime,
       handler: 'handler',
       entry,
-      functionName: options?.functionName || id,
-      description: options?.description || `Lambda function: ${id}`,
+      functionName,
+      description: options?.description || `Lambda function: ${id} (${this.envName})`,
       timeout: options?.timeout || this.commonConfig.timeout,
       memorySize: options?.memorySize || this.commonConfig.memorySize,
       environment,

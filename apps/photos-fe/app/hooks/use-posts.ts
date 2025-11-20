@@ -9,7 +9,7 @@ export function usePosts() {
     queryFn: async () => {
       const restOperation = get({
         apiName: 'SocialApp',
-        path: '/posts',
+        path: 'posts',
       });
 
       const { body } = await restOperation.response;

@@ -1,10 +1,10 @@
 import { createPostSchema } from '@chahm/types';
 import { v4 as uuidv4 } from 'uuid';
 import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schemas/api-gateway';
-import type { APIGatewayProxyResult } from 'aws-lambda';
 import { z } from 'zod';
 import middy from '@middy/core';
 import httpEventNormalizerMiddleware from '@middy/http-event-normalizer';
+import httpHeaderNormalizerMiddleware from '@middy/http-header-normalizer';
 import httpJsonBodyParserMiddleware from '@middy/http-json-body-parser';
 import { parser } from '@aws-lambda-powertools/parser/middleware';
 import httpErrorHandler from '@middy/http-error-handler';
@@ -21,9 +21,8 @@ type PostPhotoEventType = z.infer<typeof PostPhotoEventSchema>;
 
 export const handler = middy()
   .use(httpEventNormalizerMiddleware())
+  .use(httpHeaderNormalizerMiddleware())
   .use(httpJsonBodyParserMiddleware())
-  .use(parser({ schema: PostPhotoEventSchema }))
-  .use(httpErrorHandler())
   .use(
     httpCorsMiddleware({
       origin: '*', // Same as your current Access-Control-Allow-Origin: *
@@ -41,7 +40,10 @@ export const handler = middy()
       defaultContentType: 'application/json',
     })
   )
+  .use(httpErrorHandler())
+  .use(parser({ schema: PostPhotoEventSchema }))
   .handler(async (event: PostPhotoEventType) => {
+    console.log('event', event);
     try {
       const userId = getUserId(event);
       const body = event.body;

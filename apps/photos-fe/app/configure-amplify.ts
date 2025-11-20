@@ -16,8 +16,6 @@ const getApiEndpoint = () => {
 export const configureAmplify = () => {
   const apiEndpoint = getApiEndpoint();
 
-  console.log('Configuring Amplify with API endpoint:', apiEndpoint);
-
   Amplify.configure(
     {
       Auth: {

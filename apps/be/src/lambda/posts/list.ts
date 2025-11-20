@@ -6,7 +6,7 @@ import {
 } from '../../database';
 import { getOptionalUserId } from '../utils';
 import { createApiHandlerNoBody } from '../middleware/apiHandler';
-import { PostDto } from '@chahm/types';
+import { PostDto, postDtoSchema } from '@chahm/types';
 
 /**
  * GET /posts
@@ -39,10 +39,12 @@ export const handler = createApiHandlerNoBody().handler(
       result.items.map((post) => post.postId)
     );
 
-    const postsWithLikeStatus: PostDto[] = result.items.map((post) => ({
-      ...post,
-      isLiked: likedPostIds.has(post.postId),
-    }));
+    const postsWithLikeStatus: PostDto[] = result.items.map((post) =>
+      postDtoSchema.parse({
+        ...post,
+        isLiked: likedPostIds.has(post.postId),
+      })
+    );
 
     return {
       statusCode: 200,

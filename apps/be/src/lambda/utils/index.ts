@@ -1,6 +1,7 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { ApiGatewayProxyEventType } from '../../types';
-import * as createError from 'http-errors';
+import { BadRequest } from 'http-errors';
+import { getLogger } from './context';
 export * from './context';
 
 /**
@@ -27,7 +28,7 @@ export function getUserId(
   }
 
   if (!userId) {
-    throw createError(401, 'User ID not found in request context');
+    throw BadRequest('User ID not found in request context');
   }
 
   return userId;

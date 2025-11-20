@@ -2,7 +2,7 @@ import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { removeComment, getCommentsByPost } from '../../database';
 import { getUserId } from '../utils';
 import { createApiHandlerNoBody } from '../middleware/apiHandler';
-import * as createHttpError from 'http-errors';
+import { BadRequest, NotFound, Forbidden } from 'http-errors';
 
 /**
  * DELETE /posts/:postId/comments/:commentId
@@ -15,11 +15,11 @@ export const handler = createApiHandlerNoBody().handler(
     const commentId = event.pathParameters?.commentId;
 
     if (!postId) {
-      throw new createHttpError.BadRequest('Post ID is required');
+      throw new BadRequest('Post ID is required');
     }
 
     if (!commentId) {
-      throw new createHttpError.BadRequest('Comment ID is required');
+      throw new BadRequest('Comment ID is required');
     }
 
     // Check if comment exists and user owns it
@@ -27,13 +27,11 @@ export const handler = createApiHandlerNoBody().handler(
     const comment = comments.items.find((c) => c.commentId === commentId);
 
     if (!comment) {
-      throw new createHttpError.NotFound('Comment not found');
+      throw new NotFound('Comment not found');
     }
 
     if (comment.userId !== userId) {
-      throw new createHttpError.Forbidden(
-        'You can only delete your own comments'
-      );
+      throw new Forbidden('You can only delete your own comments');
     }
 
     // Remove comment (automatically updates comment count)

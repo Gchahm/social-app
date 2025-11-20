@@ -2,7 +2,7 @@ import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { unlikePost } from '../../database';
 import { getUserId } from '../utils';
 import { createApiHandlerNoBody } from '../middleware/apiHandler';
-import * as createHttpError from 'http-errors';
+import { BadRequest, Conflict } from 'http-errors';
 
 /**
  * DELETE /posts/:postId/like
@@ -14,7 +14,7 @@ export const handler = createApiHandlerNoBody().handler(
     const postId = event.pathParameters?.postId;
 
     if (!postId) {
-      throw new createHttpError.BadRequest('Post ID is required');
+      throw new BadRequest('Post ID is required');
     }
 
     try {
@@ -22,7 +22,7 @@ export const handler = createApiHandlerNoBody().handler(
       await unlikePost(postId, userId);
     } catch (error) {
       if (error.message === 'Post not liked by user') {
-        throw new createHttpError.Conflict('You have not liked this post');
+        throw new Conflict('You have not liked this post');
       }
       throw error;
     }

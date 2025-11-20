@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { addComment } from '../../database';
 import { getUserId } from '../utils';
 import { createApiHandler } from '../middleware/apiHandler';
-import * as createHttpError from 'http-errors';
+import { BadRequest } from 'http-errors';
 
 const AddCommentEventSchema = APIGatewayProxyEventSchema.extend({
   body: addCommentSchema,
@@ -24,7 +24,7 @@ export const handler = createApiHandler(AddCommentEventSchema).handler(
     const body = event.body;
 
     if (!postId) {
-      throw new createHttpError.BadRequest('Post ID is required');
+      throw new BadRequest('Post ID is required');
     }
 
     const commentId = uuidv4();

@@ -1,7 +1,7 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { getCommentsByPost } from '../../database';
 import { createApiHandlerNoBody } from '../middleware/apiHandler';
-import * as createHttpError from 'http-errors';
+import { BadRequest } from 'http-errors';
 
 /**
  * GET /posts/:postId/comments
@@ -21,7 +21,7 @@ export const handler = createApiHandlerNoBody().handler(
       : undefined;
 
     if (!postId) {
-      throw new createHttpError.BadRequest('Post ID is required');
+      throw new BadRequest('Post ID is required');
     }
 
     const result = await getCommentsByPost(postId, { limit, lastEvaluatedKey });

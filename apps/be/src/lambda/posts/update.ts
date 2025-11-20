@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { getPostById, updatePost } from '../../database';
 import { getUserId } from '../utils';
 import { createApiHandler } from '../middleware/apiHandler';
-import * as createHttpError from 'http-errors';
+import { BadRequest, NotFound, Forbidden } from 'http-errors';
 
 const UpdatePostEventSchema = APIGatewayProxyEventSchema.extend({
   body: updatePostSchema,
@@ -23,19 +23,17 @@ export const handler = createApiHandler(UpdatePostEventSchema).handler(
     const body = event.body;
 
     if (!postId) {
-      throw new createHttpError.BadRequest('Post ID is required');
+      throw new BadRequest('Post ID is required');
     }
 
     // Check if post exists and user owns it
     const existingPost = await getPostById(postId);
     if (!existingPost) {
-      throw new createHttpError.NotFound('Post not found');
+      throw new NotFound('Post not found');
     }
 
     if (existingPost.userId !== userId) {
-      throw new createHttpError.Forbidden(
-        'Forbidden: You can only update your own posts'
-      );
+      throw new Forbidden('Forbidden: You can only update your own posts');
     }
 
     // Update the post

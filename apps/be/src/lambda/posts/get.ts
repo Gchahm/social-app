@@ -1,8 +1,8 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
-import { getPostById, checkUserLikedPost } from '../../database';
+import { checkUserLikedPost, getPostById } from '../../database';
 import { getOptionalUserId } from '../utils';
 import { createApiHandlerNoBody } from '../middleware/apiHandler';
-import * as createHttpError from 'http-errors';
+import { BadRequest, NotFound } from 'http-errors';
 
 /**
  * GET /posts/:postId
@@ -13,13 +13,13 @@ export const handler = createApiHandlerNoBody().handler(
     const postId = event.pathParameters?.postId;
 
     if (!postId) {
-      throw new createHttpError.BadRequest('Post ID is required');
+      throw new BadRequest('Post ID is required');
     }
 
     const post = await getPostById(postId);
 
     if (!post) {
-      throw new createHttpError.NotFound('Post not found');
+      throw new NotFound('Post not found');
     }
 
     // Add isLiked field if user is authenticated

@@ -1,4 +1,4 @@
-import * as zod from 'zod';
+import { z } from 'zod';
 
 const allowedContentTypes = [
   'image/jpeg',
@@ -6,18 +6,20 @@ const allowedContentTypes = [
   'image/png',
   'image/webp',
   'image/gif',
-] as const;
+];
 
-export const requestUploadUrlSchema = zod.object({
-  fileName: zod.string().min(1, 'File name is required'),
-  contentType: zod.enum(allowedContentTypes, {
-    errorMap: () => ({
-      message: `Invalid content type. Allowed: ${allowedContentTypes.join(', ')}`,
+export const requestUploadUrlSchema = z.object({
+  fileName: z.string().min(1, 'File name is required'),
+  contentType: z.enum(allowedContentTypes, {
+    error: () => ({
+      message: `Invalid content type. Allowed: ${allowedContentTypes.join(
+        ', '
+      )}`,
     }),
   }),
 });
 
-export type RequestUploadUrlPayload = zod.infer<typeof requestUploadUrlSchema>;
+export type RequestUploadUrlPayload = z.infer<typeof requestUploadUrlSchema>;
 
 export interface RequestUploadUrlResponse {
   uploadUrl: string;

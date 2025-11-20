@@ -1,4 +1,6 @@
 export * from './create';
+export * from './add-comment';
+export * from './update';
 
 export interface PostDto {
   postId: string;
@@ -21,18 +23,6 @@ export interface GetPostResponse {
   post: PostDto;
 }
 
-export interface LikePostResponse {
-  message: string;
-  like: {
-    postId: string;
-    userId: string;
-    createdAt: string;
-  };
-}
-
-export interface UnlikePostResponse {
-  message: string;
-}
 
 export interface CommentDto {
   commentId: string;
@@ -41,15 +31,6 @@ export interface CommentDto {
   content: string;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface AddCommentPayload {
-  content: string;
-}
-
-export interface AddCommentResponse {
-  message: string;
-  comment: CommentDto;
 }
 
 export interface GetCommentsResponse {
@@ -66,11 +47,3 @@ export interface DeletePostResponse {
   message: string;
 }
 
-export interface UpdatePostPayload {
-  caption?: string;
-}
-
-export interface UpdatePostResponse {
-  message: string;
-  post: PostDto;
-}

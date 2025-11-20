@@ -1,37 +1,37 @@
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { unlikePost } from '../../database';
-import { getUserId, successResponse, errorResponse } from '../utils';
+import { getUserId } from '../utils';
+import { createApiHandlerNoBody } from '../middleware/apiHandler';
+import * as createHttpError from 'http-errors';
 
 /**
  * DELETE /posts/:postId/like
  * Unlike a post
  */
-export async function handler(
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> {
-  try {
+export const handler = createApiHandlerNoBody().handler(
+  async (event: APIGatewayProxyEvent) => {
     const userId = getUserId(event);
     const postId = event.pathParameters?.postId;
 
     if (!postId) {
-      return errorResponse('Post ID is required', 400);
+      throw new createHttpError.BadRequest('Post ID is required');
     }
 
-    // Unlike the post (automatically updates like count)
-    await unlikePost(postId, userId);
-
-    return successResponse({
-      message: 'Post unliked successfully',
-    });
-  } catch (error) {
-    if (error.message === 'User ID not found in request context') {
-      return errorResponse('Unauthorized', 401, error);
+    try {
+      // Unlike the post (automatically updates like count)
+      await unlikePost(postId, userId);
+    } catch (error) {
+      if (error.message === 'Post not liked by user') {
+        throw new createHttpError.Conflict('You have not liked this post');
+      }
+      throw error;
     }
 
-    if (error.message === 'Post not liked by user') {
-      return errorResponse('You have not liked this post', 409, error);
-    }
-
-    return errorResponse('Failed to unlike post', 500, error);
+    return {
+      statusCode: 200,
+      body: {
+        message: 'Post unliked successfully',
+      },
+    };
   }
-}
+);

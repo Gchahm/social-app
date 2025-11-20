@@ -1,47 +1,29 @@
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { requestUploadUrlSchema } from '@chahm/types';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
-import { getUserId, successResponse, errorResponse, validateRequiredFields } from '../utils';
+import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schemas/api-gateway';
+import { z } from 'zod';
+import { getUserId } from '../utils';
+import { createApiHandler } from '../middleware/apiHandler';
 
 const s3Client = new S3Client({});
 const BUCKET_NAME = process.env.BUCKET_NAME!;
 
+const RequestUploadUrlEventSchema = APIGatewayProxyEventSchema.extend({
+  body: requestUploadUrlSchema,
+});
+
+type RequestUploadUrlEventType = z.infer<typeof RequestUploadUrlEventSchema>;
+
 /**
  * POST /posts/upload-url
  * Request a presigned URL for uploading an image directly to S3
- *
- * Request body:
- * {
- *   "fileName": "photo.jpg",
- *   "contentType": "image/jpeg"
- * }
- *
- * Response:
- * {
- *   "uploadUrl": "https://...",
- *   "imageKey": "posts/user123/uuid.jpg",
- *   "imageUrl": "https://bucket.s3.amazonaws.com/posts/user123/uuid.jpg"
- * }
  */
-export async function handler(
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> {
-  try {
+export const handler = createApiHandler(RequestUploadUrlEventSchema).handler(
+  async (event: RequestUploadUrlEventType) => {
     const userId = getUserId(event);
-    const body = JSON.parse(event.body || '{}');
-
-    // Validate required fields
-    validateRequiredFields(body, ['fileName', 'contentType']);
-
-    // Validate content type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowedTypes.includes(body.contentType)) {
-      return errorResponse(
-        `Invalid content type. Allowed: ${allowedTypes.join(', ')}`,
-        400
-      );
-    }
+    const body = event.body;
 
     // Generate unique file key
     const fileExtension = body.fileName.split('.').pop();
@@ -62,21 +44,14 @@ export async function handler(
     // Construct the final image URL
     const imageUrl = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${imageKey}`;
 
-    return successResponse({
-      uploadUrl,
-      imageKey,
-      imageUrl,
-      expiresIn: 300,
-    });
-  } catch (error) {
-    if (error.message === 'User ID not found in request context') {
-      return errorResponse('Unauthorized', 401, error);
-    }
-
-    if (error.message?.includes('Missing required fields')) {
-      return errorResponse(error.message, 400, error);
-    }
-
-    return errorResponse('Failed to generate upload URL', 500, error);
+    return {
+      statusCode: 200,
+      body: {
+        uploadUrl,
+        imageKey,
+        imageUrl,
+        expiresIn: 300,
+      },
+    };
   }
-}
+);

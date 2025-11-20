@@ -1,31 +1,31 @@
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { addCommentSchema } from '@chahm/types';
 import { v4 as uuidv4 } from 'uuid';
+import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schemas/api-gateway';
+import { z } from 'zod';
 import { addComment } from '../../database';
-import { getUserId, successResponse, errorResponse, validateRequiredFields } from '../utils';
+import { getUserId } from '../utils';
+import { createApiHandler } from '../middleware/apiHandler';
+import * as createHttpError from 'http-errors';
+
+const AddCommentEventSchema = APIGatewayProxyEventSchema.extend({
+  body: addCommentSchema,
+});
+
+type AddCommentEventType = z.infer<typeof AddCommentEventSchema>;
 
 /**
  * POST /posts/:postId/comments
  * Add a comment to a post
- *
- * Request body:
- * {
- *   "content": "Comment text"
- * }
  */
-export async function handler(
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> {
-  try {
+export const handler = createApiHandler(AddCommentEventSchema).handler(
+  async (event: AddCommentEventType) => {
     const userId = getUserId(event);
     const postId = event.pathParameters?.postId;
-    const body = JSON.parse(event.body || '{}');
+    const body = event.body;
 
     if (!postId) {
-      return errorResponse('Post ID is required', 400);
+      throw new createHttpError.BadRequest('Post ID is required');
     }
-
-    // Validate required fields
-    validateRequiredFields(body, ['content']);
 
     const commentId = uuidv4();
 
@@ -37,22 +37,12 @@ export async function handler(
       content: body.content,
     });
 
-    return successResponse(
-      {
+    return {
+      statusCode: 201,
+      body: {
         message: 'Comment added successfully',
         commentId,
       },
-      201
-    );
-  } catch (error) {
-    if (error.message === 'User ID not found in request context') {
-      return errorResponse('Unauthorized', 401, error);
-    }
-
-    if (error.message?.includes('Missing required fields')) {
-      return errorResponse(error.message, 400, error);
-    }
-
-    return errorResponse('Failed to add comment', 500, error);
+    };
   }
-}
+);

@@ -1,36 +1,41 @@
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { updatePostSchema } from '@chahm/types';
+import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schemas/api-gateway';
+import { z } from 'zod';
 import { getPostById, updatePost } from '../../database';
-import { getUserId, successResponse, errorResponse } from '../utils';
+import { getUserId } from '../utils';
+import { createApiHandler } from '../middleware/apiHandler';
+import * as createHttpError from 'http-errors';
+
+const UpdatePostEventSchema = APIGatewayProxyEventSchema.extend({
+  body: updatePostSchema,
+});
+
+type UpdatePostEventType = z.infer<typeof UpdatePostEventSchema>;
 
 /**
  * PUT /posts/:postId
  * Update a post (caption only)
- *
- * Request body:
- * {
- *   "caption": "New caption"
- * }
  */
-export async function handler(
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> {
-  try {
+export const handler = createApiHandler(UpdatePostEventSchema).handler(
+  async (event: UpdatePostEventType) => {
     const userId = getUserId(event);
     const postId = event.pathParameters?.postId;
-    const body = JSON.parse(event.body || '{}');
+    const body = event.body;
 
     if (!postId) {
-      return errorResponse('Post ID is required', 400);
+      throw new createHttpError.BadRequest('Post ID is required');
     }
 
     // Check if post exists and user owns it
     const existingPost = await getPostById(postId);
     if (!existingPost) {
-      return errorResponse('Post not found', 404);
+      throw new createHttpError.NotFound('Post not found');
     }
 
     if (existingPost.userId !== userId) {
-      return errorResponse('Forbidden: You can only update your own posts', 403);
+      throw new createHttpError.Forbidden(
+        'Forbidden: You can only update your own posts'
+      );
     }
 
     // Update the post
@@ -39,15 +44,12 @@ export async function handler(
       caption: body.caption,
     });
 
-    return successResponse({
-      message: 'Post updated successfully',
-      post: updatedPost,
-    });
-  } catch (error) {
-    if (error.message === 'User ID not found in request context') {
-      return errorResponse('Unauthorized', 401, error);
-    }
-
-    return errorResponse('Failed to update post', 500, error);
+    return {
+      statusCode: 200,
+      body: {
+        message: 'Post updated successfully',
+        post: updatedPost,
+      },
+    };
   }
-}
+);

@@ -40,3 +40,32 @@ export const createApiHandler = <T extends ZodSchema>(schema: T) => {
     .use(httpErrorHandler())
     .use(parseErrorHandler());
 };
+
+/**
+ * Creates a middy handler for API endpoints without body validation
+ * Useful for GET, DELETE, or POST endpoints that don't require request body
+ * @returns Configured middy instance ready to accept a handler function
+ */
+export const createApiHandlerNoBody = () => {
+  return middy()
+    .use(httpEventNormalizerMiddleware())
+    .use(httpHeaderNormalizerMiddleware())
+    .use(
+      httpCorsMiddleware({
+        origin: '*',
+        credentials: false,
+      })
+    )
+    .use(
+      httpResponseSerializerMiddleware({
+        serializers: [
+          {
+            regex: /^application\/json$/,
+            serializer: ({ body }) => JSON.stringify(body),
+          },
+        ],
+        defaultContentType: 'application/json',
+      })
+    )
+    .use(httpErrorHandler());
+};

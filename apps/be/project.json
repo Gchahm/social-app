@@ -7,6 +7,15 @@
     "app"
   ],
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/be",
+        "command": "tsc --build tsconfig.app.json --emitDeclarationOnly"
+      },
+      "cache": true,
+      "dependsOn": ["^typecheck"]
+    },
     "generate-env": {
       "executor": "nx:run-commands",
       "options": {

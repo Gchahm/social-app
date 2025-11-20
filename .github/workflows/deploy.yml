@@ -49,20 +49,23 @@ jobs:
             echo "environment=prod" >> $GITHUB_OUTPUT
             echo "should-deploy=true" >> $GITHUB_OUTPUT
             echo "aws-role=${{ secrets.AWS_PROD_ROLE_ARN }}" >> $GITHUB_OUTPUT
-            echo "aws-region=${{ secrets.AWS_PROD_REGION || 'us-east-1' }}" >> $GITHUB_OUTPUT
-            echo "Deploying to PRODUCTION"
+            AWS_REGION="${{ secrets.AWS_PROD_REGION }}"
+            echo "aws-region=${AWS_REGION:-us-east-1}" >> $GITHUB_OUTPUT
+            echo "Deploying to PRODUCTION (region: ${AWS_REGION:-us-east-1})"
           elif [[ $GITHUB_REF == refs/heads/release/* ]]; then
             echo "environment=staging" >> $GITHUB_OUTPUT
             echo "should-deploy=true" >> $GITHUB_OUTPUT
             echo "aws-role=${{ secrets.AWS_DEV_ROLE_ARN }}" >> $GITHUB_OUTPUT
-            echo "aws-region=${{ secrets.AWS_DEV_REGION || 'us-east-1' }}" >> $GITHUB_OUTPUT
-            echo "Deploying to STAGING"
+            AWS_REGION="${{ secrets.AWS_DEV_REGION }}"
+            echo "aws-region=${AWS_REGION:-us-east-1}" >> $GITHUB_OUTPUT
+            echo "Deploying to STAGING (region: ${AWS_REGION:-us-east-1})"
           elif [[ $GITHUB_REF == refs/heads/develop ]]; then
             echo "environment=dev" >> $GITHUB_OUTPUT
             echo "should-deploy=true" >> $GITHUB_OUTPUT
             echo "aws-role=${{ secrets.AWS_DEV_ROLE_ARN }}" >> $GITHUB_OUTPUT
-            echo "aws-region=${{ secrets.AWS_DEV_REGION || 'us-east-1' }}" >> $GITHUB_OUTPUT
-            echo "Deploying to DEVELOPMENT"
+            AWS_REGION="${{ secrets.AWS_DEV_REGION }}"
+            echo "aws-region=${AWS_REGION:-us-east-1}" >> $GITHUB_OUTPUT
+            echo "Deploying to DEVELOPMENT (region: ${AWS_REGION:-us-east-1})"
           else
             echo "environment=dev" >> $GITHUB_OUTPUT
             echo "should-deploy=false" >> $GITHUB_OUTPUT

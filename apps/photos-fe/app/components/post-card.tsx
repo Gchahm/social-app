@@ -7,12 +7,31 @@ import {
 } from '@chahm/ui-components';
 import { PostDto } from '@chahm/types';
 import { ImageIcon, Calendar, Heart, MessageCircle } from 'lucide-react';
+import { useState } from 'react';
+import { useLikePost } from '../hooks';
 
 interface PostCardProps {
   post: PostDto;
 }
 
 export function PostCard({ post }: PostCardProps) {
+  // TODO: Add isLiked field to PostDto from backend to persist liked state across refreshes
+  const [isLiked, setIsLiked] = useState(false);
+  const { mutate: toggleLike, isPending } = useLikePost();
+
+  const handleLikeClick = () => {
+    if (isPending) return;
+
+    toggleLike(
+      { postId: post.postId, isLiked },
+      {
+        onSuccess: () => {
+          setIsLiked(!isLiked);
+        },
+      }
+    );
+  };
+
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
@@ -36,10 +55,18 @@ export function PostCard({ post }: PostCardProps) {
         )}
         <Separator />
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <Heart className="h-4 w-4" />
+          <button
+            onClick={handleLikeClick}
+            disabled={isPending}
+            className="flex items-center gap-1.5 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Heart
+              className={`h-4 w-4 transition-all ${
+                isLiked ? 'fill-red-500 text-red-500' : ''
+              }`}
+            />
             <span>{post.likeCount}</span>
-          </div>
+          </button>
           <div className="flex items-center gap-1.5">
             <MessageCircle className="h-4 w-4" />
             <span>{post.commentCount}</span>

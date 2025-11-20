@@ -1,17 +1,9 @@
+import { PostDto } from './dto';
+
 export * from './create';
 export * from './add-comment';
 export * from './update';
-
-export interface PostDto {
-  postId: string;
-  userId: string;
-  imageUrl: string;
-  caption?: string;
-  likeCount: number;
-  commentCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
+export * from './dto';
 
 export interface GetPostsResponse {
   posts: PostDto[];
@@ -22,7 +14,6 @@ export interface GetPostsResponse {
 export interface GetPostResponse {
   post: PostDto;
 }
-
 
 export interface CommentDto {
   commentId: string;
@@ -46,4 +37,3 @@ export interface DeleteCommentResponse {
 export interface DeletePostResponse {
   message: string;
 }
-

@@ -2,7 +2,7 @@ import '@chahm/ui-components/styles/globals.css';
 import { EmptyState, ErrorMessage, Loading, PostsList } from '../components';
 import { usePosts } from '../hooks';
 
-export function _index() {
+export default function Index() {
   const { data, isPending, error, refetch } = usePosts();
 
   return (
@@ -21,5 +21,3 @@ export function _index() {
     </div>
   );
 }
-
-export default _index;

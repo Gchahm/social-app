@@ -2,49 +2,18 @@ import { createPostSchema } from '@chahm/types';
 import { v4 as uuidv4 } from 'uuid';
 import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schemas/api-gateway';
 import { z } from 'zod';
-import middy from '@middy/core';
-import httpEventNormalizerMiddleware from '@middy/http-event-normalizer';
-import httpHeaderNormalizerMiddleware from '@middy/http-header-normalizer';
-import httpJsonBodyParserMiddleware from '@middy/http-json-body-parser';
-import { parser } from '@aws-lambda-powertools/parser/middleware';
-import httpErrorHandler from '@middy/http-error-handler';
 import { getUserId } from '../utils';
 import { createPost, incrementPostCount } from '../database';
-import httpCorsMiddleware from '@middy/http-cors';
-import httpResponseSerializerMiddleware from '@middy/http-response-serializer';
-import { parseErrorHandler } from '../middleware/parseErrorHandler';
+import { createApiHandler } from '../middleware/apiHandler';
 
-const PostPhotoEventSchema = APIGatewayProxyEventSchema.extend({
+const createPostEvent = APIGatewayProxyEventSchema.extend({
   body: createPostSchema,
 });
 
-type PostPhotoEventType = z.infer<typeof PostPhotoEventSchema>;
+type PostPhotoEventType = z.infer<typeof createPostEvent>;
 
-export const handler = middy()
-  .use(httpEventNormalizerMiddleware())
-  .use(httpHeaderNormalizerMiddleware())
-  .use(httpJsonBodyParserMiddleware())
-  .use(parser({ schema: PostPhotoEventSchema }))
-  .use(
-    httpCorsMiddleware({
-      origin: '*',
-      credentials: false,
-    })
-  )
-  .use(
-    httpResponseSerializerMiddleware({
-      serializers: [
-        {
-          regex: /^application\/json$/,
-          serializer: ({ body }) => JSON.stringify(body),
-        },
-      ],
-      defaultContentType: 'application/json',
-    })
-  )
-  .use(httpErrorHandler())
-  .use(parseErrorHandler())
-  .handler(async (event: PostPhotoEventType) => {
+export const handler = createApiHandler(createPostEvent).handler(
+  async (event: PostPhotoEventType) => {
     const userId = getUserId(event);
     const body = event.body;
 

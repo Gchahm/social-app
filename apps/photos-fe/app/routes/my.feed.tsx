@@ -21,28 +21,29 @@ export function MyFeed() {
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 overflow-auto max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold">Upload Photo</h1>
+    <>
+      <div className="flex flex-col gap-4 p-4 overflow-auto">
+        <h1 className="text-2xl font-bold">Upload Photo</h1>
 
-      {createPostMutation.isPending ? (
-        <Card className="p-6">
-          <p className="text-lg">Uploading photo...</p>
-        </Card>
-      ) : !createPostMutation.isSuccess ? (
-        // Upload form
-        <UploadImageForm onSubmit={handleUpload} />
-      ) : (
-        // Post-upload options
-        <Card>
-          <CardHeader>
-            <CardTitle>Phost created sucessfully!</CardTitle>
-            <CardDescription>Nothing do do here</CardDescription>
-          </CardHeader>
-        </Card>
-      )}
-
+        {createPostMutation.isPending ? (
+          <Card className="p-6">
+            <p className="text-lg">Uploading photo...</p>
+          </Card>
+        ) : !createPostMutation.isSuccess ? (
+          // Upload form
+          <UploadImageForm onSubmit={handleUpload} />
+        ) : (
+          // Post-upload options
+          <Card>
+            <CardHeader>
+              <CardTitle>Phost created sucessfully!</CardTitle>
+              <CardDescription>Nothing do do here</CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+      </div>
       <PostsContainer />
-    </div>
+    </>
   );
 }
 

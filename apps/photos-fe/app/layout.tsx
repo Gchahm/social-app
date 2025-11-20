@@ -5,7 +5,11 @@ export default function RootLayout() {
   return (
     <>
       <Navbar />
-      <Outlet />
+      <div className="flex justify-center">
+        <div className="max-w-2xl">
+          <Outlet />
+        </div>
+      </div>
     </>
   );
 }

@@ -5,7 +5,7 @@ export function PostsContainer() {
   const { data, isPending, error, refetch } = usePosts();
 
   return (
-    <div className="flex flex-col gap-4 p-4 overflow-auto">
+    <div className="flex flex-col gap-4 p-4 w-full">
       {isPending && <Loading message="Loading posts..." />}
 
       {error && <ErrorMessage error={error} onRetry={refetch} />}

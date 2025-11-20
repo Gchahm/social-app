@@ -7,6 +7,13 @@
     "app"
   ],
   "targets": {
+    "generate-env": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/be",
+        "command": "node generate-env.js"
+      }
+    },
     "synth": {
       "executor": "nx:run-commands",
       "options": {

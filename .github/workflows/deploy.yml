@@ -170,7 +170,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: cdk-artifacts-${{ github.sha }}
-          path: apps/be/
+          path: apps/be/cdk.out/
 
       - name: Restore node_modules cache
         uses: actions/cache@v4
@@ -200,10 +200,10 @@ jobs:
 
           echo "Deploying to $ENVIRONMENT environment..."
 
-          # Deploy with context
+          # Deploy using pre-synthesized CloudFormation templates
           npx cdk deploy \
             --require-approval never \
-            --context environment=$ENVIRONMENT \
+            --app cdk.out \
             --outputs-file outputs.json
 
           # Extract API URL from outputs

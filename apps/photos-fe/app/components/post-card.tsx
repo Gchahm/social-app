@@ -1,4 +1,13 @@
-import { Card, CardContent, CardHeader, Separator } from '@chahm/ui-components';
+import {
+  Avatar,
+  AvatarFallback,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  Separator,
+} from '@chahm/ui-components';
 import { PostDto } from '@chahm/types';
 import { Calendar, Heart, ImageIcon, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
@@ -25,10 +34,22 @@ export function PostCard({ post }: PostCardProps) {
     );
   };
 
+  const getUserInitials = (username: string) => {
+    return username
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2 mb-3">
+          <Avatar>
+            <AvatarFallback>{getUserInitials(post.username)}</AvatarFallback>
+          </Avatar>
           <div className="flex-1">
             <p className="font-semibold text-sm">{post.username}</p>
           </div>
@@ -46,25 +67,23 @@ export function PostCard({ post }: PostCardProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {post.caption && (
-          <div>
-            <p className="text-sm line-clamp-3">{post.caption}</p>
-          </div>
-        )}
+        {post.caption && <CardDescription className="line-clamp-3">{post.caption}</CardDescription>}
         <Separator />
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={handleLikeClick}
             disabled={isPending}
-            className="flex items-center gap-1.5 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="hover:text-red-500"
           >
             <Heart
               className={`h-4 w-4 transition-all ${
                 isLiked ? 'fill-red-500 text-red-500' : ''
               }`}
             />
-            <span>{post.likeCount}</span>
-          </button>
+            <span className="ml-1.5">{post.likeCount}</span>
+          </Button>
           <div className="flex items-center gap-1.5">
             <MessageCircle className="h-4 w-4" />
             <span>{post.commentCount}</span>

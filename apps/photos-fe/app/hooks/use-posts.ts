@@ -1,15 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { get } from 'aws-amplify/api';
-import { GetPostsResponse } from '@chahm/types';
+import { GetPostsQueryParameters, GetPostsResponse } from '@chahm/types';
 import type { DefaultError } from '@tanstack/query-core';
 
-export function usePosts() {
+export function usePosts(props: GetPostsQueryParameters) {
   return useQuery<GetPostsResponse, DefaultError, GetPostsResponse>({
     queryKey: ['posts'],
     queryFn: async () => {
       const restOperation = get({
         apiName: 'SocialApp',
         path: 'posts',
+        options: {
+          queryParams: { userId: props.userId || '' },
+        },
       });
 
       const { body } = await restOperation.response;

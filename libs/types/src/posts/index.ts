@@ -5,6 +5,10 @@ export * from './add-comment';
 export * from './update';
 export * from './dto';
 
+export interface GetPostsQueryParameters {
+  userId?: string;
+}
+
 export interface GetPostsResponse {
   posts: PostDto[];
   count: number;

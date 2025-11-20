@@ -83,11 +83,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --prefer-offline --no-audit
+        run: npm ci
         timeout-minutes: 5
 
       - name: Lint backend
@@ -116,11 +116,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --prefer-offline --no-audit
+        run: npm ci
         timeout-minutes: 5
 
       - name: Synthesize CDK
@@ -157,7 +157,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Download CDK artifacts
@@ -174,7 +174,7 @@ jobs:
           role-session-name: GitHubActions-${{ github.run_id }}
 
       - name: Install dependencies
-        run: npm ci --prefer-offline --no-audit
+        run: npm ci
         timeout-minutes: 5
 
       - name: Deploy CDK stack

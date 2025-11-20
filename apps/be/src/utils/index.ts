@@ -1,5 +1,6 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { ApiGatewayProxyEventType } from '../types';
+import createError from 'http-errors';
 
 /**
  * Extract user ID from API Gateway event
@@ -25,7 +26,7 @@ export function getUserId(
   }
 
   if (!userId) {
-    throw new Error('User ID not found in request context');
+    throw createError(401, 'User ID not found in request context');
   }
 
   return userId;

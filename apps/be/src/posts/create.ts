@@ -8,10 +8,11 @@ import httpHeaderNormalizerMiddleware from '@middy/http-header-normalizer';
 import httpJsonBodyParserMiddleware from '@middy/http-json-body-parser';
 import { parser } from '@aws-lambda-powertools/parser/middleware';
 import httpErrorHandler from '@middy/http-error-handler';
-import { errorResponse, getUserId } from '../utils';
+import { getUserId } from '../utils';
 import { createPost, incrementPostCount } from '../database';
 import httpCorsMiddleware from '@middy/http-cors';
 import httpResponseSerializerMiddleware from '@middy/http-response-serializer';
+import { parseErrorHandler } from '../middleware/parseErrorHandler';
 
 const PostPhotoEventSchema = APIGatewayProxyEventSchema.extend({
   body: createPostSchema,
@@ -23,10 +24,11 @@ export const handler = middy()
   .use(httpEventNormalizerMiddleware())
   .use(httpHeaderNormalizerMiddleware())
   .use(httpJsonBodyParserMiddleware())
+  .use(parser({ schema: PostPhotoEventSchema }))
   .use(
     httpCorsMiddleware({
-      origin: '*', // Same as your current Access-Control-Allow-Origin: *
-      credentials: false, // Set to true if you need cookies/auth headers
+      origin: '*',
+      credentials: false,
     })
   )
   .use(
@@ -41,44 +43,34 @@ export const handler = middy()
     })
   )
   .use(httpErrorHandler())
-  .use(parser({ schema: PostPhotoEventSchema }))
+  .use(parseErrorHandler())
   .handler(async (event: PostPhotoEventType) => {
-    console.log('event', event);
-    try {
-      const userId = getUserId(event);
-      const body = event.body;
+    const userId = getUserId(event);
+    const body = event.body;
 
-      // Construct URL from S3 key
-      const bucketName = process.env.BUCKET_NAME;
-      const region = process.env.AWS_REGION;
-      const imageUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${body.imageKey}`;
+    // Construct URL from S3 key
+    const bucketName = process.env.BUCKET_NAME;
+    const region = process.env.AWS_REGION;
+    const imageUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${body.imageKey}`;
 
-      const postId = uuidv4();
+    const postId = uuidv4();
 
-      // Create the post
-      const post = await createPost({
-        postId,
-        userId,
-        imageUrl,
-        caption: body.caption,
-      });
+    // Create the post
+    const post = await createPost({
+      postId,
+      userId,
+      imageUrl,
+      caption: body.caption,
+    });
 
-      // Increment user's post count
-      await incrementPostCount(userId, 1);
+    // Increment user's post count
+    await incrementPostCount(userId, 1);
 
-      return {
-        body: post,
-        statusCode: 201,
-      };
-    } catch (error) {
-      if (error.message === 'User ID not found in request context') {
-        return errorResponse('Unauthorized', 401, error);
-      }
-
-      if (error.message?.includes('Missing required fields')) {
-        return errorResponse(error.message, 400, error);
-      }
-
-      return errorResponse('Failed to create post', 500, error);
-    }
+    return {
+      statusCode: 201,
+      body: {
+        message: 'Post created successfully',
+        post,
+      },
+    };
   });

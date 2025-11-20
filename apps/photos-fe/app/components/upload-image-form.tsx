@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Button,
   Field,
@@ -23,6 +23,7 @@ type UploadImageFormProps = {
 
 export function UploadImageForm(props: UploadImageFormProps) {
   const { onSubmit } = props;
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: formDefaultValues,
@@ -33,6 +34,15 @@ export function UploadImageForm(props: UploadImageFormProps) {
       await onSubmit(value);
     },
   });
+
+  // Clean up preview URL on unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   return (
     <div className="max-w-xl w-full border rounded-md p-4 bg-white/50">
@@ -87,20 +97,33 @@ export function UploadImageForm(props: UploadImageFormProps) {
                     <InputGroupInput
                       id={field.name}
                       name={field.name}
-                      onChange={async (e) =>
-                        e.currentTarget.files?.[0] &&
-                        field.handleChange(e.currentTarget.files?.[0])
-                      }
+                      onChange={async (e) => {
+                        const file = e.currentTarget.files?.[0];
+                        if (file) {
+                          // Revoke previous preview URL to avoid memory leaks
+                          if (previewUrl) {
+                            URL.revokeObjectURL(previewUrl);
+                          }
+                          // Create new preview URL
+                          const newPreviewUrl = URL.createObjectURL(file);
+                          setPreviewUrl(newPreviewUrl);
+                          field.handleChange(file);
+                        }
+                      }}
                       type="file"
                       aria-label="Image file"
                       accept="image/*"
                     />
                   </InputGroup>
-                  {/*{file && (*/}
-                  {/*  <p className="text-xs text-gray-600 mt-1">*/}
-                  {/*    /!*Selected: {file.name}*!/*/}
-                  {/*  </p>*/}
-                  {/*)}*/}
+                  {previewUrl && (
+                    <div className="mt-3">
+                      <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className="max-w-full h-auto rounded-md border"
+                      />
+                    </div>
+                  )}
                 </Field>
               );
             }}

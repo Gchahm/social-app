@@ -5,6 +5,7 @@ import { ITable } from 'aws-cdk-lib/aws-dynamodb';
 import { Integration, LambdaIntegration } from 'aws-cdk-lib/aws-apigateway';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Duration } from 'aws-cdk-lib';
+import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { ILambdaEnvironmentVariables } from './types';
 
 export interface BaseLambdaConfig {
@@ -14,12 +15,16 @@ export interface BaseLambdaConfig {
   environment?: Record<string, string>;
   minify?: boolean;
   sourceMap?: boolean;
+  logRetention?: RetentionDays;
 }
 
 export interface BaseLambdaConstructProps {
   table: ITable;
   bucket: IBucket;
   environment: ILambdaEnvironmentVariables;
+  logRetention?: RetentionDays;
+  timeout?: Duration;
+  memorySize?: number;
 }
 
 /**
@@ -34,19 +39,20 @@ export abstract class BaseLambdaConstruct extends Construct {
   constructor(scope: Construct, id: string, props: BaseLambdaConstructProps) {
     super(scope, id);
 
-    const { table, bucket, environment } = props;
+    const { table, bucket, environment, logRetention, timeout, memorySize } = props;
 
     this.table = table;
     this.bucket = bucket;
 
-    // Default common configuration
+    // Default common configuration with environment-specific overrides
     this.commonConfig = {
       runtime: Runtime.NODEJS_22_X,
-      timeout: Duration.seconds(30),
-      memorySize: 256,
+      timeout: timeout || Duration.seconds(30),
+      memorySize: memorySize || 256,
       minify: true,
       sourceMap: true,
       environment,
+      logRetention: logRetention || RetentionDays.ONE_WEEK,
     };
   }
 
@@ -82,6 +88,7 @@ export abstract class BaseLambdaConstruct extends Construct {
       timeout: options?.timeout || this.commonConfig.timeout,
       memorySize: options?.memorySize || this.commonConfig.memorySize,
       environment,
+      logRetention: this.commonConfig.logRetention,
       bundling: {
         minify: this.commonConfig.minify,
         sourceMap: this.commonConfig.sourceMap,

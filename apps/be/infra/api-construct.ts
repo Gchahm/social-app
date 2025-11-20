@@ -5,6 +5,7 @@ import {
   MethodOptions,
   ResourceOptions,
   RestApi,
+  ThrottleSettings,
 } from 'aws-cdk-lib/aws-apigateway';
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
 import { PostsIntegrations } from './posts-lambda-construct';
@@ -14,6 +15,9 @@ export interface ApiConstructProps {
   userPool: UserPool;
   postsIntegrations?: PostsIntegrations;
   photosIntegrations?: PhotosIntegrations;
+  corsOrigins: string[];
+  throttleRateLimit: number;
+  throttleBurstLimit: number;
 }
 
 export class ApiConstruct extends Construct {
@@ -22,9 +26,22 @@ export class ApiConstruct extends Construct {
   constructor(scope: Construct, id: string, props: ApiConstructProps) {
     super(scope, id);
 
-    const { userPool, photosIntegrations, postsIntegrations } = props;
+    const {
+      userPool,
+      photosIntegrations,
+      postsIntegrations,
+      corsOrigins,
+      throttleRateLimit,
+      throttleBurstLimit,
+    } = props;
 
-    const gateway = new RestApi(this, 'be-api');
+    const gateway = new RestApi(this, 'be-api', {
+      description: 'Full Stack App REST API',
+      deployOptions: {
+        throttlingRateLimit: throttleRateLimit,
+        throttlingBurstLimit: throttleBurstLimit,
+      },
+    });
     this.api = gateway;
 
     const authorizer = new CognitoUserPoolsAuthorizer(this, 'authorizer', {
@@ -41,8 +58,15 @@ export class ApiConstruct extends Construct {
 
     const optionsWithCors: ResourceOptions = {
       defaultCorsPreflightOptions: {
-        allowOrigins: Cors.ALL_ORIGINS,
+        allowOrigins: corsOrigins,
         allowMethods: Cors.ALL_METHODS,
+        allowHeaders: [
+          'Content-Type',
+          'X-Amz-Date',
+          'Authorization',
+          'X-Api-Key',
+          'X-Amz-Security-Token',
+        ],
       },
     };
 

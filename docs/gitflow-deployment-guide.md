@@ -85,7 +85,7 @@ main (production)
 
 **File: `apps/be/infra/be-stack.ts`**
 
-```typescript
+```text
 import { CfnOutput, Stack, StackProps, RemovalPolicy } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { DatabaseConstruct } from './database-construct';
@@ -226,7 +226,7 @@ export class BeStack extends Stack {
 
 **File: `apps/be/infra/app.ts`**
 
-```typescript
+```text
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
 import { BeStack, Environment } from './be-stack';

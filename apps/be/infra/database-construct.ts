@@ -5,19 +5,25 @@ import {
   Table,
   TableEncryption,
   ProjectionType,
+  PointInTimeRecoverySpecification,
 } from 'aws-cdk-lib/aws-dynamodb';
 import { RemovalPolicy } from 'aws-cdk-lib';
+
+export interface DatabaseConstructProps {
+  billingMode: BillingMode;
+  removalPolicy: RemovalPolicy;
+  pointInTimeRecoverySpecification: PointInTimeRecoverySpecification;
+}
 
 export class DatabaseConstruct extends Construct {
   public table: Table;
 
-  constructor(scope: Construct, id: string) {
+  constructor(scope: Construct, id: string, props: DatabaseConstructProps) {
     super(scope, id);
 
     // Single-table design for social media application
     // Stores Users, Posts, Likes, Comments, and Follows
     this.table = new Table(this, 'SocialMediaTable', {
-      tableName: 'SocialMediaApp',
       partitionKey: {
         name: 'PK',
         type: AttributeType.STRING,
@@ -26,9 +32,11 @@ export class DatabaseConstruct extends Construct {
         name: 'SK',
         type: AttributeType.STRING,
       },
-      billingMode: BillingMode.PAY_PER_REQUEST,
-      removalPolicy: RemovalPolicy.DESTROY, // Use RETAIN for production
+      billingMode: props.billingMode,
+      removalPolicy: props.removalPolicy,
       encryption: TableEncryption.AWS_MANAGED,
+      pointInTimeRecoverySpecification: props.pointInTimeRecoverySpecification,
+      deletionProtection: props.removalPolicy === RemovalPolicy.RETAIN,
     });
 
     // GSI1: User-Entity Index

@@ -33,6 +33,7 @@
     }
   },
   "exclude": [
+    "docs",
     "node_modules",
     "tmp"
   ]

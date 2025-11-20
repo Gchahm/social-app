@@ -1,25 +1,25 @@
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { removeComment, getCommentsByPost } from '../../database';
-import { getUserId, successResponse, errorResponse } from '../utils';
+import { getUserId } from '../utils';
+import { createApiHandlerNoBody } from '../middleware/apiHandler';
+import * as createHttpError from 'http-errors';
 
 /**
  * DELETE /posts/:postId/comments/:commentId
  * Delete a comment
  */
-export async function handler(
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> {
-  try {
+export const handler = createApiHandlerNoBody().handler(
+  async (event: APIGatewayProxyEvent) => {
     const userId = getUserId(event);
     const postId = event.pathParameters?.postId;
     const commentId = event.pathParameters?.commentId;
 
     if (!postId) {
-      return errorResponse('Post ID is required', 400);
+      throw new createHttpError.BadRequest('Post ID is required');
     }
 
     if (!commentId) {
-      return errorResponse('Comment ID is required', 400);
+      throw new createHttpError.BadRequest('Comment ID is required');
     }
 
     // Check if comment exists and user owns it
@@ -27,27 +27,23 @@ export async function handler(
     const comment = comments.items.find((c) => c.commentId === commentId);
 
     if (!comment) {
-      return errorResponse('Comment not found', 404);
+      throw new createHttpError.NotFound('Comment not found');
     }
 
     if (comment.userId !== userId) {
-      return errorResponse(
-        'Forbidden: You can only delete your own comments',
-        403
+      throw new createHttpError.Forbidden(
+        'You can only delete your own comments'
       );
     }
 
     // Remove comment (automatically updates comment count)
     await removeComment(postId, commentId);
 
-    return successResponse({
-      message: 'Comment deleted successfully',
-    });
-  } catch (error) {
-    if (error.message === 'User ID not found in request context') {
-      return errorResponse('Unauthorized', 401, error);
-    }
-
-    return errorResponse('Failed to delete comment', 500, error);
+    return {
+      statusCode: 200,
+      body: {
+        message: 'Comment deleted successfully',
+      },
+    };
   }
-}
+);

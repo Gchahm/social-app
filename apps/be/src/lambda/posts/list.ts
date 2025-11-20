@@ -1,5 +1,9 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
-import { getPostsByUser, getGlobalFeed, getUserLikedPostsFromList } from '../../database';
+import {
+  getPostsByUser,
+  getGlobalFeed,
+  getUserLikedPostsFromList,
+} from '../../database';
 import { getOptionalUserId } from '../utils';
 import { createApiHandlerNoBody } from '../middleware/apiHandler';
 import { PostDto } from '@chahm/types';
@@ -30,18 +34,15 @@ export const handler = createApiHandlerNoBody().handler(
       ? await getPostsByUser(userId, { limit, lastEvaluatedKey })
       : await getGlobalFeed({ limit, lastEvaluatedKey });
 
-    // Add isLiked field to each post if user is authenticated
-    // Batch check all likes in a single query instead of N queries
-    let postsWithLikeStatus = result.items;
-    if (currentUserId && result.items.length > 0) {
-      const postIds = result.items.map(post => post.postId);
-      const likedPostIds = await getUserLikedPostsFromList(currentUserId, postIds);
+    const likedPostIds = await getUserLikedPostsFromList(
+      currentUserId,
+      result.items.map((post) => post.postId)
+    );
 
-      postsWithLikeStatus  = result.items.map(post => ({
-        ...post,
-        isLiked: likedPostIds.has(post.postId),
-      }));
-    }
+    const postsWithLikeStatus: PostDto[] = result.items.map((post) => ({
+      ...post,
+      isLiked: likedPostIds.has(post.postId),
+    }));
 
     return {
       statusCode: 200,

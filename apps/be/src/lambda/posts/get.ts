@@ -1,29 +1,40 @@
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { getPostById } from '../../database';
-import { successResponse, errorResponse } from '../utils';
+import type { APIGatewayProxyEvent } from 'aws-lambda';
+import { getPostById, checkUserLikedPost } from '../../database';
+import { getOptionalUserId } from '../utils';
+import { createApiHandlerNoBody } from '../middleware/apiHandler';
+import * as createHttpError from 'http-errors';
 
 /**
  * GET /posts/:postId
  * Get a single post by ID
  */
-export async function handler(
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> {
-  try {
+export const handler = createApiHandlerNoBody().handler(
+  async (event: APIGatewayProxyEvent) => {
     const postId = event.pathParameters?.postId;
 
     if (!postId) {
-      return errorResponse('Post ID is required', 400);
+      throw new createHttpError.BadRequest('Post ID is required');
     }
 
     const post = await getPostById(postId);
 
     if (!post) {
-      return errorResponse('Post not found', 404);
+      throw new createHttpError.NotFound('Post not found');
     }
 
-    return successResponse({ post });
-  } catch (error) {
-    return errorResponse('Failed to fetch post', 500, error);
+    // Add isLiked field if user is authenticated
+    const currentUserId = getOptionalUserId(event);
+    let postWithLikeStatus = post;
+    if (currentUserId) {
+      const isLiked = await checkUserLikedPost(post.postId, currentUserId);
+      postWithLikeStatus = { ...post, isLiked };
+    }
+
+    return {
+      statusCode: 200,
+      body: {
+        post: postWithLikeStatus,
+      },
+    };
   }
-}
+);

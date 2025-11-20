@@ -7,5 +7,4 @@ export interface PostDto {
   commentCount: number;
   isLiked: boolean;
   createdAt: string;
-  updatedAt: string;
 }

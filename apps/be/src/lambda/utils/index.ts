@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { ApiGatewayProxyEventType } from '../../types';
-import createError from 'http-errors';
+import * as createError from 'http-errors';
 
 /**
  * Extract user ID from API Gateway event

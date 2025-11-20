@@ -1,31 +1,31 @@
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { getPostById, deletePost } from '../../database';
 import { incrementPostCount } from '../../database/user';
-import { getUserId, successResponse, errorResponse } from '../utils';
+import { getUserId } from '../utils';
+import { createApiHandlerNoBody } from '../middleware/apiHandler';
+import * as createHttpError from 'http-errors';
 
 /**
  * DELETE /posts/:postId
  * Delete a post
  */
-export async function handler(
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> {
-  try {
+export const handler = createApiHandlerNoBody().handler(
+  async (event: APIGatewayProxyEvent) => {
     const userId = getUserId(event);
     const postId = event.pathParameters?.postId;
 
     if (!postId) {
-      return errorResponse('Post ID is required', 400);
+      throw new createHttpError.BadRequest('Post ID is required');
     }
 
     // Check if post exists and user owns it
     const existingPost = await getPostById(postId);
     if (!existingPost) {
-      return errorResponse('Post not found', 404);
+      throw new createHttpError.NotFound('Post not found');
     }
 
     if (existingPost.userId !== userId) {
-      return errorResponse('Forbidden: You can only delete your own posts', 403);
+      throw new createHttpError.Forbidden('You can only delete your own posts');
     }
 
     // Delete the post
@@ -34,14 +34,11 @@ export async function handler(
     // Decrement user's post count
     await incrementPostCount(userId, -1);
 
-    return successResponse({
-      message: 'Post deleted successfully',
-    });
-  } catch (error) {
-    if (error.message === 'User ID not found in request context') {
-      return errorResponse('Unauthorized', 401, error);
-    }
-
-    return errorResponse('Failed to delete post', 500, error);
+    return {
+      statusCode: 200,
+      body: {
+        message: 'Post deleted successfully',
+      },
+    };
   }
-}
+);

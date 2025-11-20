@@ -8,6 +8,17 @@ import httpErrorHandler from '@middy/http-error-handler';
 import { parser } from '@aws-lambda-powertools/parser/middleware';
 import { parseErrorHandler } from './parseErrorHandler';
 import { ZodSchema } from 'zod';
+import { Logger } from '@aws-lambda-powertools/logger';
+import { injectLambdaContext } from '@aws-lambda-powertools/logger/middleware';
+import { Metrics } from '@aws-lambda-powertools/metrics';
+import { logMetrics } from '@aws-lambda-powertools/metrics/middleware';
+import { Tracer } from '@aws-lambda-powertools/tracer';
+import { captureLambdaHandler } from '@aws-lambda-powertools/tracer/middleware';
+
+
+const logger = new Logger();
+const tracer = new Tracer();
+const metrics = new Metrics();
 
 /**
  * Creates a middy handler with standard middleware pipeline for API endpoints
@@ -16,6 +27,9 @@ import { ZodSchema } from 'zod';
  */
 export const createApiHandler = <T extends ZodSchema>(schema: T) => {
   return middy()
+    .use(captureLambdaHandler(tracer))
+    .use(injectLambdaContext(logger))
+    .use(logMetrics(metrics))
     .use(httpEventNormalizerMiddleware())
     .use(httpHeaderNormalizerMiddleware())
     .use(httpJsonBodyParserMiddleware())
@@ -48,6 +62,9 @@ export const createApiHandler = <T extends ZodSchema>(schema: T) => {
  */
 export const createApiHandlerNoBody = () => {
   return middy()
+    .use(captureLambdaHandler(tracer))
+    .use(injectLambdaContext(logger))
+    .use(logMetrics(metrics))
     .use(httpEventNormalizerMiddleware())
     .use(httpHeaderNormalizerMiddleware())
     .use(

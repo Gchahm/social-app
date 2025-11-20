@@ -65,9 +65,5 @@ export function useLikePost() {
         queryClient.setQueryData(['posts'], context.previousPosts);
       }
     },
-    onSettled: () => {
-      // Refetch posts to ensure data consistency
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-    },
   });
 }

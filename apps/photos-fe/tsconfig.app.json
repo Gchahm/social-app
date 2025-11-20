@@ -25,7 +25,7 @@
   },
   "references": [
     {
-      "path": "../../libs/types"
+      "path": "../../libs/types/tsconfig.lib.json"
     },
     {
       "path": "../../libs/ui-components"

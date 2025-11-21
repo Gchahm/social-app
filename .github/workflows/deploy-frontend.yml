@@ -162,9 +162,43 @@ jobs:
       - name: Setup Node.js and Dependencies
         uses: ./.github/actions/setup-node-deps
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_ROLE_ARN || secrets.AWS_DEV_ROLE_ARN }}
+          aws-region: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_REGION || secrets.AWS_DEV_REGION || 'us-east-1' }}
+          role-session-name: GitHubActions-${{ github.run_id }}
+
+      - name: Fetch backend stack outputs
+        id: backend-outputs
+        env:
+          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
+        run: |
+          # Fetch backend CloudFormation stack outputs
+          STACK_NAME="social-app-${ENVIRONMENT}"
+          echo "Fetching outputs from stack: $STACK_NAME"
+
+          # Get API endpoint from backend stack
+          API_URL=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue" \
+            --output text 2>/dev/null || echo "")
+
+          if [ -z "$API_URL" ]; then
+            echo "Warning: Could not fetch API URL from backend stack. Using placeholder."
+            API_URL="https://api-placeholder.example.com"
+          fi
+
+          echo "API_URL=$API_URL" >> $GITHUB_OUTPUT
+          echo "Backend API URL: $API_URL"
+
+          # Save outputs to file for reference
+          echo "{\"apiUrl\": \"$API_URL\", \"environment\": \"$ENVIRONMENT\"}" > apps/photos-fe/backend-outputs.json
+
       - name: Build frontend
         env:
           ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
+          VITE_API_URL: ${{ steps.backend-outputs.outputs.API_URL }}
         run: npx nx build photos-fe
 
       - name: Synthesize CDK
@@ -251,8 +285,8 @@ jobs:
             --app cdk.out \
             --outputs-file outputs.json
 
-          # Extract website URL from outputs (new stack name format: UIStack-{env})
-          WEBSITE_URL=$(cat outputs.json | jq -r '."UIStack-'$ENVIRONMENT'".WebsiteUrl')
+          # Extract website URL from outputs (stack name format: social-app-{env}-website)
+          WEBSITE_URL=$(cat outputs.json | jq -r '."social-app-'$ENVIRONMENT'-website".WebsiteUrl')
           echo "website-url=$WEBSITE_URL" >> $GITHUB_OUTPUT
           echo "Deployed to: $WEBSITE_URL"
 
@@ -294,7 +328,7 @@ jobs:
         env:
           ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
         run: |
-          WEBSITE_URL=$(cat outputs.json | jq -r '."UIStack-'$ENVIRONMENT'".WebsiteUrl')
+          WEBSITE_URL=$(cat outputs.json | jq -r '."social-app-'$ENVIRONMENT'-website".WebsiteUrl')
 
           echo "Testing website at: $WEBSITE_URL"
 

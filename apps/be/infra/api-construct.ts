@@ -11,6 +11,7 @@ import { UserPool } from 'aws-cdk-lib/aws-cognito';
 import { PostsLambdas } from './posts-lambda-construct';
 import { PhotosLambdas } from './photos-lambda-construct';
 import { HealthLambdas } from './health-lambda-construct';
+import { APP_NAME } from './constants';
 
 export interface ApiConstructProps {
   userPool: UserPool;
@@ -20,6 +21,7 @@ export interface ApiConstructProps {
   corsOrigins: string[];
   throttleRateLimit: number;
   throttleBurstLimit: number;
+  envName: string;
 }
 
 export class ApiConstruct extends Construct {
@@ -36,9 +38,10 @@ export class ApiConstruct extends Construct {
       corsOrigins,
       throttleRateLimit,
       throttleBurstLimit,
+      envName,
     } = props;
 
-    const gateway = new RestApi(this, 'be-api', {
+    const gateway = new RestApi(this, `${APP_NAME}-${envName}`, {
       description: 'Full Stack App REST API',
       deployOptions: {
         throttlingRateLimit: throttleRateLimit,
@@ -75,7 +78,10 @@ export class ApiConstruct extends Construct {
 
     // Health check endpoint (no authentication required)
     const healthResource = gateway.root.addResource('health', optionsWithCors);
-    healthResource.addMethod('GET', new LambdaIntegration(healthLambdas.healthCheck));
+    healthResource.addMethod(
+      'GET',
+      new LambdaIntegration(healthLambdas.healthCheck)
+    );
 
     // Photos endpoints
     const photosResource = gateway.root.addResource('photos', optionsWithCors);
@@ -99,13 +105,19 @@ export class ApiConstruct extends Construct {
     );
 
     // GET /posts - List posts (global feed or by user)
-    postsResource.addMethod('GET', new LambdaIntegration(postsLambdas.listPosts));
+    postsResource.addMethod(
+      'GET',
+      new LambdaIntegration(postsLambdas.listPosts)
+    );
 
     // /posts/:postId
     const postIdResource = postsResource.addResource('{postId}');
 
     // GET /posts/:postId - Get single post
-    postIdResource.addMethod('GET', new LambdaIntegration(postsLambdas.getPost));
+    postIdResource.addMethod(
+      'GET',
+      new LambdaIntegration(postsLambdas.getPost)
+    );
 
     // PUT /posts/:postId - Update post
     postIdResource.addMethod(
@@ -149,7 +161,10 @@ export class ApiConstruct extends Construct {
     );
 
     // GET /posts/:postId/comments - Get comments
-    commentsResource.addMethod('GET', new LambdaIntegration(postsLambdas.getComments));
+    commentsResource.addMethod(
+      'GET',
+      new LambdaIntegration(postsLambdas.getComments)
+    );
 
     // /posts/:postId/comments/:commentId
     const commentIdResource = commentsResource.addResource('{commentId}');

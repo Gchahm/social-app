@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
 import { BeStack, Environment } from './be-stack';
+import { APP_NAME } from './constants';
 
 const app = new cdk.App();
 
 // Get environment from context (passed via CLI: --context environment=dev)
-const environment = (app.node.tryGetContext('environment') as Environment) || 'dev';
+const environment =
+  (app.node.tryGetContext('environment') as Environment) || 'dev';
 
 // Validate environment
 if (!['dev', 'staging', 'prod'].includes(environment)) {
@@ -23,13 +25,13 @@ const awsEnv = {
   region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
 };
 
-new BeStack(app, 'BeStack', {
+new BeStack(app, APP_NAME, {
   environment,
   env: awsEnv,
   description: `Backend stack for ${environment} environment - Full Stack App`,
   tags: {
     Environment: environment,
-    Project: 'FullStackApp',
+    Project: APP_NAME,
     ManagedBy: 'CDK',
     Repository: 'aws-full-stack',
   },

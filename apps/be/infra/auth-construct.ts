@@ -3,6 +3,7 @@ import { UserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
 import { RemovalPolicy } from 'aws-cdk-lib';
 import { Environment } from './be-stack';
 import { IFunction } from 'aws-cdk-lib/aws-lambda';
+import { APP_NAME } from './constants';
 
 export interface AuthConstructProps {
   environment: Environment;
@@ -25,7 +26,7 @@ export class AuthConstruct extends Construct {
       props.environment,
       props.postRegistrationLambda
     );
-    this.userPoolClient = this.createUserPoolClient();
+    this.userPoolClient = this.createUserPoolClient(props.environment);
   }
 
   private createUserPool(
@@ -35,7 +36,7 @@ export class AuthConstruct extends Construct {
     const removalPolicy =
       environment === 'prod' ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY;
 
-    return new UserPool(this, 'SpaceUserPool', {
+    return new UserPool(this, `${APP_NAME}-user-pool-${environment}`, {
       selfSignUpEnabled: true,
       signInAliases: {
         username: true,
@@ -48,14 +49,17 @@ export class AuthConstruct extends Construct {
     });
   }
 
-  private createUserPoolClient() {
-    return this.userPool.addClient('SpaceUserPoolClient', {
-      authFlows: {
-        adminUserPassword: true,
-        custom: true,
-        userPassword: true,
-        userSrp: true,
-      },
-    });
+  private createUserPoolClient(environment: Environment) {
+    return this.userPool.addClient(
+      `${APP_NAME}-user-pool-client-${environment}`,
+      {
+        authFlows: {
+          adminUserPassword: true,
+          custom: true,
+          userPassword: true,
+          userSrp: true,
+        },
+      }
+    );
   }
 }

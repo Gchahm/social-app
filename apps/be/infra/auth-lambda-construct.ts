@@ -24,7 +24,7 @@ export class AuthLambdaConstruct extends BaseLambdaConstruct {
       'PostRegistrationLambda',
       'src/lambda/auth/post-registration.ts',
       {
-        functionName: 'auth-PostRegistration',
+        functionName: 'auth-post-registration',
         description: 'Auth: Post-registration trigger',
       }
     );

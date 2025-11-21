@@ -13,6 +13,7 @@ import { prodConfig } from './configs/prod';
 import { AuthLambdaConstruct } from './auth-lambda-construct';
 import { HealthLambdaConstruct } from './health-lambda-construct';
 import { DomainConstruct } from './domain-construct';
+import { APP_NAME } from './constants';
 
 export type Environment = 'dev' | 'staging' | 'prod';
 
@@ -36,11 +37,11 @@ export class BeStack extends Stack {
     const config = envConfigs[props.environment];
 
     // Database construct with environment-specific config
-    const databaseConstruct = new DatabaseConstruct(this, 'DatabaseConstruct', {
-      billingMode: config.tableBillingMode,
-      removalPolicy: config.tableRemovalPolicy,
-      pointInTimeRecoverySpecification: config.pointInTimeRecoverySpecification,
-    });
+    const databaseConstruct = new DatabaseConstruct(
+      this,
+      'DatabaseConstruct',
+      config
+    );
 
     // Storage construct with environment-specific config
     const storageConstruct = new StorageConstruct(this, 'StorageConstruct', {
@@ -102,6 +103,7 @@ export class BeStack extends Stack {
       corsOrigins: config.corsOrigins,
       throttleRateLimit: config.throttleRateLimit,
       throttleBurstLimit: config.throttleBurstLimit,
+      envName: props.environment,
     });
 
     // Custom domain setup (optional, based on configuration)
@@ -158,7 +160,7 @@ export class BeStack extends Stack {
 
     // Add tags to all resources for cost tracking and organization
     this.tags.setTag('Environment', props.environment);
-    this.tags.setTag('Project', 'FullStackApp');
+    this.tags.setTag('Project', APP_NAME);
     this.tags.setTag('ManagedBy', 'CDK');
     this.tags.setTag(
       'CostCenter',

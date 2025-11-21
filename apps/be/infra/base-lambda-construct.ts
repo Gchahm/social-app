@@ -6,6 +6,7 @@ import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Duration } from 'aws-cdk-lib';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { ILambdaEnvironmentVariables } from './types';
+import { APP_NAME } from './constants';
 
 export interface BaseLambdaConfig {
   runtime?: Runtime;
@@ -82,7 +83,7 @@ export abstract class BaseLambdaConstruct extends Construct {
 
     // Create environment-specific function name
     const baseFunctionName = options?.functionName || id;
-    const functionName = `${baseFunctionName}-${this.envName}`;
+    const functionName = `${APP_NAME}-${baseFunctionName}-${this.envName}`;
 
     // Create Lambda function
     const lambdaFn = new NodejsFunction(this, id, {

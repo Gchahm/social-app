@@ -22,7 +22,7 @@ export class PhotosLambdaConstruct extends BaseLambdaConstruct {
 
     this.lambdas = {
       requestPhotoUploadUrl: this.createLambdaFunction(
-        'RequestUploadUrl',
+        'photos-request-upload-url',
         'src/lambda/photos/request-upload-url.ts',
         {
           functionName: 'photos-RequestUploadUrl',

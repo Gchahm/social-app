@@ -38,4 +38,3 @@ runs:
       if: inputs.skip-install != 'true' && steps.cache-deps.outputs.cache-hit != 'true'
       shell: bash
       run: npm ci
-      timeout-minutes: 5

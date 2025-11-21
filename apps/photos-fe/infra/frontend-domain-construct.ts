@@ -10,6 +10,7 @@ import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import {
   CachePolicy,
   Distribution,
+  DistributionProps,
   OriginAccessIdentity,
   ViewerProtocolPolicy,
 } from 'aws-cdk-lib/aws-cloudfront';
@@ -65,22 +66,10 @@ export class FrontendDomainConstruct extends Construct {
       );
     }
 
+    const hasCustomDomain = this.certificate && customDomain.feDomain;
+
     // Build CloudFront distribution config
-    const distributionProps: {
-      defaultBehavior: {
-        origin: S3BucketOrigin;
-        viewerProtocolPolicy: ViewerProtocolPolicy;
-        cachePolicy: CachePolicy;
-      };
-      defaultRootObject: string;
-      errorResponses: Array<{
-        httpStatus: number;
-        responseHttpStatus: number;
-        responsePagePath: string;
-      }>;
-      domainNames?: string[];
-      certificate?: ICertificate;
-    } = {
+    const distributionProps: DistributionProps = {
       defaultBehavior: {
         origin: S3BucketOrigin.withOriginAccessIdentity(bucket, {
           originAccessIdentity,
@@ -102,13 +91,9 @@ export class FrontendDomainConstruct extends Construct {
           responsePagePath: '/index.html',
         },
       ],
+      domainNames: hasCustomDomain ? [customDomain.feDomain] : undefined,
+      certificate: hasCustomDomain ? this.certificate : undefined,
     };
-
-    // Add custom domain if certificate is available
-    if (this.certificate && customDomain.feDomain) {
-      distributionProps.domainNames = [customDomain.feDomain];
-      distributionProps.certificate = this.certificate;
-    }
 
     // Create CloudFront distribution
     this.distribution = new Distribution(

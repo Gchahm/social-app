@@ -6,8 +6,9 @@ import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { BlockPublicAccess, Bucket } from 'aws-cdk-lib/aws-s3';
 import {
   FrontendDomainConstruct,
-  CustomDomainConfig,
 } from './frontend-domain-construct';
+import { APP_NAME } from './constants';
+import { CustomDomainConfig } from './utils';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -26,7 +27,7 @@ export class UiStack extends Stack {
 
     // S3 bucket for static assets - private, accessed via CloudFront OAI
     const uiCodeBucket = new Bucket(this, 'UIBucket', {
-      bucketName: `sample-app-bucket-${environment}-${this.account}`,
+      bucketName: `${APP_NAME}-fe-${environment}-${this.account}`,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
     });
 

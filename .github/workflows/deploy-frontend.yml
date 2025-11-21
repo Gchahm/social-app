@@ -86,7 +86,7 @@ jobs:
   test:
     name: Lint & Type Check
     runs-on: ubuntu-latest
-    needs: [check-affected]
+    needs: [check-affected, determine-environment]
     if: needs.check-affected.outputs.affected == 'true'
 
     steps:
@@ -95,6 +95,18 @@ jobs:
 
       - name: Setup Node.js and Dependencies
         uses: ./.github/actions/setup-node-deps
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_ROLE_ARN || secrets.AWS_DEV_ROLE_ARN }}
+          aws-region: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_REGION || secrets.AWS_DEV_REGION || 'us-east-1' }}
+          role-session-name: GitHubActions-${{ github.run_id }}
+
+      - name: Fetch backend stack outputs
+        env:
+          OUTPUT_FILE: apps/photos-fe/backend-outputs.json
+        run: ./.github/scripts/fetch-backend-outputs.sh "${{ needs.determine-environment.outputs.environment }}"
 
       - name: Lint frontend
         run: npx nx lint photos-fe

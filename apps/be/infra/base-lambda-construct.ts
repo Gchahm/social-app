@@ -7,6 +7,7 @@ import { Duration } from 'aws-cdk-lib';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { ILambdaEnvironmentVariables } from './types';
 import { APP_NAME } from './constants';
+import { EnvironmentConfig } from './configs';
 
 export interface BaseLambdaConfig {
   runtime?: Runtime;
@@ -18,14 +19,11 @@ export interface BaseLambdaConfig {
   logRetention?: RetentionDays;
 }
 
-export interface BaseLambdaConstructProps {
+export interface BaseLambdaConstructProps extends EnvironmentConfig {
   table: ITable;
   bucket: IBucket;
   environment: ILambdaEnvironmentVariables;
   envName?: string; // Environment name for resource naming (dev/staging/prod)
-  logRetention?: RetentionDays;
-  timeout?: Duration;
-  memorySize?: number;
 }
 
 /**
@@ -41,7 +39,15 @@ export abstract class BaseLambdaConstruct extends Construct {
   constructor(scope: Construct, id: string, props: BaseLambdaConstructProps) {
     super(scope, id);
 
-    const { table, bucket, environment, envName, logRetention, timeout, memorySize } = props;
+    const {
+      table,
+      bucket,
+      environment,
+      envName,
+      lambdaTimeout,
+      lambdaMemorySize,
+      logRetentionDays,
+    } = props;
 
     this.table = table;
     this.bucket = bucket;
@@ -50,12 +56,12 @@ export abstract class BaseLambdaConstruct extends Construct {
     // Default common configuration with environment-specific overrides
     this.commonConfig = {
       runtime: Runtime.NODEJS_22_X,
-      timeout: timeout || Duration.seconds(30),
-      memorySize: memorySize || 256,
+      timeout: lambdaTimeout || Duration.seconds(3),
+      memorySize: lambdaMemorySize || 256,
       minify: true,
       sourceMap: true,
       environment,
-      logRetention: logRetention || RetentionDays.ONE_WEEK,
+      logRetention: logRetentionDays || RetentionDays.ONE_WEEK,
     };
   }
 
@@ -91,7 +97,8 @@ export abstract class BaseLambdaConstruct extends Construct {
       handler: 'handler',
       entry,
       functionName,
-      description: options?.description || `Lambda function: ${id} (${this.envName})`,
+      description:
+        options?.description || `Lambda function: ${id} (${this.envName})`,
       timeout: options?.timeout || this.commonConfig.timeout,
       memorySize: options?.memorySize || this.commonConfig.memorySize,
       environment,

@@ -12,15 +12,13 @@ import { PostsLambdas } from './posts-lambda-construct';
 import { PhotosLambdas } from './photos-lambda-construct';
 import { HealthLambdas } from './health-lambda-construct';
 import { APP_NAME } from './constants';
+import { EnvironmentConfig } from './configs';
 
-export interface ApiConstructProps {
+export interface ApiConstructProps extends EnvironmentConfig {
   userPool: UserPool;
   postsLambdas?: PostsLambdas;
   photosLambdas?: PhotosLambdas;
   healthLambdas?: HealthLambdas;
-  corsOrigins: string[];
-  throttleRateLimit: number;
-  throttleBurstLimit: number;
   envName: string;
 }
 

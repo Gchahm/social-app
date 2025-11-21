@@ -22,10 +22,10 @@ export class PhotosLambdaConstruct extends BaseLambdaConstruct {
 
     this.lambdas = {
       requestPhotoUploadUrl: this.createLambdaFunction(
-        'photos-request-upload-url',
+        'requestPhotoUploadUrl',
         'src/lambda/photos/request-upload-url.ts',
         {
-          functionName: 'photos-RequestUploadUrl',
+          functionName: 'photos-request-upload-url',
           description: 'Photos API: Request presigned URL for upload',
           grantS3Write: true, // Needs permission to generate presigned URLs
         }

@@ -44,10 +44,7 @@ export class BeStack extends Stack {
     );
 
     // Storage construct with environment-specific config
-    const storageConstruct = new StorageConstruct(this, 'StorageConstruct', {
-      removalPolicy: config.bucketRemovalPolicy,
-      corsOrigins: config.corsOrigins,
-    });
+    const storageConstruct = new StorageConstruct(this, 'StorageConstruct', config);
 
     // Lambda shared configuration
     const lambdaProps: BaseLambdaConstructProps = {
@@ -58,12 +55,9 @@ export class BeStack extends Stack {
         BUCKET_NAME: storageConstruct.bucket.bucketName,
         SERVICE_NAME: stackName,
         ENVIRONMENT: props.environment,
-        CORS_ORIGINS: config.corsOrigins.join(','),
       },
       envName: props.environment,
-      logRetention: config.logRetentionDays,
-      timeout: config.lambdaTimeout,
-      memorySize: config.lambdaMemorySize,
+      ...config,
     };
 
     const photosLambdaConstruct = new PhotosLambdaConstruct(
@@ -100,16 +94,14 @@ export class BeStack extends Stack {
       postsLambdas: postsLambdaConstruct.lambdas,
       photosLambdas: photosLambdaConstruct.lambdas,
       healthLambdas: healthLambdaConstruct.lambdas,
-      corsOrigins: config.corsOrigins,
-      throttleRateLimit: config.throttleRateLimit,
-      throttleBurstLimit: config.throttleBurstLimit,
+      ...config,
       envName: props.environment,
     });
 
     // Custom domain setup (optional, based on configuration)
     const domainConstruct = new DomainConstruct(this, 'DomainConstruct', {
-      customDomain: config.customDomain,
       api: apiConstruct.api,
+      ...config
     });
 
     // Stack outputs with environment-specific export names

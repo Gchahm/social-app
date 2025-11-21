@@ -13,7 +13,7 @@ export const devConfig: EnvironmentConfig = {
 
   // Lambda - basic settings for development
   logRetentionDays: RetentionDays.ONE_WEEK,
-  lambdaTimeout: Duration.seconds(30),
+  lambdaTimeout: Duration.seconds(3),
   lambdaMemorySize: 512,
 
   // S3 - auto-cleanup for dev

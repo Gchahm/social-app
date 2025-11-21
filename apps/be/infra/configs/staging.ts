@@ -13,7 +13,7 @@ export const stagingConfig: EnvironmentConfig = {
 
   // Lambda - production-like settings
   logRetentionDays: RetentionDays.TWO_WEEKS,
-  lambdaTimeout: Duration.seconds(30),
+  lambdaTimeout: Duration.seconds(3),
   lambdaMemorySize: 1024,
 
   // S3 - retain for troubleshooting

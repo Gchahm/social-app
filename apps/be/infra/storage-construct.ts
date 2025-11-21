@@ -1,11 +1,9 @@
 import { Construct } from 'constructs';
 import { Bucket, HttpMethods, BlockPublicAccess } from 'aws-cdk-lib/aws-s3';
 import { RemovalPolicy } from 'aws-cdk-lib';
+import { EnvironmentConfig } from './configs';
 
-export interface StorageConstructProps {
-  removalPolicy: RemovalPolicy;
-  corsOrigins: string[];
-}
+export type StorageConstructProps = EnvironmentConfig;
 
 export class StorageConstruct extends Construct {
   public bucket: Bucket;
@@ -17,8 +15,8 @@ export class StorageConstruct extends Construct {
       // Allow public read access to uploaded images
       publicReadAccess: true,
       blockPublicAccess: BlockPublicAccess.BLOCK_ACLS_ONLY,
-      removalPolicy: props.removalPolicy,
-      autoDeleteObjects: props.removalPolicy === RemovalPolicy.DESTROY,
+      removalPolicy: props.bucketRemovalPolicy,
+      autoDeleteObjects: props.bucketRemovalPolicy === RemovalPolicy.DESTROY,
       cors: [
         {
           allowedOrigins: props.corsOrigins,
@@ -33,7 +31,7 @@ export class StorageConstruct extends Construct {
           exposedHeaders: ['ETag'],
         },
       ],
-      versioned: props.removalPolicy === RemovalPolicy.RETAIN, // Enable versioning for prod
+      versioned: props.bucketRemovalPolicy === RemovalPolicy.RETAIN, // Enable versioning for prod
     });
   }
 }

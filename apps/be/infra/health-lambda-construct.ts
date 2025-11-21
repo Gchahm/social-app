@@ -4,6 +4,7 @@ import {
   BaseLambdaConstruct,
   BaseLambdaConstructProps,
 } from './base-lambda-construct';
+import { APP_NAME } from './constants';
 
 export interface HealthLambdas {
   healthCheck: NodejsFunction;
@@ -23,7 +24,7 @@ export class HealthLambdaConstruct extends BaseLambdaConstruct {
         'HealthCheck',
         'src/lambda/health/index.ts',
         {
-          functionName: 'health-Check',
+          functionName: 'health-check',
           description: 'Health check endpoint',
         }
       ),

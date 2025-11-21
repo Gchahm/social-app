@@ -1,15 +1,16 @@
 import { Construct } from 'constructs';
+import { Certificate, ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 import {
-  Certificate,
-  ICertificate,
-} from 'aws-cdk-lib/aws-certificatemanager';
-import { IHostedZone, HostedZone, ARecord, RecordTarget } from 'aws-cdk-lib/aws-route53';
+  IHostedZone,
+  HostedZone,
+  ARecord,
+  RecordTarget,
+} from 'aws-cdk-lib/aws-route53';
 import { ApiGatewayDomain } from 'aws-cdk-lib/aws-route53-targets';
 import { DomainName, RestApi } from 'aws-cdk-lib/aws-apigateway';
-import { CustomDomainConfig } from './configs';
+import { CustomDomainConfig, EnvironmentConfig } from './configs';
 
-export interface DomainConstructProps {
-  customDomain?: CustomDomainConfig;
+export interface DomainConstructProps extends EnvironmentConfig {
   api: RestApi;
 }
 
@@ -30,10 +31,14 @@ export class DomainConstruct extends Construct {
 
     // Get or import hosted zone
     if (customDomain.hostedZoneId && customDomain.hostedZoneName) {
-      this.hostedZone = HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
-        hostedZoneId: customDomain.hostedZoneId,
-        zoneName: customDomain.hostedZoneName,
-      });
+      this.hostedZone = HostedZone.fromHostedZoneAttributes(
+        this,
+        'HostedZone',
+        {
+          hostedZoneId: customDomain.hostedZoneId,
+          zoneName: customDomain.hostedZoneName,
+        }
+      );
     }
 
     // Get or import certificate
@@ -63,9 +68,7 @@ export class DomainConstruct extends Construct {
         new ARecord(this, 'AliasRecord', {
           zone: this.hostedZone,
           recordName: customDomain.domainName,
-          target: RecordTarget.fromAlias(
-            new ApiGatewayDomain(this.domainName)
-          ),
+          target: RecordTarget.fromAlias(new ApiGatewayDomain(this.domainName)),
         });
       }
     }

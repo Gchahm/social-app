@@ -14,7 +14,7 @@ export const prodConfig: EnvironmentConfig = {
 
   // Lambda - production settings
   logRetentionDays: RetentionDays.ONE_MONTH,
-  lambdaTimeout: Duration.seconds(30),
+  lambdaTimeout: Duration.seconds(3),
   lambdaMemorySize: 1024,
 
   // S3 - retain production data

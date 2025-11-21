@@ -20,7 +20,7 @@ export const stagingConfig: EnvironmentConfig = {
 
   // S3 - retain for troubleshooting
   bucketRemovalPolicy: RemovalPolicy.RETAIN,
-  corsOrigins: ['https://staging.yourdomain.com'], // Update with your staging domain
+  corsOrigins: [], // Update with your staging domain
 
   // API Gateway - production-like limits
   throttleRateLimit: 10,

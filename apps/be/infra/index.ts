@@ -14,7 +14,7 @@ const domainName = app.node.tryGetContext('domainName') as string;
 
 const customDomain: CustomDomainConfig | undefined = domainName
   ? {
-      domainName: `${environment}api-${domainName}`,
+      domainName,
       hostedZoneId: app.node.tryGetContext('hostedZoneId') as string,
       hostedZoneName: app.node.tryGetContext('hostedZoneName') as string,
       certificateArn: app.node.tryGetContext('certificateArn') as string,

@@ -19,6 +19,7 @@ export interface CustomDomainConfig {
 
 export interface DomainConstructProps extends CustomDomainConfig {
   api: RestApi;
+  environment: string;
 }
 
 export class DomainConstruct extends Construct {
@@ -59,16 +60,17 @@ export class DomainConstruct extends Construct {
 
     // Only create domain if we have a certificate
     if (this.certificate) {
+      const domain = `${props.environment}api-${customDomain.domainName}`;
       // Create custom domain for API Gateway
       this.domainName = new DomainName(this, 'CustomDomain', {
         domainName: customDomain.domainName,
         certificate: this.certificate,
       });
 
-      new CfnOutput(this, 'CustomDomainUrl', {
-        value: `https://${customDomain.domainName}`,
+      new CfnOutput(this, 'CustomDomainApiUrl', {
+        value: `https://${domain}`,
         description: 'Custom domain URL for API',
-        exportName: `CustomDomainUrl`,
+        exportName: `CustomDomainApiUrl`,
       });
       // Attach the API to the custom domain
       this.domainName.addBasePathMapping(api, {

@@ -37,6 +37,13 @@ export class BeStack extends Stack {
 
     const config = envConfigs[props.environment];
 
+    if (props.customDomain) {
+      config.corsOrigins = [
+        `https://${props.customDomain}`,
+        ...config.corsOrigins,
+      ];
+    }
+
     // Database construct with environment-specific config
     const databaseConstruct = new DatabaseConstruct(
       this,
@@ -100,6 +107,7 @@ export class BeStack extends Stack {
     // Custom domain setup (optional, based on configuration)
     new DomainConstruct(this, 'DomainConstruct', {
       api: apiConstruct.api,
+      environment: props.environment,
       ...props.customDomain,
     });
 

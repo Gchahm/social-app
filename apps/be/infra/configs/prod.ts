@@ -21,7 +21,7 @@ export const prodConfig: EnvironmentConfig = {
 
   // S3 - retain production data
   bucketRemovalPolicy: RemovalPolicy.RETAIN,
-  corsOrigins: ['https://yourdomain.com'], // Update with your production domain
+  corsOrigins: [], // Update with your production domain
 
   // API Gateway - production limits
   throttleRateLimit: 10,

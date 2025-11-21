@@ -274,7 +274,7 @@ jobs:
 
       - name: Health check
         run: |
-          API_URL=$(cat outputs.json | jq -r '.["BeStack-${{ needs.determine-environment.outputs.environment }}"].ApiEndpoint')
+          API_URL=$(cat outputs.json | jq -r '.["social-app-${{ needs.determine-environment.outputs.environment }}"].ApiEndpoint')
 
           echo "Testing API health at: $API_URL"
 

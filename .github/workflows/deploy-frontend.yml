@@ -139,6 +139,8 @@ jobs:
         env:
           ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
           VITE_API_URL: ${{ steps.backend-outputs.outputs.API_URL }}
+          VITE_USER_POOL_ID: ${{ steps.backend-outputs.outputs.USER_POOL_ID }}
+          VITE_USER_POOL_CLIENT_ID: ${{ steps.backend-outputs.outputs.USER_POOL_CLIENT_ID }}
         run: npx nx build photos-fe
 
       - name: Synthesize CDK

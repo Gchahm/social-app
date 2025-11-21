@@ -15,6 +15,9 @@
       "path": "../../libs/types"
     },
     {
+      "path": "../../libs/ui-components"
+    },
+    {
       "path": "./tsconfig.app.json"
     }
   ],

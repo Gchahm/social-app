@@ -1,6 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { get } from 'aws-amplify/api';
-import { GetPostsQueryParameters, GetPostsResponse } from '@chahm/types';
+import {
+  getPostResponseSchema,
+  GetPostsQueryParameters,
+  GetPostsResponse,
+} from '@chahm/types';
 import type { DefaultError } from '@tanstack/query-core';
 
 export function usePosts(props: GetPostsQueryParameters) {
@@ -16,7 +20,7 @@ export function usePosts(props: GetPostsQueryParameters) {
       });
 
       const { body } = await restOperation.response;
-      return await body.json();
+      return getPostResponseSchema.parse(await body.json());
     },
   });
 }

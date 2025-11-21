@@ -28,7 +28,7 @@ if (!['dev', 'staging', 'prod'].includes(environment)) {
   );
 }
 
-console.log(`🚀 Deploying to ${environment.toUpperCase()} environment`);
+console.log(`🚀 Deploying to ${environment.toUpperCase()} environment ${domainName ? `with custom domain ${domainName}` : ''}`);
 
 // Single AWS account configuration
 // All environments deploy to the same account with isolated resources

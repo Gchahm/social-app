@@ -15,7 +15,7 @@ import { getLogger, getMetrics, getTracer } from '../utils';
 
 const corsMiddleware = () => {
   return httpCorsMiddleware({
-    origin: process.env.CORS_ORIGINS,
+    origins: process.env.CORS_ORIGINS.split(','),
     credentials: false,
   });
 };

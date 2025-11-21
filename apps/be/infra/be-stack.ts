@@ -98,7 +98,7 @@ export class BeStack extends Stack {
     });
 
     // Custom domain setup (optional, based on configuration)
-    const domainConstruct = new DomainConstruct(this, 'DomainConstruct', {
+    new DomainConstruct(this, 'DomainConstruct', {
       api: apiConstruct.api,
       ...props.customDomain,
     });
@@ -107,46 +107,7 @@ export class BeStack extends Stack {
     new CfnOutput(this, 'Environment', {
       value: props.environment,
       description: 'Deployment environment',
-      exportName: `${stackName}-Environment`,
-    });
-
-    new CfnOutput(this, 'ApiEndpoint', {
-      value: apiConstruct.api.url,
-      description: 'API Gateway endpoint URL',
-      exportName: `${stackName}-ApiEndpoint`,
-    });
-
-    // Output custom domain URL if configured
-    if (domainConstruct.domainName && props.customDomain?.domainName) {
-      new CfnOutput(this, 'CustomDomainUrl', {
-        value: `https://${props.customDomain.domainName}`,
-        description: 'Custom domain URL for API',
-        exportName: `${stackName}-CustomDomainUrl`,
-      });
-    }
-
-    new CfnOutput(this, 'UserPoolId', {
-      value: authConstruct.userPool.userPoolId,
-      description: 'Cognito User Pool ID',
-      exportName: `${stackName}-UserPoolId`,
-    });
-
-    new CfnOutput(this, 'UserPoolClientId', {
-      value: authConstruct.userPoolClient.userPoolClientId,
-      description: 'Cognito User Pool Client ID',
-      exportName: `${stackName}-UserPoolClientId`,
-    });
-
-    new CfnOutput(this, 'TableName', {
-      value: databaseConstruct.table.tableName,
-      description: 'DynamoDB table name',
-      exportName: `${stackName}-TableName`,
-    });
-
-    new CfnOutput(this, 'BucketName', {
-      value: storageConstruct.bucket.bucketName,
-      description: 'S3 bucket name',
-      exportName: `${stackName}-BucketName`,
+      exportName: `Environment`,
     });
 
     // Add tags to all resources for cost tracking and organization

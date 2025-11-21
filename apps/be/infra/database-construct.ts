@@ -5,7 +5,7 @@ import {
   Table,
   TableEncryption,
 } from 'aws-cdk-lib/aws-dynamodb';
-import { RemovalPolicy } from 'aws-cdk-lib';
+import { CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
 import { EnvironmentConfig } from './configs';
 import { APP_NAME } from './constants';
 
@@ -33,6 +33,12 @@ export class DatabaseConstruct extends Construct {
       encryption: TableEncryption.AWS_MANAGED,
       pointInTimeRecoverySpecification: props.pointInTimeRecoverySpecification,
       deletionProtection: props.tableRemovalPolicy === RemovalPolicy.RETAIN,
+    });
+
+    new CfnOutput(this, 'TableName', {
+      value: this.table.tableName,
+      description: 'DynamoDB table name',
+      exportName: `TableName`,
     });
 
     // GSI1: User-Entity Index

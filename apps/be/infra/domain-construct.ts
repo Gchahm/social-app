@@ -8,6 +8,7 @@ import {
 } from 'aws-cdk-lib/aws-route53';
 import { ApiGatewayDomain } from 'aws-cdk-lib/aws-route53-targets';
 import { DomainName, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { CfnOutput } from 'aws-cdk-lib';
 
 export interface CustomDomainConfig {
   domainName?: string;
@@ -64,6 +65,11 @@ export class DomainConstruct extends Construct {
         certificate: this.certificate,
       });
 
+      new CfnOutput(this, 'CustomDomainUrl', {
+        value: `https://${customDomain.domainName}`,
+        description: 'Custom domain URL for API',
+        exportName: `CustomDomainUrl`,
+      });
       // Attach the API to the custom domain
       this.domainName.addBasePathMapping(api, {
         basePath: '',

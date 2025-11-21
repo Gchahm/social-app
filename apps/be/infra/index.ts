@@ -14,7 +14,7 @@ const domainName = app.node.tryGetContext('domainName') as string;
 
 const customDomain: CustomDomainConfig | undefined = domainName
   ? {
-      domainName,
+      domainName: `${environment}api-${domainName}`,
       hostedZoneId: app.node.tryGetContext('hostedZoneId') as string,
       hostedZoneName: app.node.tryGetContext('hostedZoneName') as string,
       certificateArn: app.node.tryGetContext('certificateArn') as string,
@@ -28,7 +28,11 @@ if (!['dev', 'staging', 'prod'].includes(environment)) {
   );
 }
 
-console.log(`🚀 Deploying to ${environment.toUpperCase()} environment ${domainName ? `with custom domain ${domainName}` : ''}`);
+console.log(
+  `🚀 Deploying to ${environment.toUpperCase()} environment ${
+    domainName ? `with custom domain ${domainName}` : ''
+  }`
+);
 
 // Single AWS account configuration
 // All environments deploy to the same account with isolated resources

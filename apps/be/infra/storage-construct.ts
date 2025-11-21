@@ -1,6 +1,6 @@
 import { Construct } from 'constructs';
 import { Bucket, HttpMethods, BlockPublicAccess } from 'aws-cdk-lib/aws-s3';
-import { RemovalPolicy } from 'aws-cdk-lib';
+import { CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
 import { EnvironmentConfig } from './configs';
 
 export type StorageConstructProps = EnvironmentConfig;
@@ -32,6 +32,12 @@ export class StorageConstruct extends Construct {
         },
       ],
       versioned: props.bucketRemovalPolicy === RemovalPolicy.RETAIN, // Enable versioning for prod
+    });
+
+    new CfnOutput(this, 'BucketName', {
+      value: this.bucket.bucketName,
+      description: 'S3 bucket name',
+      exportName: `BucketName`,
     });
   }
 }

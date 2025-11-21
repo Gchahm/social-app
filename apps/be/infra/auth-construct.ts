@@ -1,6 +1,6 @@
 import { Construct } from 'constructs';
 import { UserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
-import { RemovalPolicy } from 'aws-cdk-lib';
+import { CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
 import { Environment } from './be-stack';
 import { IFunction } from 'aws-cdk-lib/aws-lambda';
 import { APP_NAME } from './constants';
@@ -27,6 +27,18 @@ export class AuthConstruct extends Construct {
       props.postRegistrationLambda
     );
     this.userPoolClient = this.createUserPoolClient(props.environment);
+
+    new CfnOutput(scope, 'UserPoolId', {
+      value: this.userPool.userPoolId,
+      description: 'Cognito User Pool ID',
+      exportName: `UserPoolId`,
+    });
+
+    new CfnOutput(this, 'UserPoolClientId', {
+      value: this.userPoolClient.userPoolClientId,
+      description: 'Cognito User Pool Client ID',
+      exportName: `UserPoolClientId`,
+    });
   }
 
   private createUserPool(

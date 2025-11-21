@@ -3,8 +3,6 @@ import {
   CognitoUserPoolsAuthorizer,
   Cors,
   LambdaIntegration,
-  MethodOptions,
-  ResourceOptions,
   RestApi,
 } from 'aws-cdk-lib/aws-apigateway';
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
@@ -13,6 +11,7 @@ import { PhotosLambdas } from './photos-lambda-construct';
 import { HealthLambdas } from './health-lambda-construct';
 import { APP_NAME } from './constants';
 import { EnvironmentConfig } from './configs';
+import { CfnOutput } from 'aws-cdk-lib';
 
 export interface ApiConstructProps extends EnvironmentConfig {
   userPool: UserPool;
@@ -25,21 +24,23 @@ export interface ApiConstructProps extends EnvironmentConfig {
 export class ApiConstruct extends Construct {
   public readonly api: RestApi;
 
-  constructor(scope: Construct, id: string, props: ApiConstructProps) {
+  constructor(scope: Construct, id: string, public props: ApiConstructProps) {
     super(scope, id);
 
     const {
       userPool,
-      photosLambdas,
-      postsLambdas,
-      healthLambdas,
       corsOrigins,
       throttleRateLimit,
       throttleBurstLimit,
       envName,
     } = props;
 
-    const gateway = new RestApi(this, `${APP_NAME}-${envName}`, {
+    const authorizer = new CognitoUserPoolsAuthorizer(this, 'authorizer', {
+      cognitoUserPools: [userPool],
+      identitySource: 'method.request.header.Authorization',
+    });
+
+    this.api = new RestApi(this, `${APP_NAME}-${envName}`, {
       description: 'Full Stack App REST API',
       deployOptions: {
         throttlingRateLimit: throttleRateLimit,
@@ -50,53 +51,59 @@ export class ApiConstruct extends Construct {
         allowMethods: Cors.ALL_METHODS,
         allowHeaders: Cors.DEFAULT_HEADERS,
       },
-    });
-    this.api = gateway;
-
-    const authorizer = new CognitoUserPoolsAuthorizer(this, 'authorizer', {
-      cognitoUserPools: [userPool],
-      identitySource: 'method.request.header.Authorization',
+      defaultMethodOptions: {
+        authorizationType: authorizer.authorizationType,
+        authorizer,
+      },
     });
 
-    authorizer._attachToApi(gateway);
+    authorizer._attachToApi(this.api);
 
-    const optionsWithAuthorizer: MethodOptions = {
-      authorizationType: authorizer.authorizationType,
-      authorizer,
-    };
+    this.addHealthEndpoints();
+    this.addPhotosEndpoints();
+    this.addPostsEndpoints();
 
-    // Health check endpoint (no authentication required)
-    const healthResource = gateway.root.addResource('health');
+    new CfnOutput(scope, 'ApiEndpoint', {
+      value: this.api.url,
+      description: 'API Gateway endpoint URL',
+      exportName: `ApiEndpoint`,
+    });
+  }
+
+  private addHealthEndpoints() {
+    const healthResource = this.api.root.addResource('health');
     healthResource.addMethod(
       'GET',
-      new LambdaIntegration(healthLambdas.healthCheck)
+      new LambdaIntegration(this.props.healthLambdas.healthCheck)
     );
+  }
 
+  private addPhotosEndpoints() {
     // Photos endpoints
-    const photosResource = gateway.root.addResource('photos');
+    const photosResource = this.api.root.addResource('photos');
 
     // POST /photos/upload-url - Request presigned URL
     const uploadUrlResource = photosResource.addResource('upload-url');
     uploadUrlResource.addMethod(
       'POST',
-      new LambdaIntegration(photosLambdas.requestPhotoUploadUrl),
-      optionsWithAuthorizer
+      new LambdaIntegration(this.props.photosLambdas.requestPhotoUploadUrl)
     );
+  }
 
+  private addPostsEndpoints() {
     // Posts endpoints
-    const postsResource = gateway.root.addResource('posts');
+    const postsResource = this.api.root.addResource('posts');
 
     // POST /posts - Create post
     postsResource.addMethod(
       'POST',
-      new LambdaIntegration(postsLambdas.createPost),
-      optionsWithAuthorizer
+      new LambdaIntegration(this.props.postsLambdas.createPost)
     );
 
     // GET /posts - List posts (global feed or by user)
     postsResource.addMethod(
       'GET',
-      new LambdaIntegration(postsLambdas.listPosts)
+      new LambdaIntegration(this.props.postsLambdas.listPosts)
     );
 
     // /posts/:postId
@@ -105,21 +112,19 @@ export class ApiConstruct extends Construct {
     // GET /posts/:postId - Get single post
     postIdResource.addMethod(
       'GET',
-      new LambdaIntegration(postsLambdas.getPost)
+      new LambdaIntegration(this.props.postsLambdas.getPost)
     );
 
     // PUT /posts/:postId - Update post
     postIdResource.addMethod(
       'PUT',
-      new LambdaIntegration(postsLambdas.updatePost),
-      optionsWithAuthorizer
+      new LambdaIntegration(this.props.postsLambdas.updatePost)
     );
 
     // DELETE /posts/:postId - Delete post
     postIdResource.addMethod(
       'DELETE',
-      new LambdaIntegration(postsLambdas.deletePost),
-      optionsWithAuthorizer
+      new LambdaIntegration(this.props.postsLambdas.deletePost)
     );
 
     // /posts/:postId/like
@@ -128,15 +133,13 @@ export class ApiConstruct extends Construct {
     // POST /posts/:postId/like - Like post
     likeResource.addMethod(
       'POST',
-      new LambdaIntegration(postsLambdas.likePost),
-      optionsWithAuthorizer
+      new LambdaIntegration(this.props.postsLambdas.likePost)
     );
 
     // DELETE /posts/:postId/like - Unlike post
     likeResource.addMethod(
       'DELETE',
-      new LambdaIntegration(postsLambdas.unlikePost),
-      optionsWithAuthorizer
+      new LambdaIntegration(this.props.postsLambdas.unlikePost)
     );
 
     // /posts/:postId/comments
@@ -145,14 +148,13 @@ export class ApiConstruct extends Construct {
     // POST /posts/:postId/comments - Add comment
     commentsResource.addMethod(
       'POST',
-      new LambdaIntegration(postsLambdas.addComment),
-      optionsWithAuthorizer
+      new LambdaIntegration(this.props.postsLambdas.addComment)
     );
 
     // GET /posts/:postId/comments - Get comments
     commentsResource.addMethod(
       'GET',
-      new LambdaIntegration(postsLambdas.getComments)
+      new LambdaIntegration(this.props.postsLambdas.getComments)
     );
 
     // /posts/:postId/comments/:commentId
@@ -161,8 +163,7 @@ export class ApiConstruct extends Construct {
     // DELETE /posts/:postId/comments/:commentId - Delete comment
     commentIdResource.addMethod(
       'DELETE',
-      new LambdaIntegration(postsLambdas.deleteComment),
-      optionsWithAuthorizer
+      new LambdaIntegration(this.props.postsLambdas.deleteComment)
     );
   }
 }

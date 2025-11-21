@@ -9,13 +9,7 @@ import {
 import { ApiGatewayDomain } from 'aws-cdk-lib/aws-route53-targets';
 import { DomainName, RestApi } from 'aws-cdk-lib/aws-apigateway';
 import { CfnOutput } from 'aws-cdk-lib';
-
-export interface CustomDomainConfig {
-  domainName?: string;
-  hostedZoneId?: string;
-  hostedZoneName?: string;
-  certificateArn?: string;
-}
+import { CustomDomainConfig } from './utils';
 
 export interface DomainConstructProps extends CustomDomainConfig {
   api: RestApi;
@@ -33,7 +27,7 @@ export class DomainConstruct extends Construct {
     const { api, ...customDomain } = props;
 
     // Skip if no custom domain configuration
-    if (!customDomain?.domainName) {
+    if (!customDomain?.apiDomain) {
       return;
     }
 
@@ -60,15 +54,14 @@ export class DomainConstruct extends Construct {
 
     // Only create domain if we have a certificate
     if (this.certificate) {
-      const domain = `api-${customDomain.domainName}`;
       // Create custom domain for API Gateway
       this.domainName = new DomainName(this, 'CustomDomain', {
-        domainName: customDomain.domainName,
+        domainName: customDomain.apiDomain,
         certificate: this.certificate,
       });
 
       new CfnOutput(this, 'CustomDomainApiUrl', {
-        value: `https://${domain}`,
+        value: `https://${customDomain.apiDomain}`,
         description: 'Custom domain URL for API',
         exportName: `CustomDomainApiUrl`,
       });
@@ -81,7 +74,7 @@ export class DomainConstruct extends Construct {
       if (this.hostedZone) {
         new ARecord(this, 'AliasRecord', {
           zone: this.hostedZone,
-          recordName: customDomain.domainName,
+          recordName: customDomain.apiDomain,
           target: RecordTarget.fromAlias(new ApiGatewayDomain(this.domainName)),
         });
       }

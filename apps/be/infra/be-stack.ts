@@ -12,10 +12,9 @@ import { stagingConfig } from './configs/staging';
 import { prodConfig } from './configs/prod';
 import { AuthLambdaConstruct } from './auth-lambda-construct';
 import { HealthLambdaConstruct } from './health-lambda-construct';
-import { CustomDomainConfig, DomainConstruct } from './domain-construct';
+import { DomainConstruct } from './domain-construct';
 import { APP_NAME } from './constants';
-
-export type Environment = 'dev' | 'staging' | 'prod';
+import { Environment, CustomDomainConfig } from './utils';
 
 export interface BeStackProps extends StackProps {
   environment: Environment;
@@ -39,7 +38,7 @@ export class BeStack extends Stack {
 
     if (props.customDomain) {
       config.corsOrigins = [
-        `https://${props.customDomain}`,
+        `https://${props.customDomain.feDomain}`,
         ...config.corsOrigins,
       ];
     }

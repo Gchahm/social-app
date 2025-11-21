@@ -1,25 +1,13 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
-import { BeStack, Environment } from './be-stack';
+import { BeStack } from './be-stack';
 import { APP_NAME } from './constants';
-import { CustomDomainConfig } from './domain-construct';
+import { getDomain, getEnvironment } from './utils';
 
 const app = new cdk.App();
 
-// Get environment from context (passed via CLI: --context environment=dev)
-const environment =
-  (app.node.tryGetContext('environment') as Environment) || 'dev';
-
-const domainName = app.node.tryGetContext('domainName') as string;
-
-const customDomain: CustomDomainConfig | undefined = domainName
-  ? {
-      domainName: `${environment}-${domainName}`,
-      hostedZoneId: app.node.tryGetContext('hostedZoneId') as string,
-      hostedZoneName: app.node.tryGetContext('hostedZoneName') as string,
-      certificateArn: app.node.tryGetContext('certificateArn') as string,
-    }
-  : undefined;
+const environment = getEnvironment(app);
+const customDomain = getDomain(app, environment);
 
 // Validate environment
 if (!['dev', 'staging', 'prod'].includes(environment)) {
@@ -28,11 +16,7 @@ if (!['dev', 'staging', 'prod'].includes(environment)) {
   );
 }
 
-console.log(
-  `🚀 Deploying to ${environment.toUpperCase()} environment ${
-    domainName ? `with custom domain ${domainName}` : ''
-  }`
-);
+console.log(`🚀 Deploying to ${environment.toUpperCase()} environment `);
 
 // Single AWS account configuration
 // All environments deploy to the same account with isolated resources

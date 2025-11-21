@@ -4,8 +4,6 @@ import {
 } from 'aws-cdk-lib/aws-dynamodb';
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
-import { Environment } from '../be-stack';
-
 
 export interface EnvironmentConfig {
   tableBillingMode: BillingMode;

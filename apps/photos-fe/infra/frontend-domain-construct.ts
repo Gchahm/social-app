@@ -1,28 +1,22 @@
 import { Construct } from 'constructs';
 import { Certificate, ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 import {
-  IHostedZone,
-  HostedZone,
   ARecord,
+  HostedZone,
+  IHostedZone,
   RecordTarget,
 } from 'aws-cdk-lib/aws-route53';
 import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import {
-  Distribution,
-  ViewerProtocolPolicy,
   CachePolicy,
+  Distribution,
   OriginAccessIdentity,
+  ViewerProtocolPolicy,
 } from 'aws-cdk-lib/aws-cloudfront';
 import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { CfnOutput } from 'aws-cdk-lib';
-
-export interface CustomDomainConfig {
-  domainName?: string;
-  hostedZoneId?: string;
-  hostedZoneName?: string;
-  certificateArn?: string;
-}
+import { CustomDomainConfig } from './utils';
 
 export interface FrontendDomainConstructProps extends CustomDomainConfig {
   bucket: Bucket;
@@ -35,7 +29,11 @@ export class FrontendDomainConstruct extends Construct {
   public readonly certificate?: ICertificate;
   public readonly hostedZone?: IHostedZone;
 
-  constructor(scope: Construct, id: string, props: FrontendDomainConstructProps) {
+  constructor(
+    scope: Construct,
+    id: string,
+    props: FrontendDomainConstructProps
+  ) {
     super(scope, id);
 
     const { bucket, environment, ...customDomain } = props;
@@ -107,24 +105,30 @@ export class FrontendDomainConstruct extends Construct {
     };
 
     // Add custom domain if certificate is available
-    if (this.certificate && customDomain.domainName) {
-      distributionProps.domainNames = [customDomain.domainName];
+    if (this.certificate && customDomain.feDomain) {
+      distributionProps.domainNames = [customDomain.feDomain];
       distributionProps.certificate = this.certificate;
     }
 
     // Create CloudFront distribution
-    this.distribution = new Distribution(this, 'Distribution', distributionProps);
+    this.distribution = new Distribution(
+      this,
+      'Distribution',
+      distributionProps
+    );
 
     // Set the URL based on whether custom domain is configured
-    if (customDomain.domainName && this.certificate) {
-      this.domainUrl = `https://${customDomain.domainName}`;
+    if (customDomain.feDomain && this.certificate) {
+      this.domainUrl = `https://${customDomain.feDomain}`;
 
       // Create Route53 A record if we have a hosted zone
       if (this.hostedZone) {
         new ARecord(this, 'AliasRecord', {
           zone: this.hostedZone,
-          recordName: customDomain.domainName,
-          target: RecordTarget.fromAlias(new CloudFrontTarget(this.distribution)),
+          recordName: customDomain.feDomain,
+          target: RecordTarget.fromAlias(
+            new CloudFrontTarget(this.distribution)
+          ),
         });
       }
 

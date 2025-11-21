@@ -1,7 +1,7 @@
 import { Construct } from 'constructs';
 import { UserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
 import { CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
-import { Environment } from './be-stack';
+import { Environment } from './utils';
 import { IFunction } from 'aws-cdk-lib/aws-lambda';
 import { APP_NAME } from './constants';
 

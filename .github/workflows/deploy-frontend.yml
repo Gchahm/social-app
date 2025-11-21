@@ -39,28 +39,14 @@ jobs:
       - name: Check if frontend is affected
         id: check-affected
         run: |
-          # For pull requests, compare against base branch
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             BASE=${{ github.event.pull_request.base.sha }}
             HEAD=${{ github.event.pull_request.head.sha }}
           else
-            # For pushes, compare against previous commit
             BASE=${{ github.event.before }}
             HEAD=${{ github.sha }}
           fi
-
-          echo "Checking if 'photos-fe' project is affected..."
-          echo "Base: $BASE"
-          echo "Head: $HEAD"
-
-          # Check if frontend or its dependencies are affected
-          if npx nx show project photos-fe --affected --base=$BASE --head=$HEAD > /dev/null 2>&1; then
-            echo "✅ Frontend is affected by changes"
-            echo "affected=true" >> $GITHUB_OUTPUT
-          else
-            echo "⏭️  Frontend is not affected by changes - skipping deployment"
-            echo "affected=false" >> $GITHUB_OUTPUT
-          fi
+          ./.github/scripts/check-affected.sh photos-fe "$BASE" "$HEAD"
 
       - name: Comment on PR if not affected
         if: github.event_name == 'pull_request' && steps.check-affected.outputs.affected != 'true'
@@ -87,38 +73,12 @@ jobs:
       should-deploy: ${{ steps.set-env.outputs.should-deploy }}
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Determine environment from branch
         id: set-env
-        run: |
-          echo "Event: ${{ github.event_name }}"
-          echo "Ref: ${{ github.ref }}"
-
-          # Don't deploy on PRs
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "environment=dev" >> $GITHUB_OUTPUT
-            echo "should-deploy=false" >> $GITHUB_OUTPUT
-            echo "Pull request - will not deploy"
-            exit 0
-          fi
-
-          # Determine environment based on branch
-          if [[ $GITHUB_REF == refs/heads/main ]]; then
-            echo "environment=prod" >> $GITHUB_OUTPUT
-            echo "should-deploy=true" >> $GITHUB_OUTPUT
-            echo "Deploying to PRODUCTION"
-          elif [[ $GITHUB_REF == refs/heads/release/* ]]; then
-            echo "environment=staging" >> $GITHUB_OUTPUT
-            echo "should-deploy=true" >> $GITHUB_OUTPUT
-            echo "Deploying to STAGING"
-          elif [[ $GITHUB_REF == refs/heads/develop ]]; then
-            echo "environment=dev" >> $GITHUB_OUTPUT
-            echo "should-deploy=true" >> $GITHUB_OUTPUT
-            echo "Deploying to DEVELOPMENT"
-          else
-            echo "environment=dev" >> $GITHUB_OUTPUT
-            echo "should-deploy=false" >> $GITHUB_OUTPUT
-            echo "Unknown branch - will not deploy"
-          fi
+        run: ./.github/scripts/determine-environment.sh "${{ github.event_name }}" "${{ github.ref }}"
 
   # ==========================================
   # Job 3: Lint and type check
@@ -172,28 +132,8 @@ jobs:
       - name: Fetch backend stack outputs
         id: backend-outputs
         env:
-          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
-        run: |
-          # Fetch backend CloudFormation stack outputs
-          STACK_NAME="social-app-${ENVIRONMENT}"
-          echo "Fetching outputs from stack: $STACK_NAME"
-
-          # Get API endpoint from backend stack
-          API_URL=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue" \
-            --output text 2>/dev/null || echo "")
-
-          if [ -z "$API_URL" ]; then
-            echo "Warning: Could not fetch API URL from backend stack. Using placeholder."
-            API_URL="https://api-placeholder.example.com"
-          fi
-
-          echo "API_URL=$API_URL" >> $GITHUB_OUTPUT
-          echo "Backend API URL: $API_URL"
-
-          # Save outputs to file for reference
-          echo "{\"apiUrl\": \"$API_URL\", \"environment\": \"$ENVIRONMENT\"}" > apps/photos-fe/backend-outputs.json
+          OUTPUT_FILE: apps/photos-fe/backend-outputs.json
+        run: ./.github/scripts/fetch-backend-outputs.sh "${{ needs.determine-environment.outputs.environment }}"
 
       - name: Build frontend
         env:

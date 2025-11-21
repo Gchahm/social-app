@@ -47,6 +47,8 @@ export abstract class BaseLambdaConstruct extends Construct {
       lambdaTimeout,
       lambdaMemorySize,
       logRetentionDays,
+      minify,
+      sourceMap,
     } = props;
 
     this.table = table;
@@ -58,8 +60,8 @@ export abstract class BaseLambdaConstruct extends Construct {
       runtime: Runtime.NODEJS_22_X,
       timeout: lambdaTimeout || Duration.seconds(3),
       memorySize: lambdaMemorySize || 256,
-      minify: true,
-      sourceMap: true,
+      minify,
+      sourceMap,
       environment,
       logRetention: logRetentionDays || RetentionDays.ONE_WEEK,
     };

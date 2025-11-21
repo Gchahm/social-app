@@ -15,6 +15,8 @@ export interface EnvironmentConfig {
   logRetentionDays: RetentionDays;
   lambdaTimeout: Duration;
   lambdaMemorySize: number;
+  minify: boolean;
+  sourceMap: boolean;
 
   bucketRemovalPolicy: RemovalPolicy;
   corsOrigins: string[];

@@ -8,23 +8,21 @@ export const devConfig: EnvironmentConfig = {
   tableBillingMode: BillingMode.PAY_PER_REQUEST,
   tableRemovalPolicy: RemovalPolicy.DESTROY, // Auto-cleanup for dev
   pointInTimeRecoverySpecification: {
-    pointInTimeRecoveryEnabled: false
+    pointInTimeRecoveryEnabled: false,
   },
 
   // Lambda - basic settings for development
   logRetentionDays: RetentionDays.ONE_WEEK,
   lambdaTimeout: Duration.seconds(3),
   lambdaMemorySize: 512,
+  minify: false,
+  sourceMap: false,
 
   // S3 - auto-cleanup for dev
   bucketRemovalPolicy: RemovalPolicy.DESTROY,
-  corsOrigins: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'http://127.0.0.1:5173',
-  ],
+  corsOrigins: ['http://localhost:3000', 'http://localhost:4200'],
 
   // API Gateway - relaxed limits for dev
-  throttleRateLimit: 1000,
-  throttleBurstLimit: 2000,
+  throttleRateLimit: 10,
+  throttleBurstLimit: 100,
 };

@@ -15,12 +15,14 @@ export const stagingConfig: EnvironmentConfig = {
   logRetentionDays: RetentionDays.TWO_WEEKS,
   lambdaTimeout: Duration.seconds(3),
   lambdaMemorySize: 1024,
+  minify: true,
+  sourceMap: true,
 
   // S3 - retain for troubleshooting
   bucketRemovalPolicy: RemovalPolicy.RETAIN,
   corsOrigins: ['https://staging.yourdomain.com'], // Update with your staging domain
 
   // API Gateway - production-like limits
-  throttleRateLimit: 5000,
-  throttleBurstLimit: 10000,
+  throttleRateLimit: 10,
+  throttleBurstLimit: 100,
 };

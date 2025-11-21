@@ -1,4 +1,4 @@
-import { customDomain, EnvironmentConfig } from './shared';
+import { EnvironmentConfig } from './shared';
 import { BillingMode } from 'aws-cdk-lib/aws-dynamodb';
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
@@ -23,6 +23,4 @@ export const stagingConfig: EnvironmentConfig = {
   // API Gateway - production-like limits
   throttleRateLimit: 5000,
   throttleBurstLimit: 10000,
-
-  customDomain,
 };

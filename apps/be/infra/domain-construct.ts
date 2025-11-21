@@ -8,9 +8,15 @@ import {
 } from 'aws-cdk-lib/aws-route53';
 import { ApiGatewayDomain } from 'aws-cdk-lib/aws-route53-targets';
 import { DomainName, RestApi } from 'aws-cdk-lib/aws-apigateway';
-import { CustomDomainConfig, EnvironmentConfig } from './configs';
 
-export interface DomainConstructProps extends EnvironmentConfig {
+export interface CustomDomainConfig {
+  domainName?: string;
+  hostedZoneId?: string;
+  hostedZoneName?: string;
+  certificateArn?: string;
+}
+
+export interface DomainConstructProps extends CustomDomainConfig {
   api: RestApi;
 }
 
@@ -22,7 +28,7 @@ export class DomainConstruct extends Construct {
   constructor(scope: Construct, id: string, props: DomainConstructProps) {
     super(scope, id);
 
-    const { customDomain, api } = props;
+    const { api, ...customDomain } = props;
 
     // Skip if no custom domain configuration
     if (!customDomain?.domainName) {

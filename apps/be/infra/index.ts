@@ -2,12 +2,24 @@
 import * as cdk from 'aws-cdk-lib';
 import { BeStack, Environment } from './be-stack';
 import { APP_NAME } from './constants';
+import { CustomDomainConfig } from './domain-construct';
 
 const app = new cdk.App();
 
 // Get environment from context (passed via CLI: --context environment=dev)
 const environment =
   (app.node.tryGetContext('environment') as Environment) || 'dev';
+
+const domainName = app.node.tryGetContext('domainName') as string;
+
+const customDomain: CustomDomainConfig | undefined = domainName
+  ? {
+      domainName,
+      hostedZoneId: app.node.tryGetContext('hostedZoneId') as string,
+      hostedZoneName: app.node.tryGetContext('hostedZoneName') as string,
+      certificateArn: app.node.tryGetContext('certificateArn') as string,
+    }
+  : undefined;
 
 // Validate environment
 if (!['dev', 'staging', 'prod'].includes(environment)) {
@@ -28,6 +40,7 @@ const awsEnv = {
 new BeStack(app, APP_NAME, {
   environment,
   env: awsEnv,
+  customDomain,
   description: `Backend stack for ${environment} environment - Full Stack App`,
   tags: {
     Environment: environment,

@@ -12,13 +12,14 @@ import { stagingConfig } from './configs/staging';
 import { prodConfig } from './configs/prod';
 import { AuthLambdaConstruct } from './auth-lambda-construct';
 import { HealthLambdaConstruct } from './health-lambda-construct';
-import { DomainConstruct } from './domain-construct';
+import { CustomDomainConfig, DomainConstruct } from './domain-construct';
 import { APP_NAME } from './constants';
 
 export type Environment = 'dev' | 'staging' | 'prod';
 
 export interface BeStackProps extends StackProps {
   environment: Environment;
+  customDomain?: CustomDomainConfig;
 }
 
 export class BeStack extends Stack {
@@ -44,7 +45,11 @@ export class BeStack extends Stack {
     );
 
     // Storage construct with environment-specific config
-    const storageConstruct = new StorageConstruct(this, 'StorageConstruct', config);
+    const storageConstruct = new StorageConstruct(
+      this,
+      'StorageConstruct',
+      config
+    );
 
     // Lambda shared configuration
     const lambdaProps: BaseLambdaConstructProps = {
@@ -101,7 +106,7 @@ export class BeStack extends Stack {
     // Custom domain setup (optional, based on configuration)
     const domainConstruct = new DomainConstruct(this, 'DomainConstruct', {
       api: apiConstruct.api,
-      ...config
+      ...props.customDomain,
     });
 
     // Stack outputs with environment-specific export names
@@ -118,9 +123,9 @@ export class BeStack extends Stack {
     });
 
     // Output custom domain URL if configured
-    if (domainConstruct.domainName && config.customDomain?.domainName) {
+    if (domainConstruct.domainName && props.customDomain?.domainName) {
       new CfnOutput(this, 'CustomDomainUrl', {
-        value: `https://${config.customDomain.domainName}`,
+        value: `https://${props.customDomain.domainName}`,
         description: 'Custom domain URL for API',
         exportName: `${stackName}-CustomDomainUrl`,
       });

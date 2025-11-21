@@ -25,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       affected: ${{ steps.check-affected.outputs.affected }}
+      cache-hit: ${{ steps.setup-deps.outputs.cache-hit }}
 
     steps:
       - name: Checkout code
@@ -32,15 +33,9 @@ jobs:
         with:
           fetch-depth: 0  # Fetch all history for accurate change detection
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-        timeout-minutes: 5
+      - name: Setup Node.js and Dependencies
+        id: setup-deps
+        uses: ./.github/actions/setup-node-deps
 
       - name: Check if backend is affected
         id: check-affected
@@ -139,21 +134,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-        timeout-minutes: 5
-
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
 
       - name: Lint backend
         run: npx nx lint be
@@ -166,7 +148,7 @@ jobs:
         continue-on-error: true  # Allow failure if tests aren't fully configured yet
 
   # ==========================================
-  # Job 3: Build
+  # Job 4: Build
   # ==========================================
   build:
     name: Build
@@ -178,23 +160,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Restore node_modules cache
-        uses: actions/cache@v4
-        id: cache-restore
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
-
-      - name: Install dependencies
-        if: steps.cache-restore.outputs.cache-hit != 'true'
-        run: npm ci
-        timeout-minutes: 5
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
 
       - name: Synthesize CDK
         env:
@@ -215,7 +182,7 @@ jobs:
           retention-days: 1
 
   # ==========================================
-  # Job 4: Deploy
+  # Job 5: Deploy
   # ==========================================
   deploy:
     name: Deploy to ${{ needs.determine-environment.outputs.environment }}
@@ -231,29 +198,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
 
       - name: Download CDK artifacts
         uses: actions/download-artifact@v4
         with:
           name: cdk-artifacts-${{ github.sha }}
           path: apps/be/cdk.out/
-
-      - name: Restore node_modules cache
-        uses: actions/cache@v4
-        id: cache-restore
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
-
-      - name: Install dependencies
-        if: steps.cache-restore.outputs.cache-hit != 'true'
-        run: npm ci
-        timeout-minutes: 5
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -306,7 +258,7 @@ jobs:
             })
 
   # ==========================================
-  # Job 5: Post-deployment validation
+  # Job 6: Post-deployment validation
   # ==========================================
   validate:
     name: Validate Deployment

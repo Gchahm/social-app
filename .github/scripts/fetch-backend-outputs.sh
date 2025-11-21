@@ -30,7 +30,7 @@ fi
 
 # Output JSON file if OUTPUT_FILE is set
 if [ -n "${OUTPUT_FILE:-}" ]; then
-  echo "{\"apiUrl\": \"$API_URL\", \"environment\": \"$ENVIRONMENT\"}" > "$OUTPUT_FILE"
+  echo "{\"UserPoolClientId\": \"$API_URL\", \"UserPoolId\": \"$API_URL\", \"ApiEndpoint\": \"$API_URL\", \"environment\": \"$ENVIRONMENT\" }" > "$OUTPUT_FILE"
 fi
 
 echo "$API_URL"

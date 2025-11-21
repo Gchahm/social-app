@@ -49,3 +49,6 @@ cdk.out
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+
+
+outputs.json

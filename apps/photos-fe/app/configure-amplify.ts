@@ -1,4 +1,4 @@
-import { BEStack } from '../outputs.json';
+import BEStack from '../outputs.json';
 import { Amplify } from 'aws-amplify';
 import { fetchAuthSession } from 'aws-amplify/auth';
 

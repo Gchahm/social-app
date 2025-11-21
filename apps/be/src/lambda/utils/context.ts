@@ -10,13 +10,6 @@ export interface LambdaContext {
 
 let context: LambdaContext | undefined;
 
-const logger = new Logger({ serviceName: context.serviceName });
-const tracer = new Tracer();
-const metrics = new Metrics();
-
-export const getLogger = () => logger;
-export const getTracer = () => tracer;
-export const getMetrics = () => metrics;
 export const getContext = () => {
   if (!context) {
     const tableName = process.env.TABLE_NAME;
@@ -27,3 +20,12 @@ export const getContext = () => {
   }
   return context;
 };
+
+const logger = new Logger({ serviceName: getContext().serviceName });
+const tracer = new Tracer();
+const metrics = new Metrics();
+
+export const getLogger = () => logger;
+export const getTracer = () => tracer;
+export const getMetrics = () => metrics;
+

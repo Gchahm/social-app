@@ -45,6 +45,11 @@ export class ApiConstruct extends Construct {
         throttlingRateLimit: throttleRateLimit,
         throttlingBurstLimit: throttleBurstLimit,
       },
+      defaultCorsPreflightOptions: {
+        allowOrigins: corsOrigins,
+        allowMethods: Cors.ALL_METHODS,
+        allowHeaders: Cors.DEFAULT_HEADERS,
+      },
     });
     this.api = gateway;
 
@@ -60,29 +65,15 @@ export class ApiConstruct extends Construct {
       authorizer,
     };
 
-    const optionsWithCors: ResourceOptions = {
-      defaultCorsPreflightOptions: {
-        allowOrigins: corsOrigins,
-        allowMethods: Cors.ALL_METHODS,
-        allowHeaders: [
-          'Content-Type',
-          'X-Amz-Date',
-          'Authorization',
-          'X-Api-Key',
-          'X-Amz-Security-Token',
-        ],
-      },
-    };
-
     // Health check endpoint (no authentication required)
-    const healthResource = gateway.root.addResource('health', optionsWithCors);
+    const healthResource = gateway.root.addResource('health');
     healthResource.addMethod(
       'GET',
       new LambdaIntegration(healthLambdas.healthCheck)
     );
 
     // Photos endpoints
-    const photosResource = gateway.root.addResource('photos', optionsWithCors);
+    const photosResource = gateway.root.addResource('photos');
 
     // POST /photos/upload-url - Request presigned URL
     const uploadUrlResource = photosResource.addResource('upload-url');
@@ -93,7 +84,7 @@ export class ApiConstruct extends Construct {
     );
 
     // Posts endpoints
-    const postsResource = gateway.root.addResource('posts', optionsWithCors);
+    const postsResource = gateway.root.addResource('posts');
 
     // POST /posts - Create post
     postsResource.addMethod(

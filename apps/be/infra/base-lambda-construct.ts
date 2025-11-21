@@ -22,7 +22,6 @@ export interface BaseLambdaConfig {
 export interface BaseLambdaConstructProps extends EnvironmentConfig {
   table: ITable;
   bucket: IBucket;
-  environment: ILambdaEnvironmentVariables;
   envName?: string; // Environment name for resource naming (dev/staging/prod)
 }
 
@@ -42,7 +41,6 @@ export abstract class BaseLambdaConstruct extends Construct {
     const {
       table,
       bucket,
-      environment,
       envName,
       lambdaTimeout,
       lambdaMemorySize,
@@ -62,7 +60,13 @@ export abstract class BaseLambdaConstruct extends Construct {
       memorySize: lambdaMemorySize || 256,
       minify,
       sourceMap,
-      environment,
+      environment: {
+        TABLE_NAME: props.table.tableName,
+        BUCKET_NAME: props.bucket.bucketName,
+        SERVICE_NAME: APP_NAME,
+        ENVIRONMENT: props.envName,
+        CORS_ORIGINS: props.corsOrigins.join(','),
+      },
       logRetention: logRetentionDays || RetentionDays.ONE_WEEK,
     };
   }

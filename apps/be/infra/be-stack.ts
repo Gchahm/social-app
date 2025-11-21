@@ -55,12 +55,6 @@ export class BeStack extends Stack {
     const lambdaProps: BaseLambdaConstructProps = {
       table: databaseConstruct.table,
       bucket: storageConstruct.bucket,
-      environment: {
-        TABLE_NAME: databaseConstruct.table.tableName,
-        BUCKET_NAME: storageConstruct.bucket.bucketName,
-        SERVICE_NAME: stackName,
-        ENVIRONMENT: props.environment,
-      },
       envName: props.environment,
       ...config,
     };

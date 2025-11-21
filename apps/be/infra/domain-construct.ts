@@ -60,7 +60,7 @@ export class DomainConstruct extends Construct {
 
     // Only create domain if we have a certificate
     if (this.certificate) {
-      const domain = `${props.environment}api-${customDomain.domainName}`;
+      const domain = `api-${customDomain.domainName}`;
       // Create custom domain for API Gateway
       this.domainName = new DomainName(this, 'CustomDomain', {
         domainName: customDomain.domainName,

@@ -13,13 +13,11 @@ const environment =
 
 // Frontend can use its own domain or share with backend
 // Use frontendDomainName if provided, otherwise fall back to domainName
-const domainName =
-  (app.node.tryGetContext('frontendDomainName') as string) ||
-  (app.node.tryGetContext('domainName') as string);
+const domainName = app.node.tryGetContext('domainName') as string;
 
 const customDomain: CustomDomainConfig | undefined = domainName
   ? {
-      domainName,
+      domainName: `${environment}-${domainName}`,
       hostedZoneId: app.node.tryGetContext('hostedZoneId') as string,
       hostedZoneName: app.node.tryGetContext('hostedZoneName') as string,
       // Certificate must be in us-east-1 for CloudFront

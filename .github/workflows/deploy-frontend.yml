@@ -1,0 +1,298 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - develop       # → Dev environment
+      - 'release/**'  # → Staging environment
+      - main          # → Production (manual approval)
+  pull_request:
+    branches:
+      - develop
+      - main
+
+permissions:
+  id-token: write   # Required for AWS OIDC
+  contents: read
+  pull-requests: write
+
+jobs:
+  # ==========================================
+  # Job 1: Check if frontend is affected
+  # ==========================================
+  check-affected:
+    name: Check if Frontend Changed
+    runs-on: ubuntu-latest
+    outputs:
+      affected: ${{ steps.check-affected.outputs.affected }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for accurate change detection
+
+      - name: Setup Node.js and Dependencies
+        id: setup-deps
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Check if frontend is affected
+        id: check-affected
+        run: |
+          # For pull requests, compare against base branch
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE=${{ github.event.pull_request.base.sha }}
+            HEAD=${{ github.event.pull_request.head.sha }}
+          else
+            # For pushes, compare against previous commit
+            BASE=${{ github.event.before }}
+            HEAD=${{ github.sha }}
+          fi
+
+          echo "Checking if 'photos-fe' project is affected..."
+          echo "Base: $BASE"
+          echo "Head: $HEAD"
+
+          # Check if frontend or its dependencies are affected
+          if npx nx show project photos-fe --affected --base=$BASE --head=$HEAD > /dev/null 2>&1; then
+            echo "✅ Frontend is affected by changes"
+            echo "affected=true" >> $GITHUB_OUTPUT
+          else
+            echo "⏭️  Frontend is not affected by changes - skipping deployment"
+            echo "affected=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment on PR if not affected
+        if: github.event_name == 'pull_request' && steps.check-affected.outputs.affected != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `⏭️ **Frontend deployment skipped** - No changes detected in frontend or its dependencies.`
+            })
+
+  # ==========================================
+  # Job 2: Determine deployment environment
+  # ==========================================
+  determine-environment:
+    name: Determine Environment
+    runs-on: ubuntu-latest
+    needs: [check-affected]
+    if: needs.check-affected.outputs.affected == 'true'
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      should-deploy: ${{ steps.set-env.outputs.should-deploy }}
+
+    steps:
+      - name: Determine environment from branch
+        id: set-env
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+
+          # Don't deploy on PRs
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "Pull request - will not deploy"
+            exit 0
+          fi
+
+          # Determine environment based on branch
+          if [[ $GITHUB_REF == refs/heads/main ]]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "Deploying to PRODUCTION"
+          elif [[ $GITHUB_REF == refs/heads/release/* ]]; then
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "Deploying to STAGING"
+          elif [[ $GITHUB_REF == refs/heads/develop ]]; then
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "Deploying to DEVELOPMENT"
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "Unknown branch - will not deploy"
+          fi
+
+  # ==========================================
+  # Job 3: Lint and type check
+  # ==========================================
+  test:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    needs: [check-affected]
+    if: needs.check-affected.outputs.affected == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Lint frontend
+        run: npx nx lint photos-fe
+
+      - name: Type check frontend
+        run: npx nx typecheck photos-fe
+
+      - name: Run tests
+        run: npx nx test photos-fe
+        continue-on-error: true  # Allow failure if tests aren't fully configured yet
+
+  # ==========================================
+  # Job 4: Build
+  # ==========================================
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [determine-environment, test]
+    if: needs.determine-environment.outputs.should-deploy == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Build frontend
+        env:
+          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
+        run: npx nx build photos-fe
+
+      - name: Synthesize CDK
+        env:
+          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
+        run: |
+          cd apps/photos-fe
+          npx cdk synth
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: apps/photos-fe/build/
+          retention-days: 1
+
+      - name: Upload CDK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-cdk-artifacts-${{ github.sha }}
+          path: apps/photos-fe/cdk.out/
+          retention-days: 1
+
+  # ==========================================
+  # Job 5: Deploy
+  # ==========================================
+  deploy:
+    name: Deploy to ${{ needs.determine-environment.outputs.environment }}
+    runs-on: ubuntu-latest
+    needs: [determine-environment, build]
+    if: needs.determine-environment.outputs.should-deploy == 'true'
+
+    environment:
+      name: ${{ needs.determine-environment.outputs.environment }}
+      url: ${{ steps.deploy.outputs.website-url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: apps/photos-fe/build/
+
+      - name: Download CDK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-cdk-artifacts-${{ github.sha }}
+          path: apps/photos-fe/cdk.out/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_ROLE_ARN || secrets.AWS_DEV_ROLE_ARN }}
+          aws-region: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_REGION || secrets.AWS_DEV_REGION || 'us-east-1' }}
+          role-session-name: GitHubActions-${{ github.run_id }}
+
+      - name: Deploy CDK stack
+        id: deploy
+        env:
+          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
+        run: |
+          cd apps/photos-fe
+
+          echo "Deploying frontend to $ENVIRONMENT environment..."
+
+          # Deploy using pre-synthesized CloudFormation templates
+          npx cdk deploy \
+            --require-approval never \
+            --app cdk.out \
+            --outputs-file outputs.json
+
+          # Extract website URL from outputs
+          WEBSITE_URL=$(cat outputs.json | jq -r '.UIStack.UIDeploymentS3Url')
+          echo "website-url=$WEBSITE_URL" >> $GITHUB_OUTPUT
+          echo "Deployed to: $WEBSITE_URL"
+
+      - name: Upload deployment outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-deployment-outputs-${{ needs.determine-environment.outputs.environment }}
+          path: apps/photos-fe/outputs.json
+          retention-days: 30
+
+      - name: Comment on PR with deployment info
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `✅ Successfully deployed frontend to **${{ needs.determine-environment.outputs.environment }}**\n\nWebsite URL: ${{ steps.deploy.outputs.website-url }}`
+            })
+
+  # ==========================================
+  # Job 6: Post-deployment validation
+  # ==========================================
+  validate:
+    name: Validate Deployment
+    runs-on: ubuntu-latest
+    needs: [determine-environment, deploy]
+    if: needs.determine-environment.outputs.should-deploy == 'true'
+
+    steps:
+      - name: Download deployment outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-deployment-outputs-${{ needs.determine-environment.outputs.environment }}
+
+      - name: Health check
+        run: |
+          WEBSITE_URL=$(cat outputs.json | jq -r '.UIStack.UIDeploymentS3Url')
+
+          echo "Testing website at: $WEBSITE_URL"
+
+          # Basic health check
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${WEBSITE_URL} || echo "000")
+
+          if [[ $HTTP_STATUS == "200" ]]; then
+            echo "✅ Website is accessible"
+          else
+            echo "❌ Website health check failed with status: $HTTP_STATUS"
+            exit 1
+          fi

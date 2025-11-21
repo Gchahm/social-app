@@ -4,35 +4,49 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { BlockPublicAccess, Bucket } from 'aws-cdk-lib/aws-s3';
+import {
+  FrontendDomainConstruct,
+  CustomDomainConfig,
+} from './frontend-domain-construct';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+export interface UiStackProps extends StackProps {
+  environment: string;
+  customDomain?: CustomDomainConfig;
+}
+
 export class UiStack extends Stack {
-  constructor(scope: Construct, id: string, props?: StackProps) {
+  constructor(scope: Construct, id: string, props: UiStackProps) {
     super(scope, id, props);
 
+    const { environment, customDomain } = props;
     const uiDir = join(__dirname, '..', 'build', 'client');
 
+    // S3 bucket for static assets - private, accessed via CloudFront OAI
     const uiCodeBucket = new Bucket(this, 'UIBucket', {
-      bucketName: `sample-app-bucket-${this.account}`,
-      publicReadAccess: true,
-      blockPublicAccess: new BlockPublicAccess({
-        blockPublicAcls: false,
-        ignorePublicAcls: false,
-        blockPublicPolicy: false,
-        restrictPublicBuckets: false,
-      }),
-      websiteIndexDocument: 'index.html',
+      bucketName: `sample-app-bucket-${environment}-${this.account}`,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
     });
 
+    // Deploy static assets to S3
     new BucketDeployment(this, 'UIBucketDeployment', {
       destinationBucket: uiCodeBucket,
       sources: [Source.asset(uiDir)],
     });
 
-    new CfnOutput(this, 'UIDeploymentS3Url', {
-      value: uiCodeBucket.bucketWebsiteUrl,
+    // Create CloudFront distribution with optional custom domain
+    const frontendDomain = new FrontendDomainConstruct(this, 'FrontendDomain', {
+      bucket: uiCodeBucket,
+      environment,
+      ...customDomain,
+    });
+
+    // Output the website URL (custom domain if configured, otherwise CloudFront)
+    new CfnOutput(this, 'WebsiteUrl', {
+      value: frontendDomain.domainUrl,
+      description: 'Website URL',
     });
   }
 }

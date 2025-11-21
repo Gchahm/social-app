@@ -144,7 +144,7 @@ jobs:
       - name: Fetch backend stack outputs
         id: backend-outputs
         env:
-          OUTPUT_FILE: apps/photos-fe/backend-outputs.json
+          OUTPUT_FILE: apps/photos-fe/api-stack.outputs.json
         run: ./.github/scripts/fetch-backend-outputs.sh "${{ needs.determine-environment.outputs.environment }}"
 
       - name: Build frontend

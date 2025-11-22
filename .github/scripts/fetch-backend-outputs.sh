@@ -22,7 +22,6 @@ fetch_output() {
 # Fetch all required outputs
 API_URL=$(fetch_output "ApiEndpoint")
 USER_POOL_ID=$(fetch_output "UserPoolId")
-#TODO: fix this name
 USER_POOL_CLIENT_ID=$(fetch_output "UserPoolClientId")
 
 # Validate and warn for missing values

@@ -227,7 +227,7 @@ jobs:
     # Frontend synth waits for backend deployment if backend was affected
     if: |
       needs.check-affected.outputs.frontend-affected == 'true' &&
-      (needs.check-affected.outputs.backend-affected != 'true' || needs.backend-deploy.result == 'success')
+      (needs.backend-deploy.result == 'success' || needs.backend-deploy.result == 'skipped')
 
     steps:
       - name: Checkout code

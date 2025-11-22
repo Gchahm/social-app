@@ -8,14 +8,36 @@ import {
   DropdownMenuTrigger,
 } from '@chahm/ui-components';
 import { Bell, Home, Image, LogOut, Upload, User } from 'lucide-react';
-import { useAuthenticator } from '@aws-amplify/ui-react';
 import { Link } from 'react-router';
+import { useState, useEffect } from 'react';
+import { getCurrentUser, signOut } from 'aws-amplify/auth';
 
 export function Navbar() {
-  const { user, signOut } = useAuthenticator();
+  const [user, setUser] = useState<{ username: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleLogout = () => {
-    signOut();
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const currentUser = await getCurrentUser();
+      setUser({ username: currentUser.username });
+    } catch (error) {
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      setUser(null);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (
@@ -53,33 +75,37 @@ export function Navbar() {
         </nav>
 
         <div className="flex flex-1 items-center justify-end gap-4">
-          {/* Notifications */}
-          <button
-            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-9 w-9"
-            aria-label="Notifications"
-          >
-            <Bell className="h-5 w-5" />
-          </button>
-
-          {/* User dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-md hover:bg-accent p-1 transition-colors">
-                <Avatar className="h-8 w-8">
-                  <User />
-                </Avatar>
-                <div className="hidden md:flex md:flex-col md:items-start text-sm">
-                  <span className="font-medium">{user.username}</span>
-                </div>
+          {user && !isLoading && (
+            <>
+              {/* Notifications */}
+              <button
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-9 w-9"
+                aria-label="Notifications"
+              >
+                <Bell className="h-5 w-5" />
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+
+              {/* User dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 rounded-md hover:bg-accent p-1 transition-colors">
+                    <Avatar className="h-8 w-8">
+                      <User />
+                    </Avatar>
+                    <div className="hidden md:flex md:flex-col md:items-start text-sm">
+                      <span className="font-medium">{user.username}</span>
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
         </div>
       </div>
     </header>

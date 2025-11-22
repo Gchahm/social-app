@@ -107,7 +107,10 @@ export class ApiConstruct extends Construct {
     // GET /posts - List posts (global feed or by user)
     postsResource.addMethod(
       'GET',
-      new LambdaIntegration(this.props.postsLambdas.listPosts)
+      new LambdaIntegration(this.props.postsLambdas.listPosts),
+      {
+        authorizationType: AuthorizationType.NONE,
+      }
     );
 
     // /posts/:postId

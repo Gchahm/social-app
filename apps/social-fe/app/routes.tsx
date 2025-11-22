@@ -1,6 +1,16 @@
-import { layout, type RouteConfig } from '@react-router/dev/routes';
-import { flatRoutes } from '@react-router/fs-routes';
+import { layout, route, type RouteConfig, index } from '@react-router/dev/routes';
 
 export default [
-  layout('./layout.tsx', [...(await flatRoutes())]),
+  // Public routes (no authentication required)
+  layout('./layout.tsx', [
+    index('./routes/_index.tsx'),
+    route('users/:userId', './routes/users.$userId.tsx'),
+    route('*', './routes/$.tsx'),
+  ]),
+
+  // Authenticated routes (authentication required)
+  layout('./auth-layout.tsx', [
+    route('my/feed', './routes/my.feed.tsx'),
+    route('my/upload', './routes/my.upload.tsx'),
+  ]),
 ] satisfies RouteConfig;

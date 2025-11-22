@@ -3,8 +3,6 @@ name: Deploy
 on:
   push:
     branches:
-      - develop       # → Dev environment
-      - 'release/**'  # → Staging environment
       - main          # → Production
 
 permissions:
@@ -57,11 +55,11 @@ jobs:
           fi
 
           # Check specific projects
-          if echo "$AFFECTED_PROJECTS" | grep -q "^be$"; then
-            echo "✅ Backend (be) is affected - will deploy"
+          if echo "$AFFECTED_PROJECTS" | grep -q "^social-be$"; then
+            echo "✅ Backend (social-be) is affected - will deploy"
             echo "backend-affected=true" >> $GITHUB_OUTPUT
           else
-            echo "⏭️  Backend (be) is not affected - skipping deployment"
+            echo "⏭️  Backend (social-be) is not affected - skipping deployment"
             echo "backend-affected=false" >> $GITHUB_OUTPUT
           fi
 
@@ -79,7 +77,7 @@ jobs:
   determine-environment:
     name: Determine Environment
     runs-on: ubuntu-latest
-    needs: [check-affected]
+    needs: [ check-affected ]
     if: needs.check-affected.outputs.has-affected == 'true'
     outputs:
       environment: ${{ steps.set-env.outputs.environment }}
@@ -91,12 +89,6 @@ jobs:
           echo "Ref: ${{ github.ref }}"
 
           if [[ $GITHUB_REF == refs/heads/main ]]; then
-            echo "environment=prod" >> $GITHUB_OUTPUT
-            echo "🚀 Deploying to PRODUCTION"
-          elif [[ $GITHUB_REF == refs/heads/release/* ]]; then
-            echo "environment=staging" >> $GITHUB_OUTPUT
-            echo "🚀 Deploying to STAGING"
-          elif [[ $GITHUB_REF == refs/heads/develop ]]; then
             echo "environment=dev" >> $GITHUB_OUTPUT
             echo "🚀 Deploying to DEVELOPMENT"
           else
@@ -111,7 +103,7 @@ jobs:
   backend-synth:
     name: Backend - Synthesize CDK
     runs-on: ubuntu-latest
-    needs: [determine-environment, check-affected]
+    needs: [ determine-environment, check-affected ]
     if: needs.check-affected.outputs.backend-affected == 'true'
 
     steps:
@@ -140,7 +132,7 @@ jobs:
   backend-deploy:
     name: Backend - Deploy to ${{ needs.determine-environment.outputs.environment }}
     runs-on: ubuntu-latest
-    needs: [determine-environment, backend-synth, check-affected]
+    needs: [ determine-environment, backend-synth, check-affected ]
     if: needs.check-affected.outputs.backend-affected == 'true'
 
     environment:
@@ -200,7 +192,7 @@ jobs:
   backend-validate:
     name: Backend - Validate Deployment
     runs-on: ubuntu-latest
-    needs: [determine-environment, backend-deploy]
+    needs: [ determine-environment, backend-deploy ]
 
     steps:
       - name: Download deployment outputs
@@ -231,7 +223,7 @@ jobs:
   frontend-synth:
     name: Frontend - Synthesize CDK
     runs-on: ubuntu-latest
-    needs: [determine-environment, backend-deploy, check-affected]
+    needs: [ determine-environment, backend-deploy, check-affected ]
     # Frontend synth waits for backend deployment if backend was affected
     if: |
       needs.check-affected.outputs.frontend-affected == 'true' &&
@@ -280,7 +272,7 @@ jobs:
   frontend-deploy:
     name: Frontend - Deploy to ${{ needs.determine-environment.outputs.environment }}
     runs-on: ubuntu-latest
-    needs: [determine-environment, frontend-synth, check-affected]
+    needs: [ determine-environment, frontend-synth, check-affected ]
     if: needs.check-affected.outputs.frontend-affected == 'true'
 
     environment:
@@ -340,7 +332,7 @@ jobs:
   frontend-validate:
     name: Frontend - Validate Deployment
     runs-on: ubuntu-latest
-    needs: [determine-environment, frontend-deploy]
+    needs: [ determine-environment, frontend-deploy ]
 
     steps:
       - name: Download deployment outputs

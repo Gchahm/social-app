@@ -19,6 +19,12 @@
         "cwd": "apps/social-fe",
         "command": "cdk deploy --all --require-approval never"
       }
+    },
+    "generate-outputs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "OUTPUT_FILE=apps/social-fe/api-stack.outputs.json .github/scripts/fetch-backend-outputs.sh"
+      }
     }
   }
 }

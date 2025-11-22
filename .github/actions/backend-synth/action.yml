@@ -1,0 +1,43 @@
+name: Backend CDK Synth
+description: Synthesize backend CDK templates
+
+inputs:
+  environment:
+    description: 'Deployment environment (dev, staging, prod)'
+    required: true
+  domain-name:
+    description: 'Domain name for the application'
+    required: false
+    default: ''
+  hosted-zone-id:
+    description: 'Route53 hosted zone ID'
+    required: false
+    default: ''
+  hosted-zone-name:
+    description: 'Route53 hosted zone name'
+    required: false
+    default: ''
+  certificate-arn:
+    description: 'ACM certificate ARN'
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Synthesize CDK
+      shell: bash
+      working-directory: apps/be
+      run: |
+        if [[ -n "${{ inputs.domain-name }}" ]]; then
+          echo "Synthesizing with domain configuration..."
+          npx cdk synth \
+            --context environment=${{ inputs.environment }} \
+            --context domainName=${{ inputs.domain-name }} \
+            --context hostedZoneId=${{ inputs.hosted-zone-id }} \
+            --context hostedZoneName=${{ inputs.hosted-zone-name }} \
+            --context certificateArn=${{ inputs.certificate-arn }}
+        else
+          echo "Synthesizing with environment only..."
+          npx cdk synth --context environment=${{ inputs.environment }}
+        fi

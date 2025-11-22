@@ -187,12 +187,10 @@ jobs:
       - name: Setup Node.js and Dependencies
         uses: ./.github/actions/setup-node-deps
 
-      - name: Synthesize CDK (dev config)
-        env:
-          ENVIRONMENT: dev
-        run: |
-          cd apps/be
-          npx cdk synth --context environment=$ENVIRONMENT
+      - name: Synthesize CDK
+        uses: ./.github/actions/backend-synth
+        with:
+          environment: dev
 
   frontend-synth:
     name: Frontend - Validate CDK Synth
@@ -207,12 +205,11 @@ jobs:
       - name: Setup Node.js and Dependencies
         uses: ./.github/actions/setup-node-deps
 
-      - name: Synthesize CDK (dev config)
-        env:
-          ENVIRONMENT: dev
-        run: |
-          cd apps/photos-fe
-          npx cdk synth --context environment=$ENVIRONMENT
+      - name: Synthesize CDK
+        uses: ./.github/actions/frontend-synth
+        with:
+          environment: dev
+          should-build: 'false'
 
   # ==========================================
   # Summary

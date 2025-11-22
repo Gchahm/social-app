@@ -11,6 +11,10 @@ permissions:
   id-token: write   # Required for AWS OIDC
   contents: read
 
+env:
+  NX_BASE: ${{ github.event.before }}
+  NX_HEAD: ${{ github.sha }}
+
 jobs:
   # ==========================================
   # Check affected projects using nx
@@ -35,15 +39,12 @@ jobs:
       - name: Check affected projects
         id: check-affected
         run: |
-          BASE=${{ github.event.before }}
-          HEAD=${{ github.sha }}
-
           echo "Checking affected projects..."
-          echo "Base: $BASE"
-          echo "Head: $HEAD"
+          echo "Base: $NX_BASE"
+          echo "Head: $NX_HEAD"
 
           # Get list of affected projects using nx
-          AFFECTED_PROJECTS=$(npx nx show projects --affected --base=$BASE --head=$HEAD --type=app 2>/dev/null || echo "")
+          AFFECTED_PROJECTS=$(npx nx show projects --affected --type=app 2>/dev/null || echo "")
 
           echo "Affected projects:"
           echo "$AFFECTED_PROJECTS"

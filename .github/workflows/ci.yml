@@ -10,6 +10,10 @@ permissions:
   contents: read
   pull-requests: write
 
+env:
+  NX_BASE: ${{ github.event.pull_request.base.sha }}
+  NX_HEAD: ${{ github.event.pull_request.head.sha }}
+
 jobs:
   # ==========================================
   # Check affected projects using nx
@@ -35,15 +39,12 @@ jobs:
       - name: Check affected projects
         id: check-affected
         run: |
-          BASE=${{ github.event.pull_request.base.sha }}
-          HEAD=${{ github.event.pull_request.head.sha }}
-
           echo "Checking affected projects..."
-          echo "Base: $BASE"
-          echo "Head: $HEAD"
+          echo "Base: $NX_BASE"
+          echo "Head: $NX_HEAD"
 
           # Get list of affected projects using nx
-          AFFECTED_PROJECTS=$(npx nx show projects --affected --base=$BASE --head=$HEAD --type=app 2>/dev/null || echo "")
+          AFFECTED_PROJECTS=$(npx nx show projects --affected --type=app 2>/dev/null || echo "")
 
           echo "Affected projects:"
           echo "$AFFECTED_PROJECTS"
@@ -118,10 +119,7 @@ jobs:
         uses: ./.github/actions/setup-node-deps
 
       - name: Lint affected projects
-        run: |
-          BASE=${{ github.event.pull_request.base.sha }}
-          HEAD=${{ github.event.pull_request.head.sha }}
-          npx nx affected -t lint --base=$BASE --head=$HEAD
+        run: npx nx affected -t lint
 
   typecheck:
     name: Type Check Affected Projects
@@ -137,10 +135,7 @@ jobs:
         uses: ./.github/actions/setup-node-deps
 
       - name: Type check affected projects
-        run: |
-          BASE=${{ github.event.pull_request.base.sha }}
-          HEAD=${{ github.event.pull_request.head.sha }}
-          npx nx affected -t typecheck --base=$BASE --head=$HEAD
+        run: npx nx affected -t typecheck
 
   test:
     name: Test Affected Projects
@@ -156,10 +151,7 @@ jobs:
         uses: ./.github/actions/setup-node-deps
 
       - name: Test affected projects
-        run: |
-          BASE=${{ github.event.pull_request.base.sha }}
-          HEAD=${{ github.event.pull_request.head.sha }}
-          npx nx affected -t test --base=$BASE --head=$HEAD
+        run: npx nx affected -t test
         continue-on-error: true
 
   build:
@@ -175,11 +167,8 @@ jobs:
       - name: Setup Node.js and Dependencies
         uses: ./.github/actions/setup-node-deps
 
-      - name: Build affected projects with nx
-        run: |
-          BASE=${{ github.event.pull_request.base.sha }}
-          HEAD=${{ github.event.pull_request.head.sha }}
-          npx nx affected -t build --base=$BASE --head=$HEAD
+      - name: Build affected projects
+        run: npx nx affected -t build
 
   # ==========================================
   # Validate CDK Templates Can Be Generated

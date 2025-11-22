@@ -11,6 +11,7 @@ export default [
       '**/.react-router',
       '**/vite.config.*.timestamp*',
       '**/vitest.config.*.timestamp*',
+      '**/cdk.out',
     ],
   },
   {

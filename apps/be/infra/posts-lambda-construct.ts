@@ -3,19 +3,19 @@ import {
   BaseLambdaConstruct,
   BaseLambdaConstructProps,
 } from './base-lambda-construct';
-import { Integration } from 'aws-cdk-lib/aws-apigateway';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 
-export interface PostsIntegrations {
-  createPost: Integration;
-  getPost: Integration;
-  listPosts: Integration;
-  updatePost: Integration;
-  deletePost: Integration;
-  likePost: Integration;
-  unlikePost: Integration;
-  addComment: Integration;
-  getComments: Integration;
-  deleteComment: Integration;
+export interface PostsLambdas {
+  createPost: NodejsFunction;
+  getPost: NodejsFunction;
+  listPosts: NodejsFunction;
+  updatePost: NodejsFunction;
+  deletePost: NodejsFunction;
+  likePost: NodejsFunction;
+  unlikePost: NodejsFunction;
+  addComment: NodejsFunction;
+  getComments: NodejsFunction;
+  deleteComment: NodejsFunction;
 }
 
 /**
@@ -24,86 +24,86 @@ export interface PostsIntegrations {
  */
 export class PostsLambdaConstruct extends BaseLambdaConstruct {
   // Post CRUD operations
-  public readonly postsIntegrations: PostsIntegrations;
+  public readonly lambdas: PostsLambdas;
 
   constructor(scope: Construct, id: string, props: BaseLambdaConstructProps) {
     super(scope, id, props);
 
-    // Create all Lambda integrations using the batch method
-    const integrations = this.createLambdaIntegrations([
+    // Create all Lambda functions using the batch method
+    const functions = this.createLambdaFunctions([
       {
         id: 'CreatePost',
         entry: 'src/lambda/posts/create.ts',
-        functionName: 'posts-CreatePost',
+        functionName: 'posts-create-post',
         description: 'Posts API: Create a new post',
       },
       {
         id: 'GetPost',
         entry: 'src/lambda/posts/get.ts',
-        functionName: 'posts-GetPost',
+        functionName: 'posts-get-post',
         description: 'Posts API: Get a single post',
       },
       {
         id: 'ListPosts',
         entry: 'src/lambda/posts/list.ts',
-        functionName: 'posts-ListPosts',
+        functionName: 'posts-list-posts',
         description: 'Posts API: List posts with filters',
       },
       {
         id: 'UpdatePost',
         entry: 'src/lambda/posts/update.ts',
-        functionName: 'posts-UpdatePost',
+        functionName: 'posts-update-post',
         description: 'Posts API: Update a post',
       },
       {
         id: 'DeletePost',
         entry: 'src/lambda/posts/delete.ts',
-        functionName: 'posts-DeletePost',
+        functionName: 'posts-delete-post',
         description: 'Posts API: Delete a post',
       },
       {
         id: 'LikePost',
         entry: 'src/lambda/posts/like.ts',
-        functionName: 'posts-LikePost',
+        functionName: 'posts-like-post',
         description: 'Posts API: Like a post',
       },
       {
         id: 'UnlikePost',
         entry: 'src/lambda/posts/unlike.ts',
-        functionName: 'posts-UnlikePost',
+        functionName: 'posts-unlike-post',
         description: 'Posts API: Unlike a post',
       },
       {
         id: 'AddComment',
         entry: 'src/lambda/posts/add-comment.ts',
-        functionName: 'posts-AddComment',
+        functionName: 'posts-add-comment',
         description: 'Posts API: Add a comment',
       },
       {
         id: 'GetComments',
         entry: 'src/lambda/posts/get-comments.ts',
-        functionName: 'posts-GetComments',
+        functionName: 'posts-get-comments',
         description: 'Posts API: Get comments for a post',
       },
       {
         id: 'DeleteComment',
         entry: 'src/lambda/posts/delete-comment.ts',
-        functionName: 'posts-DeleteComment',
+        functionName: 'posts-delete-comment',
         description: 'Posts API: Delete a comment',
       },
     ]);
 
-    this.postsIntegrations = {
-      createPost: integrations.CreatePost,
-      getPost: integrations.GetPost,
-      listPosts: integrations.ListPosts,
-      updatePost: integrations.UpdatePost,
-      deletePost: integrations.DeletePost,
-      likePost: integrations.LikePost,
-      unlikePost: integrations.UnlikePost,
-      addComment: integrations.AddComment,
-      getComments: integrations.GetComments,
-      deleteComment: integrations.DeleteComment,
+    this.lambdas = {
+      createPost: functions.CreatePost,
+      getPost: functions.GetPost,
+      listPosts: functions.ListPosts,
+      updatePost: functions.UpdatePost,
+      deletePost: functions.DeletePost,
+      likePost: functions.LikePost,
+      unlikePost: functions.UnlikePost,
+      addComment: functions.AddComment,
+      getComments: functions.GetComments,
+      deleteComment: functions.DeleteComment,
     };
   }
 }

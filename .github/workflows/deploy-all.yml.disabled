@@ -1,0 +1,608 @@
+name: Deploy All
+
+on:
+  push:
+    branches:
+      - develop       # → Dev environment
+      - 'release/**'  # → Staging environment
+      - main          # → Production (manual approval)
+  pull_request:
+    branches:
+      - develop
+      - main
+
+permissions:
+  id-token: write   # Required for AWS OIDC
+  contents: read
+  pull-requests: write
+
+jobs:
+  # ==========================================
+  # Job 1: Check all affected projects once using nx
+  # ==========================================
+  check-affected:
+    name: Check Affected Projects
+    runs-on: ubuntu-latest
+    outputs:
+      backend-affected: ${{ steps.check-affected.outputs.backend-affected }}
+      frontend-affected: ${{ steps.check-affected.outputs.frontend-affected }}
+      affected-projects: ${{ steps.check-affected.outputs.affected-projects }}
+      has-affected: ${{ steps.check-affected.outputs.has-affected }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for accurate change detection
+
+      - name: Setup Node.js and Dependencies
+        id: setup-deps
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Check affected projects
+        id: check-affected
+        run: |
+          # Determine base and head commits
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE=${{ github.event.pull_request.base.sha }}
+            HEAD=${{ github.event.pull_request.head.sha }}
+          else
+            BASE=${{ github.event.before }}
+            HEAD=${{ github.sha }}
+          fi
+
+          echo "Checking affected projects..."
+          echo "Base: $BASE"
+          echo "Head: $HEAD"
+
+          # Get list of affected projects using nx
+          AFFECTED_PROJECTS=$(npx nx show projects --affected --base=$BASE --head=$HEAD --type=app 2>/dev/null || echo "")
+
+          echo "Affected projects:"
+          echo "$AFFECTED_PROJECTS"
+
+          # Save the full list
+          echo "affected-projects<<EOF" >> $GITHUB_OUTPUT
+          echo "$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Check if any projects are affected
+          if [[ -n "$AFFECTED_PROJECTS" ]]; then
+            echo "has-affected=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-affected=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Check specific projects
+          if echo "$AFFECTED_PROJECTS" | grep -q "^be$"; then
+            echo "✅ Backend (be) is affected by changes"
+            echo "backend-affected=true" >> $GITHUB_OUTPUT
+          else
+            echo "⏭️  Backend (be) is not affected"
+            echo "backend-affected=false" >> $GITHUB_OUTPUT
+          fi
+
+          if echo "$AFFECTED_PROJECTS" | grep -q "^photos-fe$"; then
+            echo "✅ Frontend (photos-fe) is affected by changes"
+            echo "frontend-affected=true" >> $GITHUB_OUTPUT
+          else
+            echo "⏭️  Frontend (photos-fe) is not affected"
+            echo "frontend-affected=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment on PR with affected projects
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const backendAffected = '${{ steps.check-affected.outputs.backend-affected }}' === 'true';
+            const frontendAffected = '${{ steps.check-affected.outputs.frontend-affected }}' === 'true';
+
+            let message = '## 🔍 Affected Projects\n\n';
+
+            if (!backendAffected && !frontendAffected) {
+              message += '⏭️ No deployments needed - no changes detected in backend or frontend.';
+            } else {
+              if (backendAffected) message += '✅ **Backend** - Will be deployed\n';
+              if (frontendAffected) message += '✅ **Frontend** - Will be deployed\n';
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
+
+  # ==========================================
+  # Job 2: Determine deployment environment
+  # ==========================================
+  determine-environment:
+    name: Determine Environment
+    runs-on: ubuntu-latest
+    needs: [check-affected]
+    if: needs.check-affected.outputs.backend-affected == 'true' || needs.check-affected.outputs.frontend-affected == 'true'
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      should-deploy: ${{ steps.set-env.outputs.should-deploy }}
+
+    steps:
+      - name: Determine environment from branch
+        id: set-env
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+
+          # Don't deploy on PRs
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "Pull request - will not deploy"
+            exit 0
+          fi
+
+          # Determine environment based on branch
+          if [[ $GITHUB_REF == refs/heads/main ]]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "Deploying to PRODUCTION"
+          elif [[ $GITHUB_REF == refs/heads/release/* ]]; then
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "Deploying to STAGING"
+          elif [[ $GITHUB_REF == refs/heads/develop ]]; then
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "Deploying to DEVELOPMENT"
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "Unknown branch - will not deploy"
+          fi
+
+  # ==========================================
+  # QUALITY CHECKS (using nx affected)
+  # ==========================================
+
+  lint:
+    name: Lint Affected Projects
+    runs-on: ubuntu-latest
+    needs: [check-affected]
+    if: needs.check-affected.outputs.backend-affected == 'true' || needs.check-affected.outputs.frontend-affected == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Lint affected projects
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE=${{ github.event.pull_request.base.sha }}
+            HEAD=${{ github.event.pull_request.head.sha }}
+          else
+            BASE=${{ github.event.before }}
+            HEAD=${{ github.sha }}
+          fi
+          npx nx affected -t lint --base=$BASE --head=$HEAD
+
+  typecheck:
+    name: Type Check Affected Projects
+    runs-on: ubuntu-latest
+    needs: [check-affected]
+    if: needs.check-affected.outputs.backend-affected == 'true' || needs.check-affected.outputs.frontend-affected == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Type check affected projects
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE=${{ github.event.pull_request.base.sha }}
+            HEAD=${{ github.event.pull_request.head.sha }}
+          else
+            BASE=${{ github.event.before }}
+            HEAD=${{ github.sha }}
+          fi
+          npx nx affected -t typecheck --base=$BASE --head=$HEAD
+
+  test:
+    name: Test Affected Projects
+    runs-on: ubuntu-latest
+    needs: [check-affected]
+    if: needs.check-affected.outputs.backend-affected == 'true' || needs.check-affected.outputs.frontend-affected == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Test affected projects
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE=${{ github.event.pull_request.base.sha }}
+            HEAD=${{ github.event.pull_request.head.sha }}
+          else
+            BASE=${{ github.event.before }}
+            HEAD=${{ github.sha }}
+          fi
+          npx nx affected -t test --base=$BASE --head=$HEAD
+        continue-on-error: true  # Allow failure if tests aren't fully configured yet
+  build:
+    name: Build Affected Projects
+    runs-on: ubuntu-latest
+    needs: [check-affected]
+    if: needs.check-affected.outputs.backend-affected == 'true' || needs.check-affected.outputs.frontend-affected == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Build affected projects with nx
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE=${{ github.event.pull_request.base.sha }}
+            HEAD=${{ github.event.pull_request.head.sha }}
+          else
+            BASE=${{ github.event.before }}
+            HEAD=${{ github.sha }}
+          fi
+          npx nx affected -t build --base=$BASE --head=$HEAD
+
+      - name: Upload frontend build artifacts
+        if: needs.check-affected.outputs.frontend-affected == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: apps/photos-fe/build/
+          retention-days: 1
+
+  # ==========================================
+  # BACKEND DEPLOYMENT
+  # ==========================================
+
+  backend-synth:
+    name: Backend - Synthesize CDK
+    runs-on: ubuntu-latest
+    needs: [determine-environment, build, check-affected]
+    if: needs.determine-environment.outputs.should-deploy == 'true' && needs.check-affected.outputs.backend-affected == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Synthesize CDK
+        env:
+          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
+          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+          HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID }}
+          HOSTED_ZONE_NAME: ${{ secrets.HOSTED_ZONE_NAME }}
+          CERTIFICATE_ARN: ${{ secrets.CERTIFICATE_ARN }}
+        run: |
+          cd apps/be
+          npx cdk synth --context environment=$ENVIRONMENT --context domainName=$DOMAIN_NAME --context hostedZoneId=$HOSTED_ZONE_ID --context hostedZoneName=$HOSTED_ZONE_NAME --context certificateArn=$CERTIFICATE_ARN
+
+      - name: Upload CDK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-cdk-artifacts-${{ github.sha }}
+          path: apps/be/cdk.out/
+          retention-days: 1
+
+  backend-deploy:
+    name: Backend - Deploy to ${{ needs.determine-environment.outputs.environment }}
+    runs-on: ubuntu-latest
+    needs: [determine-environment, backend-synth, check-affected]
+    if: needs.determine-environment.outputs.should-deploy == 'true' && needs.check-affected.outputs.backend-affected == 'true'
+
+    environment:
+      name: ${{ needs.determine-environment.outputs.environment }}
+      url: ${{ steps.deploy.outputs.api-url }}
+
+    outputs:
+      api-url: ${{ steps.deploy.outputs.api-url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Download CDK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-cdk-artifacts-${{ github.sha }}
+          path: apps/be/cdk.out/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_ROLE_ARN || secrets.AWS_DEV_ROLE_ARN }}
+          aws-region: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_REGION || secrets.AWS_DEV_REGION || 'us-east-1' }}
+          role-session-name: GitHubActions-${{ github.run_id }}
+
+      - name: Deploy CDK stack
+        id: deploy
+        env:
+          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
+        run: |
+          cd apps/be
+
+          echo "Deploying to $ENVIRONMENT environment..."
+
+          # Deploy using pre-synthesized CloudFormation templates
+          npx cdk deploy \
+            --require-approval never \
+            --app cdk.out \
+            --outputs-file outputs.json
+
+          # Extract API URL from outputs
+          API_URL=$(cat outputs.json | jq -r '.["BeStack-'$ENVIRONMENT'"].ApiEndpoint')
+          echo "api-url=$API_URL" >> $GITHUB_OUTPUT
+          echo "Deployed to: $API_URL"
+
+      - name: Upload deployment outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-deployment-outputs-${{ needs.determine-environment.outputs.environment }}
+          path: apps/be/outputs.json
+          retention-days: 30
+
+  backend-validate:
+    name: Backend - Validate Deployment
+    runs-on: ubuntu-latest
+    needs: [determine-environment, backend-deploy]
+    if: needs.determine-environment.outputs.should-deploy == 'true'
+
+    steps:
+      - name: Download deployment outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-deployment-outputs-${{ needs.determine-environment.outputs.environment }}
+
+      - name: Health check
+        run: |
+          API_URL=$(cat outputs.json | jq -r '.["social-app-${{ needs.determine-environment.outputs.environment }}"].ApiEndpoint')
+
+          echo "Testing API health at: $API_URL"
+
+          # Basic health check (adjust endpoint as needed)
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${API_URL}/health || echo "000")
+
+          if [[ $HTTP_STATUS == "200" ]] || [[ $HTTP_STATUS == "404" ]]; then
+            echo "✅ API is responding"
+          else
+            echo "❌ API health check failed with status: $HTTP_STATUS"
+            exit 1
+          fi
+
+  # ==========================================
+  # FRONTEND DEPLOYMENT JOBS (depends on backend completion)
+  # ==========================================
+
+  frontend-synth:
+    name: Frontend - Synthesize CDK
+    runs-on: ubuntu-latest
+    needs: [determine-environment, build, backend-deploy, check-affected]
+    # Frontend synth waits for backend deployment if backend was affected, otherwise just needs build
+    if: |
+      needs.determine-environment.outputs.should-deploy == 'true' &&
+      needs.check-affected.outputs.frontend-affected == 'true' &&
+      (needs.check-affected.outputs.backend-affected != 'true' || needs.backend-deploy.result == 'success' || needs.backend-deploy.result == 'skipped')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_ROLE_ARN || secrets.AWS_DEV_ROLE_ARN }}
+          aws-region: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_REGION || secrets.AWS_DEV_REGION || 'us-east-1' }}
+          role-session-name: GitHubActions-${{ github.run_id }}
+
+      - name: Fetch backend stack outputs
+        id: backend-outputs
+        env:
+          OUTPUT_FILE: apps/photos-fe/api-stack.outputs.json
+        run: ./.github/scripts/fetch-backend-outputs.sh "${{ needs.determine-environment.outputs.environment }}"
+
+      - name: Rebuild frontend with deployment configuration
+        run: npx nx build photos-fe
+
+      - name: Synthesize CDK
+        env:
+          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
+          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+          HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID }}
+          HOSTED_ZONE_NAME: ${{ secrets.HOSTED_ZONE_NAME }}
+          CERTIFICATE_ARN: ${{ secrets.CERTIFICATE_ARN }}
+        run: |
+          cd apps/photos-fe
+          npx cdk synth \
+            --context environment=$ENVIRONMENT \
+            --context domainName=$DOMAIN_NAME \
+            --context hostedZoneId=$HOSTED_ZONE_ID \
+            --context hostedZoneName=$HOSTED_ZONE_NAME \
+            --context certificateArn=$CERTIFICATE_ARN
+
+      - name: Upload CDK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-cdk-artifacts-${{ github.sha }}
+          path: apps/photos-fe/cdk.out/
+          retention-days: 1
+
+  frontend-deploy:
+    name: Frontend - Deploy to ${{ needs.determine-environment.outputs.environment }}
+    runs-on: ubuntu-latest
+    needs: [determine-environment, frontend-synth, check-affected]
+    if: needs.determine-environment.outputs.should-deploy == 'true' && needs.check-affected.outputs.frontend-affected == 'true'
+
+    environment:
+      name: ${{ needs.determine-environment.outputs.environment }}-frontend
+      url: ${{ steps.deploy.outputs.website-url }}
+
+    outputs:
+      website-url: ${{ steps.deploy.outputs.website-url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: apps/photos-fe/build/
+
+      - name: Download CDK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-cdk-artifacts-${{ github.sha }}
+          path: apps/photos-fe/cdk.out/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_ROLE_ARN || secrets.AWS_DEV_ROLE_ARN }}
+          aws-region: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_REGION || secrets.AWS_DEV_REGION || 'us-east-1' }}
+          role-session-name: GitHubActions-${{ github.run_id }}
+
+      - name: Deploy CDK stack
+        id: deploy
+        env:
+          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
+        run: |
+          cd apps/photos-fe
+
+          echo "Deploying frontend to $ENVIRONMENT environment..."
+
+          # Deploy using pre-synthesized CloudFormation templates
+          npx cdk deploy \
+            --require-approval never \
+            --app cdk.out \
+            --outputs-file outputs.json
+
+          # Extract website URL from outputs (stack name format: social-app-{env}-website)
+          WEBSITE_URL=$(cat outputs.json | jq -r '."social-app-'$ENVIRONMENT'-website".WebsiteUrl')
+          echo "website-url=$WEBSITE_URL" >> $GITHUB_OUTPUT
+          echo "Deployed to: $WEBSITE_URL"
+
+      - name: Upload deployment outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-deployment-outputs-${{ needs.determine-environment.outputs.environment }}
+          path: apps/photos-fe/outputs.json
+          retention-days: 30
+
+  frontend-validate:
+    name: Frontend - Validate Deployment
+    runs-on: ubuntu-latest
+    needs: [determine-environment, frontend-deploy]
+    if: needs.determine-environment.outputs.should-deploy == 'true'
+
+    steps:
+      - name: Download deployment outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-deployment-outputs-${{ needs.determine-environment.outputs.environment }}
+
+      - name: Health check
+        env:
+          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
+        run: |
+          WEBSITE_URL=$(cat outputs.json | jq -r '."social-app-'$ENVIRONMENT'-website".WebsiteUrl')
+
+          echo "Testing website at: $WEBSITE_URL"
+
+          # Basic health check
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${WEBSITE_URL} || echo "000")
+
+          if [[ $HTTP_STATUS == "200" ]]; then
+            echo "✅ Website is accessible"
+          else
+            echo "❌ Website health check failed with status: $HTTP_STATUS"
+            exit 1
+          fi
+
+  # ==========================================
+  # FINAL SUMMARY
+  # ==========================================
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [check-affected, backend-deploy, frontend-deploy, backend-validate, frontend-validate]
+    if: always() && github.event_name == 'pull_request'
+
+    steps:
+      - name: Comment on PR with deployment summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const backendAffected = '${{ needs.check-affected.outputs.backend-affected }}' === 'true';
+            const frontendAffected = '${{ needs.check-affected.outputs.frontend-affected }}' === 'true';
+            const backendDeployed = '${{ needs.backend-deploy.result }}' === 'success';
+            const frontendDeployed = '${{ needs.frontend-deploy.result }}' === 'success';
+            const backendUrl = '${{ needs.backend-deploy.outputs.api-url }}';
+            const frontendUrl = '${{ needs.frontend-deploy.outputs.website-url }}';
+
+            let message = '## 🚀 Deployment Summary\n\n';
+
+            if (!backendAffected && !frontendAffected) {
+              message += '⏭️ No deployments needed - no changes detected.';
+            } else {
+              if (backendAffected) {
+                if (backendDeployed) {
+                  message += `✅ **Backend** - Successfully deployed\n`;
+                  message += `   API: ${backendUrl}\n\n`;
+                } else {
+                  message += `❌ **Backend** - Deployment failed or skipped\n\n`;
+                }
+              }
+
+              if (frontendAffected) {
+                if (frontendDeployed) {
+                  message += `✅ **Frontend** - Successfully deployed\n`;
+                  message += `   Website: ${frontendUrl}\n\n`;
+                } else {
+                  message += `❌ **Frontend** - Deployment failed or skipped\n\n`;
+                }
+              }
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });

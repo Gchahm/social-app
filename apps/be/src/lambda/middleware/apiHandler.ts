@@ -13,10 +13,12 @@ import { logMetrics } from '@aws-lambda-powertools/metrics/middleware';
 import { captureLambdaHandler } from '@aws-lambda-powertools/tracer/middleware';
 import { getLogger, getMetrics, getTracer } from '../utils';
 
-const corsMiddleware = httpCorsMiddleware({
-  origin: process.env.CORS_ORIGINS || '*',
-  credentials: false,
-});
+const corsMiddleware = () => {
+  return httpCorsMiddleware({
+    origins: process.env.CORS_ORIGINS.split(','),
+    credentials: false,
+  });
+};
 
 /**
  * Creates a middy handler with standard middleware pipeline for API endpoints
@@ -32,7 +34,7 @@ export const createApiHandler = <T extends ZodType>(schema: T) => {
     .use(httpHeaderNormalizerMiddleware())
     .use(httpJsonBodyParserMiddleware())
     .use(parser({ schema }))
-    .use(corsMiddleware)
+    .use(corsMiddleware())
     .use(
       httpResponseSerializerMiddleware({
         serializers: [
@@ -60,7 +62,7 @@ export const createApiHandlerNoBody = () => {
     .use(logMetrics(getMetrics()))
     .use(httpEventNormalizerMiddleware())
     .use(httpHeaderNormalizerMiddleware())
-    .use(corsMiddleware)
+    .use(corsMiddleware())
     .use(
       httpResponseSerializerMiddleware({
         serializers: [

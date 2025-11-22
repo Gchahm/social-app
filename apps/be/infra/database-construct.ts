@@ -1,19 +1,15 @@
 import { Construct } from 'constructs';
 import {
   AttributeType,
-  BillingMode,
+  ProjectionType,
   Table,
   TableEncryption,
-  ProjectionType,
-  PointInTimeRecoverySpecification,
 } from 'aws-cdk-lib/aws-dynamodb';
-import { RemovalPolicy } from 'aws-cdk-lib';
+import { CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
+import { EnvironmentConfig } from './configs';
+import { APP_NAME } from './constants';
 
-export interface DatabaseConstructProps {
-  billingMode: BillingMode;
-  removalPolicy: RemovalPolicy;
-  pointInTimeRecoverySpecification: PointInTimeRecoverySpecification;
-}
+export type DatabaseConstructProps = EnvironmentConfig;
 
 export class DatabaseConstruct extends Construct {
   public table: Table;
@@ -23,7 +19,7 @@ export class DatabaseConstruct extends Construct {
 
     // Single-table design for social media application
     // Stores Users, Posts, Likes, Comments, and Follows
-    this.table = new Table(this, 'SocialMediaTable', {
+    this.table = new Table(this, `${APP_NAME}-table`, {
       partitionKey: {
         name: 'PK',
         type: AttributeType.STRING,
@@ -32,11 +28,17 @@ export class DatabaseConstruct extends Construct {
         name: 'SK',
         type: AttributeType.STRING,
       },
-      billingMode: props.billingMode,
-      removalPolicy: props.removalPolicy,
+      billingMode: props.tableBillingMode,
+      removalPolicy: props.tableRemovalPolicy,
       encryption: TableEncryption.AWS_MANAGED,
       pointInTimeRecoverySpecification: props.pointInTimeRecoverySpecification,
-      deletionProtection: props.removalPolicy === RemovalPolicy.RETAIN,
+      deletionProtection: props.tableRemovalPolicy === RemovalPolicy.RETAIN,
+    });
+
+    new CfnOutput(this, 'TableName', {
+      value: this.table.tableName,
+      description: 'DynamoDB table name',
+      exportName: `TableName`,
     });
 
     // GSI1: User-Entity Index

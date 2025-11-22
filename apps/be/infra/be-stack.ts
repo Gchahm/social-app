@@ -10,11 +10,15 @@ import { BaseLambdaConstructProps } from './base-lambda-construct';
 import { devConfig, EnvironmentConfig } from './configs';
 import { stagingConfig } from './configs/staging';
 import { prodConfig } from './configs/prod';
-
-export type Environment = 'dev' | 'staging' | 'prod';
+import { AuthLambdaConstruct } from './auth-lambda-construct';
+import { HealthLambdaConstruct } from './health-lambda-construct';
+import { DomainConstruct } from './domain-construct';
+import { APP_NAME } from './constants';
+import { Environment, CustomDomainConfig } from './utils';
 
 export interface BeStackProps extends StackProps {
   environment: Environment;
+  customDomain?: CustomDomainConfig;
 }
 
 export class BeStack extends Stack {
@@ -32,33 +36,33 @@ export class BeStack extends Stack {
 
     const config = envConfigs[props.environment];
 
+    if (props.customDomain) {
+      config.corsOrigins = [
+        `https://${props.customDomain.feDomain}`,
+        ...config.corsOrigins,
+      ];
+    }
+
     // Database construct with environment-specific config
-    const databaseConstruct = new DatabaseConstruct(this, 'DatabaseConstruct', {
-      billingMode: config.tableBillingMode,
-      removalPolicy: config.tableRemovalPolicy,
-      pointInTimeRecoverySpecification: config.pointInTimeRecoverySpecification,
-    });
+    const databaseConstruct = new DatabaseConstruct(
+      this,
+      'DatabaseConstruct',
+      config
+    );
 
     // Storage construct with environment-specific config
-    const storageConstruct = new StorageConstruct(this, 'StorageConstruct', {
-      removalPolicy: config.bucketRemovalPolicy,
-      corsOrigins: config.corsOrigins,
-    });
+    const storageConstruct = new StorageConstruct(
+      this,
+      'StorageConstruct',
+      config
+    );
 
     // Lambda shared configuration
     const lambdaProps: BaseLambdaConstructProps = {
       table: databaseConstruct.table,
       bucket: storageConstruct.bucket,
-      environment: {
-        TABLE_NAME: databaseConstruct.table.tableName,
-        BUCKET_NAME: storageConstruct.bucket.bucketName,
-        SERVICE_NAME: stackName,
-        ENVIRONMENT: props.environment,
-        CORS_ORIGINS: config.corsOrigins.join(','),
-      },
-      logRetention: config.logRetentionDays,
-      timeout: config.lambdaTimeout,
-      memorySize: config.lambdaMemorySize,
+      envName: props.environment,
+      ...config,
     };
 
     const photosLambdaConstruct = new PhotosLambdaConstruct(
@@ -73,60 +77,49 @@ export class BeStack extends Stack {
       lambdaProps
     );
 
+    const authLambdaConstruct = new AuthLambdaConstruct(
+      this,
+      'AuthLambdaConstruct',
+      lambdaProps
+    );
+
+    const healthLambdaConstruct = new HealthLambdaConstruct(
+      this,
+      'HealthLambdaConstruct',
+      lambdaProps
+    );
+
     const authConstruct = new AuthConstruct(this, 'AuthConstruct', {
-      table: databaseConstruct.table,
       environment: props.environment,
+      postRegistrationLambda: authLambdaConstruct.postRegistrationLambda,
     });
 
     const apiConstruct = new ApiConstruct(this, 'ApiConstruct', {
       userPool: authConstruct.userPool,
-      postsIntegrations: postsLambdaConstruct.postsIntegrations,
-      photosIntegrations: photosLambdaConstruct.integrations,
-      corsOrigins: config.corsOrigins,
-      throttleRateLimit: config.throttleRateLimit,
-      throttleBurstLimit: config.throttleBurstLimit,
+      postsLambdas: postsLambdaConstruct.lambdas,
+      photosLambdas: photosLambdaConstruct.lambdas,
+      healthLambdas: healthLambdaConstruct.lambdas,
+      ...config,
+      envName: props.environment,
+    });
+
+    // Custom domain setup (optional, based on configuration)
+    new DomainConstruct(this, 'DomainConstruct', {
+      api: apiConstruct.api,
+      environment: props.environment,
+      ...props.customDomain,
     });
 
     // Stack outputs with environment-specific export names
     new CfnOutput(this, 'Environment', {
       value: props.environment,
       description: 'Deployment environment',
-      exportName: `${stackName}-Environment`,
-    });
-
-    new CfnOutput(this, 'ApiEndpoint', {
-      value: apiConstruct.api.url,
-      description: 'API Gateway endpoint URL',
-      exportName: `${stackName}-ApiEndpoint`,
-    });
-
-    new CfnOutput(this, 'UserPoolId', {
-      value: authConstruct.userPool.userPoolId,
-      description: 'Cognito User Pool ID',
-      exportName: `${stackName}-UserPoolId`,
-    });
-
-    new CfnOutput(this, 'UserPoolClientId', {
-      value: authConstruct.userPoolClient.userPoolClientId,
-      description: 'Cognito User Pool Client ID',
-      exportName: `${stackName}-UserPoolClientId`,
-    });
-
-    new CfnOutput(this, 'TableName', {
-      value: databaseConstruct.table.tableName,
-      description: 'DynamoDB table name',
-      exportName: `${stackName}-TableName`,
-    });
-
-    new CfnOutput(this, 'BucketName', {
-      value: storageConstruct.bucket.bucketName,
-      description: 'S3 bucket name',
-      exportName: `${stackName}-BucketName`,
+      exportName: `Environment`,
     });
 
     // Add tags to all resources for cost tracking and organization
     this.tags.setTag('Environment', props.environment);
-    this.tags.setTag('Project', 'FullStackApp');
+    this.tags.setTag('Project', APP_NAME);
     this.tags.setTag('ManagedBy', 'CDK');
     this.tags.setTag(
       'CostCenter',

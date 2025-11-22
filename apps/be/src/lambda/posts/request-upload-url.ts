@@ -1,14 +1,14 @@
 import { requestUploadUrlSchema } from '@chahm/types';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schemas/api-gateway';
 import { z } from 'zod';
-import { getUserId } from '../utils';
+import { getContext, getUserId } from '../utils';
 import { createApiHandler } from '../middleware/apiHandler';
 
 const s3Client = new S3Client({});
-const BUCKET_NAME = process.env.BUCKET_NAME!;
+const { bucketName } = getContext();
 
 const RequestUploadUrlEventSchema = APIGatewayProxyEventSchema.extend({
   body: requestUploadUrlSchema,
@@ -32,7 +32,7 @@ export const handler = createApiHandler(RequestUploadUrlEventSchema).handler(
 
     // Create presigned URL for upload
     const command = new PutObjectCommand({
-      Bucket: BUCKET_NAME,
+      Bucket: bucketName,
       Key: imageKey,
       ContentType: body.contentType,
     });
@@ -42,7 +42,9 @@ export const handler = createApiHandler(RequestUploadUrlEventSchema).handler(
     });
 
     // Construct the final image URL
-    const imageUrl = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${imageKey}`;
+    const imageUrl = `https://${bucketName}.s3.${
+      process.env.AWS_REGION || 'us-east-1'
+    }.amazonaws.com/${imageKey}`;
 
     return {
       statusCode: 200,

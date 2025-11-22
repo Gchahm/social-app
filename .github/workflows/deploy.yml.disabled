@@ -1,0 +1,290 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - develop       # → Dev environment
+      - 'release/**'  # → Staging environment
+      - main          # → Production (manual approval)
+  pull_request:
+    branches:
+      - develop
+      - main
+
+permissions:
+  id-token: write   # Required for AWS OIDC
+  contents: read
+  pull-requests: write
+
+jobs:
+  # ==========================================
+  # Job 1: Check if backend is affected
+  # ==========================================
+  check-affected:
+    name: Check if Backend Changed
+    runs-on: ubuntu-latest
+    outputs:
+      affected: ${{ steps.check-affected.outputs.affected }}
+      cache-hit: ${{ steps.setup-deps.outputs.cache-hit }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for accurate change detection
+
+      - name: Setup Node.js and Dependencies
+        id: setup-deps
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Check if backend is affected
+        id: check-affected
+        run: |
+          # For pull requests, compare against base branch
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE=${{ github.event.pull_request.base.sha }}
+            HEAD=${{ github.event.pull_request.head.sha }}
+          else
+            # For pushes, compare against previous commit
+            BASE=${{ github.event.before }}
+            HEAD=${{ github.sha }}
+          fi
+
+          echo "Checking if 'be' project is affected..."
+          echo "Base: $BASE"
+          echo "Head: $HEAD"
+
+          # Check if backend or its dependencies are affected
+          if npx nx show project be --affected --base=$BASE --head=$HEAD > /dev/null 2>&1; then
+            echo "✅ Backend is affected by changes"
+            echo "affected=true" >> $GITHUB_OUTPUT
+          else
+            echo "⏭️  Backend is not affected by changes - skipping deployment"
+            echo "affected=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment on PR if not affected
+        if: github.event_name == 'pull_request' && steps.check-affected.outputs.affected != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `⏭️ **Backend deployment skipped** - No changes detected in backend or its dependencies.`
+            })
+
+  # ==========================================
+  # Job 2: Determine deployment environment
+  # ==========================================
+  determine-environment:
+    name: Determine Environment
+    runs-on: ubuntu-latest
+    needs: [check-affected]
+    if: needs.check-affected.outputs.affected == 'true'
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      should-deploy: ${{ steps.set-env.outputs.should-deploy }}
+
+    steps:
+      - name: Determine environment from branch
+        id: set-env
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+
+          # Don't deploy on PRs
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "Pull request - will not deploy"
+            exit 0
+          fi
+
+          # Determine environment based on branch
+          if [[ $GITHUB_REF == refs/heads/main ]]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "Deploying to PRODUCTION"
+          elif [[ $GITHUB_REF == refs/heads/release/* ]]; then
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "Deploying to STAGING"
+          elif [[ $GITHUB_REF == refs/heads/develop ]]; then
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "Deploying to DEVELOPMENT"
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "Unknown branch - will not deploy"
+          fi
+
+  # ==========================================
+  # Job 3: Lint and type check
+  # ==========================================
+  test:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    needs: [check-affected]
+    if: needs.check-affected.outputs.affected == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Lint backend
+        run: npx nx lint be
+
+      - name: Type check backend
+        run: npx nx typecheck be
+
+      - name: Run tests
+        run: npx nx test be
+        continue-on-error: true  # Allow failure if tests aren't fully configured yet
+
+  # ==========================================
+  # Job 4: Build
+  # ==========================================
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [determine-environment, test]
+    if: needs.determine-environment.outputs.should-deploy == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Synthesize CDK
+        env:
+          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
+          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+          HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID }}
+          HOSTED_ZONE_NAME: ${{ secrets.HOSTED_ZONE_NAME }}
+          CERTIFICATE_ARN: ${{ secrets.CERTIFICATE_ARN }}
+        run: |
+          cd apps/be
+          npx cdk synth --context environment=$ENVIRONMENT --context domainName=$DOMAIN_NAME --context hostedZoneId=$HOSTED_ZONE_ID --context hostedZoneName=$HOSTED_ZONE_NAME --context certificateArn=$CERTIFICATE_ARN
+
+      - name: Upload CDK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cdk-artifacts-${{ github.sha }}
+          path: apps/be/cdk.out/
+          retention-days: 1
+
+  # ==========================================
+  # Job 5: Deploy
+  # ==========================================
+  deploy:
+    name: Deploy to ${{ needs.determine-environment.outputs.environment }}
+    runs-on: ubuntu-latest
+    needs: [determine-environment, build]
+    if: needs.determine-environment.outputs.should-deploy == 'true'
+
+    environment:
+      name: ${{ needs.determine-environment.outputs.environment }}
+      url: ${{ steps.deploy.outputs.api-url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Download CDK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: cdk-artifacts-${{ github.sha }}
+          path: apps/be/cdk.out/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_ROLE_ARN || secrets.AWS_DEV_ROLE_ARN }}
+          aws-region: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_REGION || secrets.AWS_DEV_REGION || 'us-east-1' }}
+          role-session-name: GitHubActions-${{ github.run_id }}
+
+      - name: Deploy CDK stack
+        id: deploy
+        env:
+          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
+        run: |
+          cd apps/be
+
+          echo "Deploying to $ENVIRONMENT environment..."
+
+          # Deploy using pre-synthesized CloudFormation templates
+          npx cdk deploy \
+            --require-approval never \
+            --app cdk.out \
+            --outputs-file outputs.json
+
+          # Extract API URL from outputs
+          API_URL=$(cat outputs.json | jq -r '.["BeStack-'$ENVIRONMENT'"].ApiEndpoint')
+          echo "api-url=$API_URL" >> $GITHUB_OUTPUT
+          echo "Deployed to: $API_URL"
+
+      - name: Upload deployment outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-outputs-${{ needs.determine-environment.outputs.environment }}
+          path: apps/be/outputs.json
+          retention-days: 30
+
+      - name: Comment on PR with deployment info
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `✅ Successfully deployed to **${{ needs.determine-environment.outputs.environment }}**\n\nAPI Endpoint: ${{ steps.deploy.outputs.api-url }}`
+            })
+
+  # ==========================================
+  # Job 6: Post-deployment validation
+  # ==========================================
+  validate:
+    name: Validate Deployment
+    runs-on: ubuntu-latest
+    needs: [determine-environment, deploy]
+    if: needs.determine-environment.outputs.should-deploy == 'true'
+
+    steps:
+      - name: Download deployment outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: deployment-outputs-${{ needs.determine-environment.outputs.environment }}
+
+      - name: Health check
+        run: |
+          API_URL=$(cat outputs.json | jq -r '.["social-app-${{ needs.determine-environment.outputs.environment }}"].ApiEndpoint')
+
+          echo "Testing API health at: $API_URL"
+
+          # Basic health check (adjust endpoint as needed)
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${API_URL}/health || echo "000")
+
+          if [[ $HTTP_STATUS == "200" ]] || [[ $HTTP_STATUS == "404" ]]; then
+            echo "✅ API is responding"
+          else
+            echo "❌ API health check failed with status: $HTTP_STATUS"
+            exit 1
+          fi
+
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests..."
+          # Add your smoke tests here

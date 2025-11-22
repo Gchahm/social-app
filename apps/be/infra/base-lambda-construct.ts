@@ -2,11 +2,11 @@ import { Construct } from 'constructs';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { ITable } from 'aws-cdk-lib/aws-dynamodb';
-import { Integration, LambdaIntegration } from 'aws-cdk-lib/aws-apigateway';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Duration } from 'aws-cdk-lib';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
-import { ILambdaEnvironmentVariables } from './types';
+import { APP_NAME } from './constants';
+import { EnvironmentConfig } from './configs';
 
 export interface BaseLambdaConfig {
   runtime?: Runtime;
@@ -18,13 +18,10 @@ export interface BaseLambdaConfig {
   logRetention?: RetentionDays;
 }
 
-export interface BaseLambdaConstructProps {
+export interface BaseLambdaConstructProps extends EnvironmentConfig {
   table: ITable;
   bucket: IBucket;
-  environment: ILambdaEnvironmentVariables;
-  logRetention?: RetentionDays;
-  timeout?: Duration;
-  memorySize?: number;
+  envName?: string; // Environment name for resource naming (dev/staging/prod)
 }
 
 /**
@@ -35,31 +32,48 @@ export abstract class BaseLambdaConstruct extends Construct {
   protected readonly table: ITable;
   protected readonly bucket: IBucket;
   protected readonly commonConfig: BaseLambdaConfig;
+  protected readonly envName: string;
 
   constructor(scope: Construct, id: string, props: BaseLambdaConstructProps) {
     super(scope, id);
 
-    const { table, bucket, environment, logRetention, timeout, memorySize } = props;
+    const {
+      table,
+      bucket,
+      envName,
+      lambdaTimeout,
+      lambdaMemorySize,
+      logRetentionDays,
+      minify,
+      sourceMap,
+    } = props;
 
     this.table = table;
     this.bucket = bucket;
+    this.envName = envName || 'dev';
 
     // Default common configuration with environment-specific overrides
     this.commonConfig = {
       runtime: Runtime.NODEJS_22_X,
-      timeout: timeout || Duration.seconds(30),
-      memorySize: memorySize || 256,
-      minify: true,
-      sourceMap: true,
-      environment,
-      logRetention: logRetention || RetentionDays.ONE_WEEK,
+      timeout: lambdaTimeout || Duration.seconds(3),
+      memorySize: lambdaMemorySize || 256,
+      minify,
+      sourceMap,
+      environment: {
+        TABLE_NAME: props.table.tableName,
+        BUCKET_NAME: props.bucket.bucketName,
+        SERVICE_NAME: APP_NAME,
+        ENVIRONMENT: props.envName,
+        CORS_ORIGINS: props.corsOrigins.join(','),
+      },
+      logRetention: logRetentionDays || RetentionDays.ONE_WEEK,
     };
   }
 
   /**
-   * Create a Lambda function with API Gateway integration
+   * Create a Lambda function
    */
-  protected createLambdaIntegration(
+  protected createLambdaFunction(
     id: string,
     entry: string,
     options?: {
@@ -71,20 +85,25 @@ export abstract class BaseLambdaConstruct extends Construct {
       timeout?: Duration;
       memorySize?: number;
     }
-  ): Integration {
+  ): NodejsFunction {
     // Merge environment variables
     const environment = {
       ...this.commonConfig.environment,
       ...options?.environment,
     };
 
+    // Create environment-specific function name
+    const baseFunctionName = options?.functionName || id;
+    const functionName = `${APP_NAME}-${baseFunctionName}-${this.envName}`;
+
     // Create Lambda function
     const lambdaFn = new NodejsFunction(this, id, {
       runtime: this.commonConfig.runtime,
       handler: 'handler',
       entry,
-      functionName: options?.functionName || id,
-      description: options?.description || `Lambda function: ${id}`,
+      functionName,
+      description:
+        options?.description || `Lambda function: ${id} (${this.envName})`,
       timeout: options?.timeout || this.commonConfig.timeout,
       memorySize: options?.memorySize || this.commonConfig.memorySize,
       environment,
@@ -111,17 +130,13 @@ export abstract class BaseLambdaConstruct extends Construct {
       }
     }
 
-    // Create and return API Gateway integration
-    return new LambdaIntegration(lambdaFn, {
-      proxy: true,
-      allowTestInvoke: true,
-    });
+    return lambdaFn;
   }
 
   /**
-   * Create multiple Lambda integrations at once
+   * Create multiple Lambda functions at once
    */
-  protected createLambdaIntegrations(
+  protected createLambdaFunctions(
     configs: Array<{
       id: string;
       entry: string;
@@ -133,18 +148,18 @@ export abstract class BaseLambdaConstruct extends Construct {
       timeout?: Duration;
       memorySize?: number;
     }>
-  ): Record<string, Integration> {
-    const integrations: Record<string, Integration> = {};
+  ): Record<string, NodejsFunction> {
+    const functions: Record<string, NodejsFunction> = {};
 
     configs.forEach((config) => {
-      integrations[config.id] = this.createLambdaIntegration(
+      functions[config.id] = this.createLambdaFunction(
         config.id,
         config.entry,
         config
       );
     });
 
-    return integrations;
+    return functions;
   }
 
   /**

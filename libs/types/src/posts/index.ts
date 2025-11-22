@@ -4,16 +4,8 @@ export * from './create';
 export * from './add-comment';
 export * from './update';
 export * from './dto';
+export * from './getPost';
 
-export interface GetPostsQueryParameters {
-  userId?: string;
-}
-
-export interface GetPostsResponse {
-  posts: PostDto[];
-  count: number;
-  lastEvaluatedKey?: string;
-}
 
 export interface GetPostResponse {
   post: PostDto;

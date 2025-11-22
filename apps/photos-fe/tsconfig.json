@@ -5,18 +5,18 @@
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
     "strict": true,
-    "types": [
-      "vite/client",
-      "@react-router/node",
-      "node"
-    ],
+    "types": ["vite/client", "@react-router/node", "node"],
     "moduleResolution": "bundler"
   },
   "files": [],
-  "include": [
-    "react-router.config.ts"
-  ],
+  "include": ["react-router.config.ts"],
   "references": [
+    {
+      "path": "../../libs/types"
+    },
+    {
+      "path": "../../libs/ui-components"
+    },
     {
       "path": "./tsconfig.app.json"
     }

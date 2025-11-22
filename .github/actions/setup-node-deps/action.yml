@@ -1,0 +1,40 @@
+name: 'Setup Node.js with Dependencies'
+description: 'Setup Node.js and install dependencies with caching'
+
+inputs:
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '22'
+  skip-install:
+    description: 'Skip npm install (useful when restoring from cache)'
+    required: false
+    default: 'false'
+
+outputs:
+  cache-hit:
+    description: 'Whether dependencies were restored from cache'
+    value: ${{ steps.cache-deps.outputs.cache-hit }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+
+    - name: Cache dependencies
+      id: cache-deps
+      uses: actions/cache@v4
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node-${{ inputs.node-version }}-deps-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-${{ inputs.node-version }}-deps-
+
+    - name: Install dependencies
+      if: inputs.skip-install != 'true' && steps.cache-deps.outputs.cache-hit != 'true'
+      shell: bash
+      run: npm ci

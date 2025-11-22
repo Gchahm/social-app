@@ -11,8 +11,10 @@
 module.exports = {
   // Shared environment variables applied to ALL Lambda functions
   shared: {
-    TABLE_NAME: "SocialMediaApp",
-    BUCKET_NAME: "bestack-storageconstructphotosbucket9c8e4cd0-fciy2djjzsku"
+    TABLE_NAME: 'SocialMediaApp',
+    BUCKET_NAME: 'bestack-storageconstructphotosbucket9c8e4cd0-fciy2djjzsku',
+    CORS_ORIGINS: '*',
+    SERVICE_NAME: 'app-dev',
   },
 
   // Optional: Lambda-specific overrides
@@ -22,5 +24,5 @@ module.exports = {
     // "LambdaConstructPhotosLambdaC0248FB2": {
     //   CUSTOM_VAR: "custom-value"
     // }
-  }
+  },
 };

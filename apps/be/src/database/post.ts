@@ -192,7 +192,7 @@ export async function deletePost(postId: string): Promise<void> {
  */
 export async function incrementLikeCount(
   postId: string,
-  increment: number = 1
+  increment = 1
 ): Promise<void> {
   await docClient.send(
     new UpdateCommand({
@@ -217,7 +217,7 @@ export async function incrementLikeCount(
  */
 export async function incrementCommentCount(
   postId: string,
-  increment: number = 1
+  increment = 1
 ): Promise<void> {
   await docClient.send(
     new UpdateCommand({

@@ -25,10 +25,10 @@
   },
   "references": [
     {
-      "path": "../../libs/types"
+      "path": "../../libs/types/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/ui-components"
+      "path": "../../libs/ui-components/tsconfig.lib.json"
     }
   ]
 }

@@ -1,12 +1,12 @@
 import { Construct } from 'constructs';
-import { Integration } from 'aws-cdk-lib/aws-apigateway';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import {
   BaseLambdaConstruct,
   BaseLambdaConstructProps,
 } from './base-lambda-construct';
 
-export interface PhotosIntegrations {
-  requestPhotoUploadUrl: Integration;
+export interface PhotosLambdas {
+  requestPhotoUploadUrl: NodejsFunction;
 }
 
 /**
@@ -15,17 +15,17 @@ export interface PhotosIntegrations {
  */
 export class PhotosLambdaConstruct extends BaseLambdaConstruct {
   // Presigned URL flow
-  public readonly integrations: PhotosIntegrations;
+  public readonly lambdas: PhotosLambdas;
 
   constructor(scope: Construct, id: string, props: BaseLambdaConstructProps) {
     super(scope, id, props);
 
-    this.integrations = {
-      requestPhotoUploadUrl: this.createLambdaIntegration(
-        'RequestUploadUrl',
+    this.lambdas = {
+      requestPhotoUploadUrl: this.createLambdaFunction(
+        'requestPhotoUploadUrl',
         'src/lambda/photos/request-upload-url.ts',
         {
-          functionName: 'photos-RequestUploadUrl',
+          functionName: 'photos-request-upload-url',
           description: 'Photos API: Request presigned URL for upload',
           grantS3Write: true, // Needs permission to generate presigned URLs
         }

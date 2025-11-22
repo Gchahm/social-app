@@ -3,6 +3,7 @@ import { checkUserLikedPost, getPostById } from '../../database';
 import { getOptionalUserId } from '../utils';
 import { createApiHandlerNoBody } from '../middleware/apiHandler';
 import { BadRequest, NotFound } from 'http-errors';
+import { PostDto, postDtoSchema } from '@chahm/types';
 
 /**
  * GET /posts/:postId
@@ -24,11 +25,13 @@ export const handler = createApiHandlerNoBody().handler(
 
     // Add isLiked field if user is authenticated
     const currentUserId = getOptionalUserId(event);
-    let postWithLikeStatus = post;
-    if (currentUserId) {
-      const isLiked = await checkUserLikedPost(post.postId, currentUserId);
-      postWithLikeStatus = { ...post, isLiked };
-    }
+    const isLiked =
+      !currentUserId || (await checkUserLikedPost(post.postId, currentUserId));
+
+    const postWithLikeStatus: PostDto = postDtoSchema.parse({
+      ...post,
+      isLiked,
+    });
 
     return {
       statusCode: 200,

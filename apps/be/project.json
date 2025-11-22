@@ -7,6 +7,15 @@
     "app"
   ],
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/be",
+        "command": "tsc --build tsconfig.app.json --emitDeclarationOnly"
+      },
+      "cache": true,
+      "dependsOn": ["^typecheck"]
+    },
     "generate-env": {
       "executor": "nx:run-commands",
       "options": {
@@ -32,7 +41,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "apps/be",
-        "command": "sam local start-api --template cdk.out/BEStack.template.json --env-vars env.json --warm-containers EAGER"
+        "command": "sam local start-api --template cdk.out/social-app-dev.template.json --env-vars env.json --warm-containers EAGER"
       }
     },
     "dev:watch": {

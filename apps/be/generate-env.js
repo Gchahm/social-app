@@ -11,7 +11,7 @@ try {
   const config = require('./env.config.js');
 
   // Read the synthesized CloudFormation template
-  const templatePath = path.join(__dirname, 'cdk.out', 'BEStack.template.json');
+  const templatePath = path.join(__dirname, 'cdk.out', 'social-app-dev.template.json');
 
   if (!fs.existsSync(templatePath)) {
     console.error('✗ CloudFormation template not found!');

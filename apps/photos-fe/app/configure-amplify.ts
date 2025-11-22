@@ -1,4 +1,4 @@
-import { BEStack } from '../outputs.json';
+import BEStack from '../api-stack.outputs.json';
 import { Amplify } from 'aws-amplify';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
@@ -15,8 +15,6 @@ const getApiEndpoint = () => {
 
 export const configureAmplify = () => {
   const apiEndpoint = getApiEndpoint();
-
-  console.log('Configuring Amplify with API endpoint:', apiEndpoint);
 
   Amplify.configure(
     {

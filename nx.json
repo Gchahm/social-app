@@ -72,6 +72,9 @@
     }
   ],
   "targetDefaults": {
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
     "@nx/esbuild:esbuild": {
       "cache": true,
       "dependsOn": ["^build"],

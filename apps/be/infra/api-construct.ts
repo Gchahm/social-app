@@ -1,5 +1,6 @@
 import { Construct } from 'constructs';
 import {
+  AuthorizationType,
   CognitoUserPoolsAuthorizer,
   Cors,
   LambdaIntegration,
@@ -71,7 +72,11 @@ export class ApiConstruct extends Construct {
   }
 
   private addHealthEndpoints() {
-    const healthResource = this.api.root.addResource('health');
+    const healthResource = this.api.root.addResource('health', {
+      defaultMethodOptions: {
+        authorizationType: AuthorizationType.NONE,
+      },
+    });
     healthResource.addMethod(
       'GET',
       new LambdaIntegration(this.props.healthLambdas.healthCheck)

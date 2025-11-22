@@ -3,8 +3,6 @@ name: Deploy
 on:
   push:
     branches:
-      - develop       # → Dev environment
-      - 'release/**'  # → Staging environment
       - main          # → Production
 
 permissions:
@@ -91,12 +89,6 @@ jobs:
           echo "Ref: ${{ github.ref }}"
 
           if [[ $GITHUB_REF == refs/heads/main ]]; then
-            echo "environment=prod" >> $GITHUB_OUTPUT
-            echo "🚀 Deploying to PRODUCTION"
-          elif [[ $GITHUB_REF == refs/heads/release/* ]]; then
-            echo "environment=staging" >> $GITHUB_OUTPUT
-            echo "🚀 Deploying to STAGING"
-          elif [[ $GITHUB_REF == refs/heads/develop ]]; then
             echo "environment=dev" >> $GITHUB_OUTPUT
             echo "🚀 Deploying to DEVELOPMENT"
           else

@@ -37,7 +37,9 @@ export function useLikePost() {
       await queryClient.cancelQueries({ queryKey: ['posts'] });
 
       // Snapshot the previous value
-      const previousPosts = queryClient.getQueryData<GetPostsResponse>(['posts']);
+      const previousPosts = queryClient.getQueryData<GetPostsResponse>([
+        'posts',
+      ]);
 
       // Optimistically update the cache
       queryClient.setQueryData<GetPostsResponse>(['posts'], (old) => {

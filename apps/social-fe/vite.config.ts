@@ -6,7 +6,7 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
   root: __dirname,
-  cacheDir: '../../node_modules/.vite/apps/photos-fe',
+  cacheDir: '../../node_modules/.vite/apps/social-fe',
   server: {
     port: 4200,
     host: 'localhost',
@@ -25,7 +25,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   build: {
-    outDir: '../../dist/apps/photos-fe',
+    outDir: '../../dist/apps/social-fe',
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {

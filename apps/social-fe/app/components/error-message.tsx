@@ -1,4 +1,11 @@
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@chahm/ui-components';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@chahm/ui-components';
 import { AlertCircle } from 'lucide-react';
 
 interface ErrorMessageProps {

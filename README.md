@@ -256,7 +256,7 @@ nx run be:dev:watch
 
 ```bash
 # Start React development server
-nx run photos-fe:dev
+nx run social-fe:dev
 
 # The app will be available at http://localhost:5173
 ```
@@ -269,7 +269,7 @@ nx affected -t test
 
 # Test specific project
 nx run be:test
-nx run photos-fe:test
+nx run social-fe:test
 
 # Type check
 nx affected -t typecheck
@@ -284,7 +284,7 @@ nx affected -t typecheck
 nx run be:deploy
 
 # Deploy frontend (requires backend to be deployed first)
-nx run photos-fe:deploy
+nx run social-fe:deploy
 ```
 
 #### Deploy to Staging/Production
@@ -362,7 +362,7 @@ aws-full-stack/
 │   │   ├── infra/               # CDK infrastructure code
 │   │   └── project.json         # Nx project configuration
 │   │
-│   └── photos-fe/               # Frontend application
+│   └── social-fe/               # Frontend application
 │       ├── src/
 │       │   ├── routes/          # File-based routing
 │       │   ├── components/      # React components
@@ -422,7 +422,7 @@ nx run be:test
 nx run be:test:integration
 
 # E2E tests for critical user flows
-nx run photos-fe:test:e2e
+nx run social-fe:test:e2e
 ```
 
 ### Testing Patterns

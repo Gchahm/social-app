@@ -32,7 +32,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "apps/social-be",
-        "command": "cdk deploy --all --outputs-file ../photos-fe/outputs.json --require-approval never"
+        "command": "cdk deploy --all --outputs-file ../social-fe/outputs.json --require-approval never"
       }
     },
     "dev": {

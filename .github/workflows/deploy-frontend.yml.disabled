@@ -46,7 +46,7 @@ jobs:
             BASE=${{ github.event.before }}
             HEAD=${{ github.sha }}
           fi
-          ./.github/scripts/check-affected.sh photos-fe "$BASE" "$HEAD"
+          ./.github/scripts/check-affected.sh social-fe "$BASE" "$HEAD"
 
       - name: Comment on PR if not affected
         if: github.event_name == 'pull_request' && steps.check-affected.outputs.affected != 'true'
@@ -105,17 +105,17 @@ jobs:
 
       - name: Fetch backend stack outputs
         env:
-          OUTPUT_FILE: apps/photos-fe/api-stack.outputs.json
+          OUTPUT_FILE: apps/social-fe/api-stack.outputs.json
         run: ./.github/scripts/fetch-backend-outputs.sh "${{ needs.determine-environment.outputs.environment }}"
 
       - name: Lint frontend
-        run: npx nx lint photos-fe
+        run: npx nx lint social-fe
 
       - name: Type check frontend
-        run: npx nx typecheck photos-fe
+        run: npx nx typecheck social-fe
 
       - name: Run tests
-        run: npx nx test photos-fe
+        run: npx nx test social-fe
         continue-on-error: true  # Allow failure if tests aren't fully configured yet
 
   # ==========================================
@@ -144,7 +144,7 @@ jobs:
       - name: Fetch backend stack outputs
         id: backend-outputs
         env:
-          OUTPUT_FILE: apps/photos-fe/api-stack.outputs.json
+          OUTPUT_FILE: apps/social-fe/api-stack.outputs.json
         run: ./.github/scripts/fetch-backend-outputs.sh "${{ needs.determine-environment.outputs.environment }}"
 
       - name: Build frontend
@@ -153,7 +153,7 @@ jobs:
           VITE_API_URL: ${{ steps.backend-outputs.outputs.API_URL }}
           VITE_USER_POOL_ID: ${{ steps.backend-outputs.outputs.USER_POOL_ID }}
           VITE_USER_POOL_CLIENT_ID: ${{ steps.backend-outputs.outputs.USER_POOL_CLIENT_ID }}
-        run: npx nx build photos-fe
+        run: npx nx build social-fe
 
       - name: Synthesize CDK
         env:
@@ -163,7 +163,7 @@ jobs:
           HOSTED_ZONE_NAME: ${{ secrets.HOSTED_ZONE_NAME }}
           CERTIFICATE_ARN: ${{ secrets.CERTIFICATE_ARN }}
         run: |
-          cd apps/photos-fe
+          cd apps/social-fe
           npx cdk synth \
             --context environment=$ENVIRONMENT \
             --context domainName=$DOMAIN_NAME \
@@ -175,14 +175,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build-${{ github.sha }}
-          path: apps/photos-fe/build/
+          path: apps/social-fe/build/
           retention-days: 1
 
       - name: Upload CDK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: frontend-cdk-artifacts-${{ github.sha }}
-          path: apps/photos-fe/cdk.out/
+          path: apps/social-fe/cdk.out/
           retention-days: 1
 
   # ==========================================
@@ -209,13 +209,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-build-${{ github.sha }}
-          path: apps/photos-fe/build/
+          path: apps/social-fe/build/
 
       - name: Download CDK artifacts
         uses: actions/download-artifact@v4
         with:
           name: frontend-cdk-artifacts-${{ github.sha }}
-          path: apps/photos-fe/cdk.out/
+          path: apps/social-fe/cdk.out/
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -229,7 +229,7 @@ jobs:
         env:
           ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
         run: |
-          cd apps/photos-fe
+          cd apps/social-fe
 
           echo "Deploying frontend to $ENVIRONMENT environment..."
 
@@ -248,7 +248,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-deployment-outputs-${{ needs.determine-environment.outputs.environment }}
-          path: apps/photos-fe/outputs.json
+          path: apps/social-fe/outputs.json
           retention-days: 30
 
       - name: Comment on PR with deployment info

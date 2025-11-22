@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Local deployment script for photos-fe
+# Local deployment script for social-fe
 # Mimics the GitHub Actions workflow
 #
 # Usage: ./scripts/deploy-local.sh [environment]
@@ -23,7 +23,7 @@ fi
 ENVIRONMENT="${1:-${ENVIRONMENT:-dev}}"
 
 echo "========================================"
-echo "Deploying photos-fe to $ENVIRONMENT"
+echo "Deploying social-fe to $ENVIRONMENT"
 echo "========================================"
 
 # Step 1: Fetch backend outputs
@@ -44,7 +44,7 @@ cd "$REPO_ROOT"
 VITE_API_URL="$API_URL" \
 VITE_USER_POOL_ID="$USER_POOL_ID" \
 VITE_USER_POOL_CLIENT_ID="$USER_POOL_CLIENT_ID" \
-  npx nx build photos-fe
+  npx nx build social-fe
 
 # Step 3: Synthesize CDK
 echo ""

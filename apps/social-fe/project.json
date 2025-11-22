@@ -1,15 +1,14 @@
 {
-  "name": "photos-fe",
+  "name": "social-fe",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/photos-fe/src",
+  "sourceRoot": "apps/social-fe/src",
   "projectType": "application",
   "tags": ["app", "ui"],
-  "// targets": "to see all targets run: nx show project photos-fe --web",
   "targets": {
     "synth": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "apps/photos-fe",
+        "cwd": "apps/social-fe",
         "command": "cdk synth"
       }
     },
@@ -17,7 +16,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
       "options": {
-        "cwd": "apps/photos-fe",
+        "cwd": "apps/social-fe",
         "command": "cdk deploy --all --require-approval never"
       }
     }

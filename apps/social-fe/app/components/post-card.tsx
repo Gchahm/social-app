@@ -71,7 +71,11 @@ export function PostCard({ post }: PostCardProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {post.caption && <CardDescription className="line-clamp-3">{post.caption}</CardDescription>}
+        {post.caption && (
+          <CardDescription className="line-clamp-3">
+            {post.caption}
+          </CardDescription>
+        )}
         <Separator />
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <Button

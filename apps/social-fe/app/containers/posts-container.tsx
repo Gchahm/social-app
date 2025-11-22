@@ -3,7 +3,7 @@ import { EmptyState, ErrorMessage, Loading, PostsList } from '../components';
 import { GetPostsQueryParameters } from '@chahm/types';
 
 export interface PostsContainerProps extends GetPostsQueryParameters {
-  title?: string ;
+  title?: string;
 }
 
 export function PostsContainer(props: PostsContainerProps) {

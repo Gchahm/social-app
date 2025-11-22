@@ -4,9 +4,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { BlockPublicAccess, Bucket } from 'aws-cdk-lib/aws-s3';
-import {
-  FrontendDomainConstruct,
-} from './frontend-domain-construct';
+import { FrontendDomainConstruct } from './frontend-domain-construct';
 import { APP_NAME } from './constants';
 import { CustomDomainConfig } from './utils';
 

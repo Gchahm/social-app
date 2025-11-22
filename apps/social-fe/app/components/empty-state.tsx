@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@chahm/ui-components';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@chahm/ui-components';
 import { ImageOff } from 'lucide-react';
 
 interface EmptyStateProps {

@@ -7,9 +7,7 @@
     "allowSyntheticDefaultImports": true
   },
   "files": [],
-  "include": [
-    "infra/**/*.ts"
-  ],
+  "include": ["infra/**/*.ts"],
   "references": [
     {
       "path": "./tsconfig.app.json"

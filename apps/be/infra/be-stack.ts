@@ -114,7 +114,7 @@ export class BeStack extends Stack {
     new CfnOutput(this, 'Environment', {
       value: props.environment,
       description: 'Deployment environment',
-      exportName: `Environment`,
+      exportName: `Environment-${props.environment}`,
     });
 
     // Add tags to all resources for cost tracking and organization

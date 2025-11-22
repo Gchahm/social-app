@@ -31,13 +31,13 @@ export class AuthConstruct extends Construct {
     new CfnOutput(scope, 'UserPoolId', {
       value: this.userPool.userPoolId,
       description: 'Cognito User Pool ID',
-      exportName: `UserPoolId`,
+      exportName: `user-pool-id-${props.environment}`,
     });
 
-    new CfnOutput(this, 'UserPoolClientId', {
+    new CfnOutput(scope, 'UserPoolClientId', {
       value: this.userPoolClient.userPoolClientId,
       description: 'Cognito User Pool Client ID',
-      exportName: `UserPoolClientId`,
+      exportName: `user-pool-client-id-${props.environment}`,
     });
   }
 

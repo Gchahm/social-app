@@ -4,8 +4,11 @@ import {
 } from 'aws-cdk-lib/aws-dynamodb';
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
+import { Environment } from '../utils';
 
 export interface EnvironmentConfig {
+  environment: Environment;
+
   tableBillingMode: BillingMode;
   tableRemovalPolicy: RemovalPolicy;
   pointInTimeRecoverySpecification: PointInTimeRecoverySpecification;

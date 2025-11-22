@@ -242,16 +242,11 @@ jobs:
           fi
           npx nx affected -t test --base=$BASE --head=$HEAD
         continue-on-error: true  # Allow failure if tests aren't fully configured yet
-
-  # ==========================================
-  # BUILD (using nx affected)
-  # ==========================================
-
   build:
     name: Build Affected Projects
     runs-on: ubuntu-latest
-    needs: [check-affected, determine-environment, lint, typecheck, test]
-    if: needs.check-affected.outputs.has-affected == 'true'
+    needs: [check-affected]
+    if: needs.check-affected.outputs.backend-affected == 'true' || needs.check-affected.outputs.frontend-affected == 'true'
 
     steps:
       - name: Checkout code
@@ -262,27 +257,7 @@ jobs:
       - name: Setup Node.js and Dependencies
         uses: ./.github/actions/setup-node-deps
 
-      - name: Configure AWS credentials (for frontend build env vars)
-        if: needs.check-affected.outputs.frontend-affected == 'true'
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_ROLE_ARN || secrets.AWS_DEV_ROLE_ARN }}
-          aws-region: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_REGION || secrets.AWS_DEV_REGION || 'us-east-1' }}
-          role-session-name: GitHubActions-${{ github.run_id }}
-
-      - name: Fetch backend outputs for frontend build
-        if: needs.check-affected.outputs.frontend-affected == 'true'
-        id: backend-outputs
-        env:
-          OUTPUT_FILE: apps/photos-fe/api-stack.outputs.json
-        run: ./.github/scripts/fetch-backend-outputs.sh "${{ needs.determine-environment.outputs.environment }}"
-
       - name: Build affected projects with nx
-        env:
-          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
-          VITE_API_URL: ${{ steps.backend-outputs.outputs.API_URL }}
-          VITE_USER_POOL_ID: ${{ steps.backend-outputs.outputs.USER_POOL_ID }}
-          VITE_USER_POOL_CLIENT_ID: ${{ steps.backend-outputs.outputs.USER_POOL_CLIENT_ID }}
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             BASE=${{ github.event.pull_request.base.sha }}
@@ -445,11 +420,21 @@ jobs:
       - name: Setup Node.js and Dependencies
         uses: ./.github/actions/setup-node-deps
 
-      - name: Download frontend build artifacts
-        uses: actions/download-artifact@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          name: frontend-build-${{ github.sha }}
-          path: apps/photos-fe/build/
+          role-to-assume: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_ROLE_ARN || secrets.AWS_DEV_ROLE_ARN }}
+          aws-region: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_REGION || secrets.AWS_DEV_REGION || 'us-east-1' }}
+          role-session-name: GitHubActions-${{ github.run_id }}
+
+      - name: Fetch backend stack outputs
+        id: backend-outputs
+        env:
+          OUTPUT_FILE: apps/photos-fe/api-stack.outputs.json
+        run: ./.github/scripts/fetch-backend-outputs.sh "${{ needs.determine-environment.outputs.environment }}"
+
+      - name: Rebuild frontend with deployment configuration
+        run: npx nx build photos-fe
 
       - name: Synthesize CDK
         env:

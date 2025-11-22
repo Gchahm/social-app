@@ -67,7 +67,7 @@ export class ApiConstruct extends Construct {
     new CfnOutput(scope, 'ApiEndpoint', {
       value: this.api.url,
       description: 'API Gateway endpoint URL',
-      exportName: `ApiEndpoint`,
+      exportName: `api-endpoint-${props.environment}`,
     });
   }
 

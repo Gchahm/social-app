@@ -117,22 +117,25 @@ export class FrontendDomainConstruct extends Construct {
         });
       }
 
-      new CfnOutput(this, 'CustomDomainUrl', {
+      new CfnOutput(scope, 'CustomDomainUrl', {
         value: this.domainUrl,
         description: 'Custom domain URL for frontend',
+        exportName: `custom-domain-url-${props.environment}`,
       });
     } else {
       this.domainUrl = `https://${this.distribution.distributionDomainName}`;
     }
 
-    new CfnOutput(this, 'CloudFrontUrl', {
+    new CfnOutput(scope, 'CloudFrontUrl', {
       value: `https://${this.distribution.distributionDomainName}`,
       description: 'CloudFront distribution URL',
+      exportName: `cloud-front-url-${props.environment}`,
     });
 
-    new CfnOutput(this, 'DistributionId', {
+    new CfnOutput(scope, 'DistributionId', {
       value: this.distribution.distributionId,
       description: 'CloudFront distribution ID',
+      exportName: `distribution-id-${props.environment}`,
     });
   }
 }

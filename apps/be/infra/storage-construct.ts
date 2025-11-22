@@ -34,10 +34,10 @@ export class StorageConstruct extends Construct {
       versioned: props.bucketRemovalPolicy === RemovalPolicy.RETAIN, // Enable versioning for prod
     });
 
-    new CfnOutput(this, 'BucketName', {
+    new CfnOutput(scope, 'BucketName', {
       value: this.bucket.bucketName,
       description: 'S3 bucket name',
-      exportName: `BucketName`,
+      exportName: `bucket-name-${props.environment}`,
     });
   }
 }

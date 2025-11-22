@@ -75,6 +75,7 @@ export class ApiConstruct extends Construct {
     const healthResource = this.api.root.addResource('health', {
       defaultMethodOptions: {
         authorizationType: AuthorizationType.NONE,
+        authorizer: undefined,
       },
     });
     healthResource.addMethod(

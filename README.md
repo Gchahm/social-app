@@ -1,7 +1,7 @@
 # AWS Full-Stack Social Media Platform
 
-[![CI](https://github.com/gchahm/aws-full-stack/actions/workflows/ci.yml/badge.svg)](https://github.com/gchahm/aws-full-stack/actions/workflows/ci.yml)
-[![Deploy](https://github.com/gchahm/aws-full-stack/actions/workflows/deploy.yml/badge.svg)](https://github.com/gchahm/aws-full-stack/actions/workflows/deploy.yml)
+[![CI](https://github.com/Gchahm/social-app/actions/workflows/ci.yml/badge.svg)](https://github.com/Gchahm/social-app/actions/workflows/ci.yml)
+[![Deploy](https://github.com/Gchahm/social-app/actions/workflows/deploy.yml/badge.svg)](https://github.com/Gchahm/social-app/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
 [![AWS CDK](https://img.shields.io/badge/AWS%20CDK-2.x-orange.svg)](https://aws.amazon.com/cdk/)
@@ -476,7 +476,7 @@ nx run social-fe:test:e2e
 
 TODO:<ADD_IMAGE - GitHub Actions workflow visualization>
 
-## Senior Engineering Practices Demonstrated
+## Summary 
 
 ### Architecture & Design
 - [x] Cloud-native serverless architecture
@@ -553,6 +553,6 @@ This project was built to demonstrate production-ready full-stack development sk
 
 ---
 
-**Built by** [Gabriel Chahm](https://github.com/gchahm)
+**Built by** [Gustavo Chahm](https://github.com/gchahm)
 
 TODO:<ADD_IMAGE - Personal logo or headshot>

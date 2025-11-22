@@ -72,15 +72,13 @@ export class ApiConstruct extends Construct {
   }
 
   private addHealthEndpoints() {
-    const healthResource = this.api.root.addResource('health', {
-      defaultMethodOptions: {
-        authorizationType: AuthorizationType.NONE,
-        authorizer: undefined,
-      },
-    });
+    const healthResource = this.api.root.addResource('health');
     healthResource.addMethod(
       'GET',
-      new LambdaIntegration(this.props.healthLambdas.healthCheck)
+      new LambdaIntegration(this.props.healthLambdas.healthCheck),
+      {
+        authorizationType: AuthorizationType.NONE,
+      }
     );
   }
 

@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   # ==========================================
-  # Job 1: Check all affected projects once
+  # Job 1: Check all affected projects once using nx
   # ==========================================
   check-affected:
     name: Check Affected Projects
@@ -26,6 +26,8 @@ jobs:
     outputs:
       backend-affected: ${{ steps.check-affected.outputs.backend-affected }}
       frontend-affected: ${{ steps.check-affected.outputs.frontend-affected }}
+      affected-projects: ${{ steps.check-affected.outputs.affected-projects }}
+      has-affected: ${{ steps.check-affected.outputs.has-affected }}
 
     steps:
       - name: Checkout code
@@ -53,8 +55,26 @@ jobs:
           echo "Base: $BASE"
           echo "Head: $HEAD"
 
-          # Check if backend is affected
-          if npx nx show project be --affected --base=$BASE --head=$HEAD > /dev/null 2>&1; then
+          # Get list of affected projects using nx
+          AFFECTED_PROJECTS=$(npx nx show projects --affected --base=$BASE --head=$HEAD --type=app 2>/dev/null || echo "")
+
+          echo "Affected projects:"
+          echo "$AFFECTED_PROJECTS"
+
+          # Save the full list
+          echo "affected-projects<<EOF" >> $GITHUB_OUTPUT
+          echo "$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Check if any projects are affected
+          if [[ -n "$AFFECTED_PROJECTS" ]]; then
+            echo "has-affected=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-affected=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Check specific projects
+          if echo "$AFFECTED_PROJECTS" | grep -q "^be$"; then
             echo "✅ Backend (be) is affected by changes"
             echo "backend-affected=true" >> $GITHUB_OUTPUT
           else
@@ -62,8 +82,7 @@ jobs:
             echo "backend-affected=false" >> $GITHUB_OUTPUT
           fi
 
-          # Check if frontend is affected
-          if npx nx show project photos-fe --affected --base=$BASE --head=$HEAD > /dev/null 2>&1; then
+          if echo "$AFFECTED_PROJECTS" | grep -q "^photos-fe$"; then
             echo "✅ Frontend (photos-fe) is affected by changes"
             echo "frontend-affected=true" >> $GITHUB_OUTPUT
           else
@@ -225,13 +244,71 @@ jobs:
         continue-on-error: true  # Allow failure if tests aren't fully configured yet
 
   # ==========================================
-  # BACKEND DEPLOYMENT JOBS
+  # BUILD (using nx affected)
   # ==========================================
 
-  backend-build:
-    name: Backend - Build
+  build:
+    name: Build Affected Projects
     runs-on: ubuntu-latest
-    needs: [determine-environment, lint, typecheck, test]
+    needs: [check-affected, determine-environment, lint, typecheck, test]
+    if: needs.check-affected.outputs.has-affected == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Configure AWS credentials (for frontend build env vars)
+        if: needs.check-affected.outputs.frontend-affected == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_ROLE_ARN || secrets.AWS_DEV_ROLE_ARN }}
+          aws-region: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_REGION || secrets.AWS_DEV_REGION || 'us-east-1' }}
+          role-session-name: GitHubActions-${{ github.run_id }}
+
+      - name: Fetch backend outputs for frontend build
+        if: needs.check-affected.outputs.frontend-affected == 'true'
+        id: backend-outputs
+        env:
+          OUTPUT_FILE: apps/photos-fe/api-stack.outputs.json
+        run: ./.github/scripts/fetch-backend-outputs.sh "${{ needs.determine-environment.outputs.environment }}"
+
+      - name: Build affected projects with nx
+        env:
+          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
+          VITE_API_URL: ${{ steps.backend-outputs.outputs.API_URL }}
+          VITE_USER_POOL_ID: ${{ steps.backend-outputs.outputs.USER_POOL_ID }}
+          VITE_USER_POOL_CLIENT_ID: ${{ steps.backend-outputs.outputs.USER_POOL_CLIENT_ID }}
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE=${{ github.event.pull_request.base.sha }}
+            HEAD=${{ github.event.pull_request.head.sha }}
+          else
+            BASE=${{ github.event.before }}
+            HEAD=${{ github.sha }}
+          fi
+          npx nx affected -t build --base=$BASE --head=$HEAD
+
+      - name: Upload frontend build artifacts
+        if: needs.check-affected.outputs.frontend-affected == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: apps/photos-fe/build/
+          retention-days: 1
+
+  # ==========================================
+  # BACKEND DEPLOYMENT
+  # ==========================================
+
+  backend-synth:
+    name: Backend - Synthesize CDK
+    runs-on: ubuntu-latest
+    needs: [determine-environment, build, check-affected]
     if: needs.determine-environment.outputs.should-deploy == 'true' && needs.check-affected.outputs.backend-affected == 'true'
 
     steps:
@@ -255,14 +332,14 @@ jobs:
       - name: Upload CDK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: cdk-artifacts-${{ github.sha }}
+          name: backend-cdk-artifacts-${{ github.sha }}
           path: apps/be/cdk.out/
           retention-days: 1
 
   backend-deploy:
     name: Backend - Deploy to ${{ needs.determine-environment.outputs.environment }}
     runs-on: ubuntu-latest
-    needs: [determine-environment, backend-build, check-affected]
+    needs: [determine-environment, backend-synth, check-affected]
     if: needs.determine-environment.outputs.should-deploy == 'true' && needs.check-affected.outputs.backend-affected == 'true'
 
     environment:
@@ -282,7 +359,7 @@ jobs:
       - name: Download CDK artifacts
         uses: actions/download-artifact@v4
         with:
-          name: cdk-artifacts-${{ github.sha }}
+          name: backend-cdk-artifacts-${{ github.sha }}
           path: apps/be/cdk.out/
 
       - name: Configure AWS credentials
@@ -351,11 +428,11 @@ jobs:
   # FRONTEND DEPLOYMENT JOBS (depends on backend completion)
   # ==========================================
 
-  frontend-build:
-    name: Frontend - Build
+  frontend-synth:
+    name: Frontend - Synthesize CDK
     runs-on: ubuntu-latest
-    needs: [determine-environment, lint, typecheck, test, backend-deploy, check-affected]
-    # Frontend build waits for backend deployment if backend was affected, otherwise just needs quality checks
+    needs: [determine-environment, build, backend-deploy, check-affected]
+    # Frontend synth waits for backend deployment if backend was affected, otherwise just needs build
     if: |
       needs.determine-environment.outputs.should-deploy == 'true' &&
       needs.check-affected.outputs.frontend-affected == 'true' &&
@@ -368,26 +445,11 @@ jobs:
       - name: Setup Node.js and Dependencies
         uses: ./.github/actions/setup-node-deps
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Download frontend build artifacts
+        uses: actions/download-artifact@v4
         with:
-          role-to-assume: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_ROLE_ARN || secrets.AWS_DEV_ROLE_ARN }}
-          aws-region: ${{ needs.determine-environment.outputs.environment == 'prod' && secrets.AWS_PROD_REGION || secrets.AWS_DEV_REGION || 'us-east-1' }}
-          role-session-name: GitHubActions-${{ github.run_id }}
-
-      - name: Fetch backend stack outputs
-        id: backend-outputs
-        env:
-          OUTPUT_FILE: apps/photos-fe/api-stack.outputs.json
-        run: ./.github/scripts/fetch-backend-outputs.sh "${{ needs.determine-environment.outputs.environment }}"
-
-      - name: Build frontend
-        env:
-          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
-          VITE_API_URL: ${{ steps.backend-outputs.outputs.API_URL }}
-          VITE_USER_POOL_ID: ${{ steps.backend-outputs.outputs.USER_POOL_ID }}
-          VITE_USER_POOL_CLIENT_ID: ${{ steps.backend-outputs.outputs.USER_POOL_CLIENT_ID }}
-        run: npx nx build photos-fe
+          name: frontend-build-${{ github.sha }}
+          path: apps/photos-fe/build/
 
       - name: Synthesize CDK
         env:
@@ -405,13 +467,6 @@ jobs:
             --context hostedZoneName=$HOSTED_ZONE_NAME \
             --context certificateArn=$CERTIFICATE_ARN
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-build-${{ github.sha }}
-          path: apps/photos-fe/build/
-          retention-days: 1
-
       - name: Upload CDK artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -422,7 +477,7 @@ jobs:
   frontend-deploy:
     name: Frontend - Deploy to ${{ needs.determine-environment.outputs.environment }}
     runs-on: ubuntu-latest
-    needs: [determine-environment, frontend-build, check-affected]
+    needs: [determine-environment, frontend-synth, check-affected]
     if: needs.determine-environment.outputs.should-deploy == 'true' && needs.check-affected.outputs.frontend-affected == 'true'
 
     environment:

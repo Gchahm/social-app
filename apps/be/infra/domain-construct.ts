@@ -60,10 +60,10 @@ export class DomainConstruct extends Construct {
         certificate: this.certificate,
       });
 
-      new CfnOutput(this, 'CustomDomainApiUrl', {
+      new CfnOutput(scope, 'CustomDomainApiUrl', {
         value: `https://${customDomain.apiDomain}`,
         description: 'Custom domain URL for API',
-        exportName: `CustomDomainApiUrl`,
+        exportName: `custom-domain-api-url-${props.environment}`,
       });
       // Attach the API to the custom domain
       this.domainName.addBasePathMapping(api, {

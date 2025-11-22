@@ -35,10 +35,10 @@ export class DatabaseConstruct extends Construct {
       deletionProtection: props.tableRemovalPolicy === RemovalPolicy.RETAIN,
     });
 
-    new CfnOutput(this, 'TableName', {
+    new CfnOutput(scope, 'TableName', {
       value: this.table.tableName,
       description: 'DynamoDB table name',
-      exportName: `TableName`,
+      exportName: `table-name-${props.environment}`,
     });
 
     // GSI1: User-Entity Index

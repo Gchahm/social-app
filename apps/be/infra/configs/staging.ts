@@ -4,6 +4,8 @@ import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 
 export const stagingConfig: EnvironmentConfig = {
+  environment: 'staging',
+
   // DynamoDB - production-like but cost-conscious
   tableBillingMode: BillingMode.PAY_PER_REQUEST,
   tableRemovalPolicy: RemovalPolicy.RETAIN, // Keep data for analysis

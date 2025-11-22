@@ -4,6 +4,8 @@ import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 
 export const prodConfig: EnvironmentConfig = {
+  environment: 'prod',
+
   // DynamoDB - production-optimized
   tableBillingMode: BillingMode.PAY_PER_REQUEST, // Can switch to PROVISIONED if predictable traffic
   tableRemovalPolicy: RemovalPolicy.RETAIN, // Never auto-delete production data

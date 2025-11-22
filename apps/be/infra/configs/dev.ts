@@ -4,6 +4,8 @@ import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { EnvironmentConfig } from './shared';
 
 export const devConfig: EnvironmentConfig = {
+  environment: 'dev',
+
   // DynamoDB - cost-optimized for development
   tableBillingMode: BillingMode.PAY_PER_REQUEST,
   tableRemovalPolicy: RemovalPolicy.DESTROY, // Auto-cleanup for dev

@@ -48,6 +48,7 @@ export class UiStack extends Stack {
     new CfnOutput(this, 'WebsiteUrl', {
       value: frontendDomain.domainUrl,
       description: 'Website URL',
+      exportName: `website-url-${props.environment}`,
     });
   }
 }

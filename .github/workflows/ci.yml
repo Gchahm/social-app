@@ -63,7 +63,7 @@ jobs:
 
           # Check specific projects
           if echo "$AFFECTED_PROJECTS" | grep -q "^be$"; then
-            echo "✅ Backend (be) is affected by changes"
+            echo "✅ Backend (social-be) is affected by changes"
             echo "backend-affected=true" >> $GITHUB_OUTPUT
           else
             echo "⏭️  Backend (be) is not affected"

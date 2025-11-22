@@ -58,10 +58,10 @@ jobs:
 
           # Check specific projects
           if echo "$AFFECTED_PROJECTS" | grep -q "^be$"; then
-            echo "✅ Backend (be) is affected - will deploy"
+            echo "✅ Backend (social-be) is affected - will deploy"
             echo "backend-affected=true" >> $GITHUB_OUTPUT
           else
-            echo "⏭️  Backend (be) is not affected - skipping deployment"
+            echo "⏭️  Backend (social-be) is not affected - skipping deployment"
             echo "backend-affected=false" >> $GITHUB_OUTPUT
           fi
 

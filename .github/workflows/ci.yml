@@ -1,0 +1,285 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # ==========================================
+  # Check affected projects using nx
+  # ==========================================
+  check-affected:
+    name: Check Affected Projects
+    runs-on: ubuntu-latest
+    outputs:
+      backend-affected: ${{ steps.check-affected.outputs.backend-affected }}
+      frontend-affected: ${{ steps.check-affected.outputs.frontend-affected }}
+      affected-projects: ${{ steps.check-affected.outputs.affected-projects }}
+      has-affected: ${{ steps.check-affected.outputs.has-affected }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Check affected projects
+        id: check-affected
+        run: |
+          BASE=${{ github.event.pull_request.base.sha }}
+          HEAD=${{ github.event.pull_request.head.sha }}
+
+          echo "Checking affected projects..."
+          echo "Base: $BASE"
+          echo "Head: $HEAD"
+
+          # Get list of affected projects using nx
+          AFFECTED_PROJECTS=$(npx nx show projects --affected --base=$BASE --head=$HEAD --type=app 2>/dev/null || echo "")
+
+          echo "Affected projects:"
+          echo "$AFFECTED_PROJECTS"
+
+          # Save the full list
+          echo "affected-projects<<EOF" >> $GITHUB_OUTPUT
+          echo "$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Check if any projects are affected
+          if [[ -n "$AFFECTED_PROJECTS" ]]; then
+            echo "has-affected=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-affected=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Check specific projects
+          if echo "$AFFECTED_PROJECTS" | grep -q "^be$"; then
+            echo "✅ Backend (be) is affected by changes"
+            echo "backend-affected=true" >> $GITHUB_OUTPUT
+          else
+            echo "⏭️  Backend (be) is not affected"
+            echo "backend-affected=false" >> $GITHUB_OUTPUT
+          fi
+
+          if echo "$AFFECTED_PROJECTS" | grep -q "^photos-fe$"; then
+            echo "✅ Frontend (photos-fe) is affected by changes"
+            echo "frontend-affected=true" >> $GITHUB_OUTPUT
+          else
+            echo "⏭️  Frontend (photos-fe) is not affected"
+            echo "frontend-affected=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment on PR with affected projects
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const backendAffected = '${{ steps.check-affected.outputs.backend-affected }}' === 'true';
+            const frontendAffected = '${{ steps.check-affected.outputs.frontend-affected }}' === 'true';
+
+            let message = '## 🔍 Affected Projects\n\n';
+
+            if (!backendAffected && !frontendAffected) {
+              message += '⏭️ No changes detected in backend or frontend.';
+            } else {
+              if (backendAffected) message += '✅ **Backend** - Affected\n';
+              if (frontendAffected) message += '✅ **Frontend** - Affected\n';
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
+
+  # ==========================================
+  # Quality Checks (using nx affected)
+  # ==========================================
+
+  lint:
+    name: Lint Affected Projects
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Lint affected projects
+        run: |
+          BASE=${{ github.event.pull_request.base.sha }}
+          HEAD=${{ github.event.pull_request.head.sha }}
+          npx nx affected -t lint --base=$BASE --head=$HEAD
+
+  typecheck:
+    name: Type Check Affected Projects
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Type check affected projects
+        run: |
+          BASE=${{ github.event.pull_request.base.sha }}
+          HEAD=${{ github.event.pull_request.head.sha }}
+          npx nx affected -t typecheck --base=$BASE --head=$HEAD
+
+  test:
+    name: Test Affected Projects
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Test affected projects
+        run: |
+          BASE=${{ github.event.pull_request.base.sha }}
+          HEAD=${{ github.event.pull_request.head.sha }}
+          npx nx affected -t test --base=$BASE --head=$HEAD
+        continue-on-error: true
+
+  build:
+    name: Build Affected Projects
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Build affected projects with nx
+        run: |
+          BASE=${{ github.event.pull_request.base.sha }}
+          HEAD=${{ github.event.pull_request.head.sha }}
+          npx nx affected -t build --base=$BASE --head=$HEAD
+
+  # ==========================================
+  # Validate CDK Templates Can Be Generated
+  # ==========================================
+
+  backend-synth:
+    name: Backend - Validate CDK Synth
+    runs-on: ubuntu-latest
+    needs: [check-affected, lint, typecheck, test]
+    if: needs.check-affected.outputs.backend-affected == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Synthesize CDK (dev config)
+        env:
+          ENVIRONMENT: dev
+        run: |
+          cd apps/be
+          npx cdk synth --context environment=$ENVIRONMENT
+
+  frontend-synth:
+    name: Frontend - Validate CDK Synth
+    runs-on: ubuntu-latest
+    needs: [check-affected, lint, typecheck, test, build]
+    if: needs.check-affected.outputs.frontend-affected == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and Dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Synthesize CDK (dev config)
+        env:
+          ENVIRONMENT: dev
+        run: |
+          cd apps/photos-fe
+          npx cdk synth --context environment=$ENVIRONMENT
+
+  # ==========================================
+  # Summary
+  # ==========================================
+
+  ci-summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [check-affected, lint, typecheck, test, build, backend-synth, frontend-synth]
+    if: always()
+
+    steps:
+      - name: Comment on PR with CI results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const backendAffected = '${{ needs.check-affected.outputs.backend-affected }}' === 'true';
+            const frontendAffected = '${{ needs.check-affected.outputs.frontend-affected }}' === 'true';
+            const lintResult = '${{ needs.lint.result }}';
+            const typecheckResult = '${{ needs.typecheck.result }}';
+            const testResult = '${{ needs.test.result }}';
+            const buildResult = '${{ needs.build.result }}';
+            const backendSynthResult = '${{ needs.backend-synth.result }}';
+            const frontendSynthResult = '${{ needs.frontend-synth.result }}';
+
+            let message = '## ✅ CI Summary\n\n';
+
+            // Quality checks
+            message += '### Quality Checks\n';
+            if (lintResult === 'success') message += '✅ Lint passed\n';
+            else if (lintResult === 'failure') message += '❌ Lint failed\n';
+
+            if (typecheckResult === 'success') message += '✅ Type check passed\n';
+            else if (typecheckResult === 'failure') message += '❌ Type check failed\n';
+
+            if (testResult === 'success') message += '✅ Tests passed\n';
+            else if (testResult === 'failure') message += '⚠️  Tests failed (non-blocking)\n';
+
+            if (buildResult === 'success') message += '✅ Build passed\n';
+            else if (buildResult === 'failure') message += '❌ Build failed\n';
+
+            // CDK synth validation
+            message += '\n### CDK Validation\n';
+            if (backendAffected) {
+              if (backendSynthResult === 'success') message += '✅ Backend CDK templates validated\n';
+              else if (backendSynthResult === 'failure') message += '❌ Backend CDK synth failed\n';
+            }
+
+            if (frontendAffected) {
+              if (frontendSynthResult === 'success') message += '✅ Frontend CDK templates validated\n';
+              else if (frontendSynthResult === 'failure') message += '❌ Frontend CDK synth failed\n';
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });

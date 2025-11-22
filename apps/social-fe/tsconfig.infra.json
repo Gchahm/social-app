@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2020",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "files": [],
+  "include": ["infra/**/*.ts"],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
+}

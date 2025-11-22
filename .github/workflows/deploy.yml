@@ -65,11 +65,11 @@ jobs:
             echo "backend-affected=false" >> $GITHUB_OUTPUT
           fi
 
-          if echo "$AFFECTED_PROJECTS" | grep -q "^photos-fe$"; then
-            echo "✅ Frontend (photos-fe) is affected - will deploy"
+          if echo "$AFFECTED_PROJECTS" | grep -q "^social-fe$"; then
+            echo "✅ Frontend (social-fe) is affected - will deploy"
             echo "frontend-affected=true" >> $GITHUB_OUTPUT
           else
-            echo "⏭️  Frontend (photos-fe) is not affected - skipping deployment"
+            echo "⏭️  Frontend (social-fe) is not affected - skipping deployment"
             echo "frontend-affected=false" >> $GITHUB_OUTPUT
           fi
 
@@ -134,7 +134,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-cdk-artifacts-${{ github.sha }}
-          path: apps/be/cdk.out/
+          path: apps/social-be/cdk.out/
           retention-days: 1
 
   backend-deploy:
@@ -161,7 +161,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: backend-cdk-artifacts-${{ github.sha }}
-          path: apps/be/cdk.out/
+          path: apps/social-be/cdk.out/
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -175,7 +175,7 @@ jobs:
         env:
           ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
         run: |
-          cd apps/be
+          cd apps/social-be
 
           echo "Deploying to $ENVIRONMENT environment..."
 
@@ -194,7 +194,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-deployment-outputs-${{ needs.determine-environment.outputs.environment }}
-          path: apps/be/outputs.json
+          path: apps/social-be/outputs.json
           retention-days: 30
 
   backend-validate:
@@ -254,7 +254,7 @@ jobs:
       - name: Fetch backend stack outputs
         id: backend-outputs
         env:
-          OUTPUT_FILE: apps/photos-fe/api-stack.outputs.json
+          OUTPUT_FILE: apps/social-fe/api-stack.outputs.json
         run: ./.github/scripts/fetch-backend-outputs.sh "${{ needs.determine-environment.outputs.environment }}"
 
       - name: Build and Synthesize CDK
@@ -274,7 +274,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-cdk-artifacts-${{ github.sha }}
-          path: apps/photos-fe/cdk.out/
+          path: apps/social-fe/cdk.out/
           retention-days: 1
 
   frontend-deploy:
@@ -301,7 +301,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-cdk-artifacts-${{ github.sha }}
-          path: apps/photos-fe/cdk.out/
+          path: apps/social-fe/cdk.out/
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -315,7 +315,7 @@ jobs:
         env:
           ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
         run: |
-          cd apps/photos-fe
+          cd apps/social-fe
 
           echo "Deploying frontend to $ENVIRONMENT environment..."
 
@@ -334,7 +334,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-deployment-outputs-${{ needs.determine-environment.outputs.environment }}
-          path: apps/photos-fe/outputs.json
+          path: apps/social-fe/outputs.json
           retention-days: 30
 
   frontend-validate:

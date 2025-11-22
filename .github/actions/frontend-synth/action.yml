@@ -49,11 +49,11 @@ runs:
         VITE_API_URL: ${{ inputs.api-url }}
         VITE_USER_POOL_ID: ${{ inputs.user-pool-id }}
         VITE_USER_POOL_CLIENT_ID: ${{ inputs.user-pool-client-id }}
-      run: npx nx build photos-fe
+      run: npx nx build social-fe
 
     - name: Synthesize CDK
       shell: bash
-      working-directory: apps/photos-fe
+      working-directory: apps/social-fe
       run: |
         if [[ -n "${{ inputs.domain-name }}" ]]; then
           echo "Synthesizing with domain configuration..."

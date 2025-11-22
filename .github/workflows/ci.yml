@@ -70,11 +70,11 @@ jobs:
             echo "backend-affected=false" >> $GITHUB_OUTPUT
           fi
 
-          if echo "$AFFECTED_PROJECTS" | grep -q "^photos-fe$"; then
-            echo "✅ Frontend (photos-fe) is affected by changes"
+          if echo "$AFFECTED_PROJECTS" | grep -q "^social-fe$"; then
+            echo "✅ Frontend (social-fe) is affected by changes"
             echo "frontend-affected=true" >> $GITHUB_OUTPUT
           else
-            echo "⏭️  Frontend (photos-fe) is not affected"
+            echo "⏭️  Frontend (social-fe) is not affected"
             echo "frontend-affected=false" >> $GITHUB_OUTPUT
           fi
 
@@ -174,7 +174,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build-${{ github.sha }}
-          path: apps/photos-fe/build/
+          path: apps/social-fe/build/
           retention-days: 1
 
   # ==========================================
@@ -216,7 +216,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-build-${{ github.sha }}
-          path: apps/photos-fe/build/
+          path: apps/social-fe/build/
 
       - name: Synthesize CDK
         uses: ./.github/actions/frontend-synth

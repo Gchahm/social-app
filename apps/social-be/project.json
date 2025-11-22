@@ -1,0 +1,53 @@
+{
+  "name": "social-be",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/social-be/src",
+  "projectType": "application",
+  "tags": ["app"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/social-be",
+        "command": "tsc --build tsconfig.app.json --emitDeclarationOnly"
+      },
+      "cache": true,
+      "dependsOn": ["^typecheck"]
+    },
+    "generate-env": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/social-be",
+        "command": "node generate-env.js"
+      }
+    },
+    "synth": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/social-be",
+        "command": "cdk synth"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/social-be",
+        "command": "cdk deploy --all --outputs-file ../social-fe/outputs.json --require-approval never"
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/social-be",
+        "command": "sam local start-api --template cdk.out/social-app-dev.template.json --env-vars env.json --warm-containers EAGER"
+      }
+    },
+    "dev:watch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/social-be",
+        "command": "npx nodemon --watch src --watch infra --ext ts --exec 'cdk synth'"
+      }
+    }
+  }
+}

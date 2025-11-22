@@ -15,7 +15,7 @@
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
       "outFiles": [
-        "${workspaceFolder}/apps/be/dist/**/*.(m|c|)js",
+        "${workspaceFolder}/apps/social-be/dist/**/*.(m|c|)js",
         "!**/node_modules/**"
       ]
     },
@@ -33,7 +33,7 @@
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
       "outFiles": [
-        "${workspaceFolder}/apps/be/dist/**/*.(m|c|)js",
+        "${workspaceFolder}/apps/social-be/dist/**/*.(m|c|)js",
         "!**/node_modules/**"
       ]
     }

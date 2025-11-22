@@ -22,7 +22,7 @@ export const devConfig: EnvironmentConfig = {
 
   // S3 - auto-cleanup for dev
   bucketRemovalPolicy: RemovalPolicy.DESTROY,
-  corsOrigins: ['http://localhost:4200', 'http://localhost:3000'],
+  corsOrigins: ['http://localhost:4200'],
 
   // API Gateway - relaxed limits for dev
   throttleRateLimit: 10,

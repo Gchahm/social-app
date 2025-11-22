@@ -3,7 +3,26 @@ name: Deploy
 on:
   push:
     branches:
-      - main          # → Production
+      - main          # → Development (auto-deploy)
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+      deploy-backend:
+        description: 'Deploy backend?'
+        required: true
+        type: boolean
+        default: true
+      deploy-frontend:
+        description: 'Deploy frontend?'
+        required: true
+        type: boolean
+        default: true
 
 permissions:
   id-token: write   # Required for AWS OIDC
@@ -37,38 +56,71 @@ jobs:
       - name: Check affected projects
         id: check-affected
         run: |
-          echo "Checking affected projects..."
-          echo "Base: $NX_BASE"
-          echo "Head: $NX_HEAD"
+          # For manual deployments, use the input toggles
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "📝 Manual deployment - using input selections"
 
-          # Get list of affected projects using nx
-          AFFECTED_PROJECTS=$(npx nx show projects --affected --type=app 2>/dev/null || echo "")
+            BACKEND_DEPLOY="${{ github.event.inputs.deploy-backend }}"
+            FRONTEND_DEPLOY="${{ github.event.inputs.deploy-frontend }}"
 
-          echo "Affected projects:"
-          echo "$AFFECTED_PROJECTS"
+            if [[ "$BACKEND_DEPLOY" == "true" ]]; then
+              echo "✅ Backend deployment requested"
+              echo "backend-affected=true" >> $GITHUB_OUTPUT
+            else
+              echo "⏭️  Backend deployment skipped"
+              echo "backend-affected=false" >> $GITHUB_OUTPUT
+            fi
 
-          # Check if any projects are affected
-          if [[ -n "$AFFECTED_PROJECTS" ]]; then
-            echo "has-affected=true" >> $GITHUB_OUTPUT
+            if [[ "$FRONTEND_DEPLOY" == "true" ]]; then
+              echo "✅ Frontend deployment requested"
+              echo "frontend-affected=true" >> $GITHUB_OUTPUT
+            else
+              echo "⏭️  Frontend deployment skipped"
+              echo "frontend-affected=false" >> $GITHUB_OUTPUT
+            fi
+
+            # Set has-affected if either is requested
+            if [[ "$BACKEND_DEPLOY" == "true" ]] || [[ "$FRONTEND_DEPLOY" == "true" ]]; then
+              echo "has-affected=true" >> $GITHUB_OUTPUT
+            else
+              echo "has-affected=false" >> $GITHUB_OUTPUT
+            fi
+
           else
-            echo "has-affected=false" >> $GITHUB_OUTPUT
-          fi
+            # For automatic deployments, use nx affected
+            echo "Checking affected projects..."
+            echo "Base: $NX_BASE"
+            echo "Head: $NX_HEAD"
 
-          # Check specific projects
-          if echo "$AFFECTED_PROJECTS" | grep -q "^social-be$"; then
-            echo "✅ Backend (social-be) is affected - will deploy"
-            echo "backend-affected=true" >> $GITHUB_OUTPUT
-          else
-            echo "⏭️  Backend (social-be) is not affected - skipping deployment"
-            echo "backend-affected=false" >> $GITHUB_OUTPUT
-          fi
+            # Get list of affected projects using nx
+            AFFECTED_PROJECTS=$(npx nx show projects --affected --type=app 2>/dev/null || echo "")
 
-          if echo "$AFFECTED_PROJECTS" | grep -q "^social-fe$"; then
-            echo "✅ Frontend (social-fe) is affected - will deploy"
-            echo "frontend-affected=true" >> $GITHUB_OUTPUT
-          else
-            echo "⏭️  Frontend (social-fe) is not affected - skipping deployment"
-            echo "frontend-affected=false" >> $GITHUB_OUTPUT
+            echo "Affected projects:"
+            echo "$AFFECTED_PROJECTS"
+
+            # Check if any projects are affected
+            if [[ -n "$AFFECTED_PROJECTS" ]]; then
+              echo "has-affected=true" >> $GITHUB_OUTPUT
+            else
+              echo "has-affected=false" >> $GITHUB_OUTPUT
+            fi
+
+            # Check specific projects
+            if echo "$AFFECTED_PROJECTS" | grep -q "^social-be$"; then
+              echo "✅ Backend (social-be) is affected - will deploy"
+              echo "backend-affected=true" >> $GITHUB_OUTPUT
+            else
+              echo "⏭️  Backend (social-be) is not affected - skipping deployment"
+              echo "backend-affected=false" >> $GITHUB_OUTPUT
+            fi
+
+            if echo "$AFFECTED_PROJECTS" | grep -q "^social-fe$"; then
+              echo "✅ Frontend (social-fe) is affected - will deploy"
+              echo "frontend-affected=true" >> $GITHUB_OUTPUT
+            else
+              echo "⏭️  Frontend (social-fe) is not affected - skipping deployment"
+              echo "frontend-affected=false" >> $GITHUB_OUTPUT
+            fi
           fi
 
   # ==========================================
@@ -83,14 +135,24 @@ jobs:
       environment: ${{ steps.set-env.outputs.environment }}
 
     steps:
-      - name: Determine environment from branch
+      - name: Determine environment from branch or manual input
         id: set-env
         run: |
-          echo "Ref: ${{ github.ref }}"
+          # Manual workflow dispatch takes precedence
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ENVIRONMENT="${{ github.event.inputs.environment }}"
+            echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
 
-          if [[ $GITHUB_REF == refs/heads/main ]]; then
+            if [[ "$ENVIRONMENT" == "prod" ]]; then
+              echo "🚀 Manually deploying to PRODUCTION"
+              echo "📍 Deploying ref: ${{ github.ref }}"
+            else
+              echo "🚀 Manually deploying to DEVELOPMENT"
+              echo "📍 Deploying ref: ${{ github.ref }}"
+            fi
+          elif [[ $GITHUB_REF == refs/heads/main ]]; then
             echo "environment=dev" >> $GITHUB_OUTPUT
-            echo "🚀 Deploying to DEVELOPMENT"
+            echo "🚀 Auto-deploying to DEVELOPMENT"
           else
             echo "❌ Unknown branch - cannot deploy"
             exit 1
@@ -227,7 +289,7 @@ jobs:
     # Frontend synth waits for backend deployment if backend was affected
     if: |
       needs.check-affected.outputs.frontend-affected == 'true' &&
-      (needs.check-affected.outputs.backend-affected != 'true' || needs.backend-deploy.result == 'success')
+      (needs.backend-deploy.result == 'success' || needs.backend-deploy.result == 'skipped')
 
     steps:
       - name: Checkout code

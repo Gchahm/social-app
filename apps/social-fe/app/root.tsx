@@ -10,7 +10,6 @@ import {
   Scripts,
   ScrollRestoration,
 } from 'react-router';
-import { Authenticator } from '@aws-amplify/ui-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { configureAmplify } from './configure-amplify';
 
@@ -57,9 +56,7 @@ configureAmplify();
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Authenticator>
-        <Outlet />
-      </Authenticator>
+      <Outlet />
     </QueryClientProvider>
   );
 }

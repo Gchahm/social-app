@@ -205,6 +205,12 @@ jobs:
       - name: Setup Node.js and Dependencies
         uses: ./.github/actions/setup-node-deps
 
+      - name: Download frontend build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: apps/photos-fe/build/
+
       - name: Synthesize CDK
         uses: ./.github/actions/frontend-synth
         with:

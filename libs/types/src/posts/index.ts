@@ -1,4 +1,6 @@
 import { PostDto } from './dto';
+import { commentDtoSchema } from './add-comment';
+import { z } from 'zod';
 
 export * from './create';
 export * from './add-comment';
@@ -11,20 +13,13 @@ export interface GetPostResponse {
   post: PostDto;
 }
 
-export interface CommentDto {
-  commentId: string;
-  postId: string;
-  userId: string;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export const getCommentsResponseSchema = z.object({
+  comments: z.array(commentDtoSchema),
+  count: z.number(),
+  lastEvaluatedKey: z.string().optional(),
+});
 
-export interface GetCommentsResponse {
-  comments: CommentDto[];
-  count: number;
-  lastEvaluatedKey?: string;
-}
+export type GetCommentsResponse = z.infer<typeof getCommentsResponseSchema>;
 
 export interface DeleteCommentResponse {
   message: string;

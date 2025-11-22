@@ -8,7 +8,6 @@ import {
 } from 'aws-cdk-lib/aws-apigateway';
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
 import { PostsLambdas } from './posts-lambda-construct';
-import { PhotosLambdas } from './photos-lambda-construct';
 import { HealthLambdas } from './health-lambda-construct';
 import { APP_NAME } from './constants';
 import { EnvironmentConfig } from './configs';
@@ -17,7 +16,6 @@ import { CfnOutput } from 'aws-cdk-lib';
 export interface ApiConstructProps extends EnvironmentConfig {
   userPool: UserPool;
   postsLambdas?: PostsLambdas;
-  photosLambdas?: PhotosLambdas;
   healthLambdas?: HealthLambdas;
   envName: string;
 }
@@ -90,7 +88,7 @@ export class ApiConstruct extends Construct {
     const uploadUrlResource = photosResource.addResource('upload-url');
     uploadUrlResource.addMethod(
       'POST',
-      new LambdaIntegration(this.props.photosLambdas.requestPhotoUploadUrl)
+      new LambdaIntegration(this.props.postsLambdas.requestPhotoUploadUrl)
     );
   }
 

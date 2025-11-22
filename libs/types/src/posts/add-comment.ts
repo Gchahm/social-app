@@ -6,16 +6,21 @@ export const addCommentSchema = zod.object({
 
 export type AddCommentPayload = zod.infer<typeof addCommentSchema>;
 
-export interface CommentDto {
-  commentId: string;
-  postId: string;
-  userId: string;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export const commentDtoSchema = zod.object({
+  commentId: zod.string(),
+  postId: zod.string(),
+  userId: zod.string(),
+  username: zod.string(),
+  content: zod.string(),
+  createdAt: zod.string(),
+  updatedAt: zod.string().optional(),
+});
 
-export interface AddCommentResponse {
-  message: string;
-  comment: CommentDto;
-}
+export type CommentDto = zod.infer<typeof commentDtoSchema>;
+
+export const addCommentResponseSchema = zod.object({
+  message: zod.string(),
+  commentId: zod.string(),
+});
+
+export type AddCommentResponse = zod.infer<typeof addCommentResponseSchema>;

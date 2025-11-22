@@ -1,7 +1,6 @@
 import { CfnOutput, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { DatabaseConstruct } from './database-construct';
-import { PhotosLambdaConstruct } from './photos-lambda-construct';
 import { PostsLambdaConstruct } from './posts-lambda-construct';
 import { ApiConstruct } from './api-construct';
 import { AuthConstruct } from './auth-construct';
@@ -65,12 +64,6 @@ export class BeStack extends Stack {
       ...config,
     };
 
-    const photosLambdaConstruct = new PhotosLambdaConstruct(
-      this,
-      'PhotosLambdaConstruct',
-      lambdaProps
-    );
-
     const postsLambdaConstruct = new PostsLambdaConstruct(
       this,
       'PostsLambdaConstruct',
@@ -97,7 +90,6 @@ export class BeStack extends Stack {
     const apiConstruct = new ApiConstruct(this, 'ApiConstruct', {
       userPool: authConstruct.userPool,
       postsLambdas: postsLambdaConstruct.lambdas,
-      photosLambdas: photosLambdaConstruct.lambdas,
       healthLambdas: healthLambdaConstruct.lambdas,
       ...config,
       envName: props.environment,

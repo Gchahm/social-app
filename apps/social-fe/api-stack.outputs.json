@@ -1,6 +1,6 @@
 {
-  "ApiEndpoint": "https://w12m9qpq2m.execute-api.us-east-1.amazonaws.com/prod/",
-  "UserPoolId": "us-east-1_xCU4SDC0Q",
-  "UserPoolClientId": "4umf81169rctfnpih0t5th3e0e",
+  "ApiEndpoint": "https://xv6u5o0bh2.execute-api.us-east-1.amazonaws.com/prod/",
+  "UserPoolId": "us-east-1_1ba6YIYoI",
+  "UserPoolClientId": "38imhbhupkrhbvlh1si13dpqkd",
   "environment": "dev"
 }

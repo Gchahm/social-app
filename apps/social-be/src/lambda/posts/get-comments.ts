@@ -1,7 +1,8 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
-import { getCommentsByPost } from '../../database';
+import { getCommentsByPost, getUsersByIds } from '../../database';
 import { createApiHandlerNoBody } from '../middleware/apiHandler';
 import { BadRequest } from 'http-errors';
+import type { CommentDto } from '@chahm/types';
 
 /**
  * GET /posts/:postId/comments
@@ -26,11 +27,24 @@ export const handler = createApiHandlerNoBody().handler(
 
     const result = await getCommentsByPost(postId, { limit, lastEvaluatedKey });
 
+    // Batch fetch user data for all comment authors
+    const userIds = result.items.map((comment) => comment.userId);
+    const usersMap = await getUsersByIds(userIds);
+
+    // Map comments with username
+    const commentsWithUsername: CommentDto[] = result.items.map((comment) => {
+      const user = usersMap.get(comment.userId);
+      return {
+        ...comment,
+        username: user?.username || 'unknown',
+      };
+    });
+
     return {
       statusCode: 200,
       body: {
-        comments: result.items,
-        count: result.items.length,
+        comments: commentsWithUsername,
+        count: commentsWithUsername.length,
         lastEvaluatedKey: result.lastEvaluatedKey
           ? JSON.stringify(result.lastEvaluatedKey)
           : undefined,

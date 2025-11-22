@@ -132,7 +132,7 @@ TODO:<ADD_IMAGE - DynamoDB table structure visualization with access patterns>
 Custom middleware composition using Middy for cross-cutting concerns:
 
 ```typescript
-// apps/be/src/lambda/middleware/apiHandler.ts
+// apps/social-be/src/lambda/middleware/apiHandler.ts
 export const apiHandler = (handler: Handler) =>
   middy(handler)
     .use(httpHeaderNormalizer())

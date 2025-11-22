@@ -11,8 +11,8 @@ import {
   BatchGetCommand,
   dynamoDBClient,
 } from './client';
-import { userKeys, generateTimestamp } from "./keys";
-import type { UserEntity, CreateUserInput, UpdateUserInput } from "./types";
+import { userKeys, generateTimestamp } from './keys';
+import type { UserEntity, CreateUserInput, UpdateUserInput } from './types';
 
 /**
  * Create a new user
@@ -28,7 +28,7 @@ export async function createUser(input: CreateUserInput): Promise<UserEntity> {
     GSI1SK: userKeys.gsi1sk(),
     GSI2PK: userKeys.gsi2pk(input.email),
     GSI2SK: userKeys.gsi2sk(),
-    entityType: "USER",
+    entityType: 'USER',
     followerCount: 0,
     followingCount: 0,
     postCount: 0,
@@ -40,7 +40,7 @@ export async function createUser(input: CreateUserInput): Promise<UserEntity> {
     new PutCommand({
       TableName: TABLE_NAME,
       Item: user,
-      ConditionExpression: "attribute_not_exists(PK)",
+      ConditionExpression: 'attribute_not_exists(PK)',
     })
   );
 
@@ -74,9 +74,9 @@ export async function getUserByUsername(
     new QueryCommand({
       TableName: TABLE_NAME,
       IndexName: GSI1_NAME,
-      KeyConditionExpression: "GSI1PK = :gsi1pk",
+      KeyConditionExpression: 'GSI1PK = :gsi1pk',
       ExpressionAttributeValues: {
-        ":gsi1pk": userKeys.gsi1pk(username),
+        ':gsi1pk': userKeys.gsi1pk(username),
       },
       Limit: 1,
     })
@@ -88,14 +88,16 @@ export async function getUserByUsername(
 /**
  * Get user by email
  */
-export async function getUserByEmail(email: string): Promise<UserEntity | null> {
+export async function getUserByEmail(
+  email: string
+): Promise<UserEntity | null> {
   const response = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,
       IndexName: GSI2_NAME,
-      KeyConditionExpression: "GSI2PK = :gsi2pk",
+      KeyConditionExpression: 'GSI2PK = :gsi2pk',
       ExpressionAttributeValues: {
-        ":gsi2pk": userKeys.gsi2pk(email),
+        ':gsi2pk': userKeys.gsi2pk(email),
       },
       Limit: 1,
     })
@@ -132,7 +134,7 @@ export async function getUsersByIds(
     new BatchGetCommand({
       RequestItems: {
         [TABLE_NAME]: {
-          Keys: uniqueUserIds.map(userId => ({
+          Keys: uniqueUserIds.map((userId) => ({
             PK: userKeys.pk(userId),
             SK: userKeys.sk(),
           })),
@@ -143,9 +145,9 @@ export async function getUsersByIds(
 
   // Build a map for efficient lookup
   const userMap = new Map<string, UserEntity>();
-  const items = response.Responses?.[TABLE_NAME] as UserEntity[] || [];
+  const items = (response.Responses?.[TABLE_NAME] as UserEntity[]) || [];
 
-  items.forEach(user => {
+  items.forEach((user) => {
     userMap.set(user.userId, user);
   });
 
@@ -164,27 +166,27 @@ export async function updateUser(
 
   // Build update expression dynamically
   if (input.displayName !== undefined) {
-    updateExpressions.push("#displayName = :displayName");
-    expressionAttributeNames["#displayName"] = "displayName";
-    expressionAttributeValues[":displayName"] = input.displayName;
+    updateExpressions.push('#displayName = :displayName');
+    expressionAttributeNames['#displayName'] = 'displayName';
+    expressionAttributeValues[':displayName'] = input.displayName;
   }
 
   if (input.profileImageUrl !== undefined) {
-    updateExpressions.push("#profileImageUrl = :profileImageUrl");
-    expressionAttributeNames["#profileImageUrl"] = "profileImageUrl";
-    expressionAttributeValues[":profileImageUrl"] = input.profileImageUrl;
+    updateExpressions.push('#profileImageUrl = :profileImageUrl');
+    expressionAttributeNames['#profileImageUrl'] = 'profileImageUrl';
+    expressionAttributeValues[':profileImageUrl'] = input.profileImageUrl;
   }
 
   if (input.bio !== undefined) {
-    updateExpressions.push("#bio = :bio");
-    expressionAttributeNames["#bio"] = "bio";
-    expressionAttributeValues[":bio"] = input.bio;
+    updateExpressions.push('#bio = :bio');
+    expressionAttributeNames['#bio'] = 'bio';
+    expressionAttributeValues[':bio'] = input.bio;
   }
 
   // Always update the updatedAt timestamp
-  updateExpressions.push("#updatedAt = :updatedAt");
-  expressionAttributeNames["#updatedAt"] = "updatedAt";
-  expressionAttributeValues[":updatedAt"] = generateTimestamp();
+  updateExpressions.push('#updatedAt = :updatedAt');
+  expressionAttributeNames['#updatedAt'] = 'updatedAt';
+  expressionAttributeValues[':updatedAt'] = generateTimestamp();
 
   if (updateExpressions.length === 1) {
     // Only updatedAt, no actual updates
@@ -198,11 +200,11 @@ export async function updateUser(
         PK: userKeys.pk(input.userId),
         SK: userKeys.sk(),
       },
-      UpdateExpression: `SET ${updateExpressions.join(", ")}`,
+      UpdateExpression: `SET ${updateExpressions.join(', ')}`,
       ExpressionAttributeNames: expressionAttributeNames,
       ExpressionAttributeValues: expressionAttributeValues,
-      ConditionExpression: "attribute_exists(PK)",
-      ReturnValues: "ALL_NEW",
+      ConditionExpression: 'attribute_exists(PK)',
+      ReturnValues: 'ALL_NEW',
     })
   );
 
@@ -239,11 +241,11 @@ export async function incrementFollowerCount(
         SK: userKeys.sk(),
       },
       UpdateExpression:
-        "SET followerCount = if_not_exists(followerCount, :zero) + :inc, updatedAt = :updatedAt",
+        'SET followerCount = if_not_exists(followerCount, :zero) + :inc, updatedAt = :updatedAt',
       ExpressionAttributeValues: {
-        ":inc": increment,
-        ":zero": 0,
-        ":updatedAt": generateTimestamp(),
+        ':inc': increment,
+        ':zero': 0,
+        ':updatedAt': generateTimestamp(),
       },
     })
   );
@@ -264,11 +266,11 @@ export async function incrementFollowingCount(
         SK: userKeys.sk(),
       },
       UpdateExpression:
-        "SET followingCount = if_not_exists(followingCount, :zero) + :inc, updatedAt = :updatedAt",
+        'SET followingCount = if_not_exists(followingCount, :zero) + :inc, updatedAt = :updatedAt',
       ExpressionAttributeValues: {
-        ":inc": increment,
-        ":zero": 0,
-        ":updatedAt": generateTimestamp(),
+        ':inc': increment,
+        ':zero': 0,
+        ':updatedAt': generateTimestamp(),
       },
     })
   );
@@ -289,11 +291,11 @@ export async function incrementPostCount(
         SK: userKeys.sk(),
       },
       UpdateExpression:
-        "SET postCount = if_not_exists(postCount, :zero) + :inc, updatedAt = :updatedAt",
+        'SET postCount = if_not_exists(postCount, :zero) + :inc, updatedAt = :updatedAt',
       ExpressionAttributeValues: {
-        ":inc": increment,
-        ":zero": 0,
-        ":updatedAt": generateTimestamp(),
+        ':inc': increment,
+        ':zero': 0,
+        ':updatedAt': generateTimestamp(),
       },
     })
   );

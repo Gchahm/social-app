@@ -22,13 +22,13 @@
  */
 
 // Types
-export * from "./types";
+export * from './types';
 
 // Client configuration
-export { TABLE_NAME, GSI1_NAME, GSI2_NAME, GSI3_NAME } from "./client";
+export { TABLE_NAME, GSI1_NAME, GSI2_NAME, GSI3_NAME } from './client';
 
 // Key builders
-export * from "./keys";
+export * from './keys';
 
 // User operations
 export {
@@ -42,7 +42,7 @@ export {
   incrementFollowerCount,
   incrementFollowingCount,
   incrementPostCount,
-} from "./user";
+} from './user';
 
 // Post operations
 export {
@@ -54,7 +54,7 @@ export {
   deletePost,
   incrementLikeCount,
   incrementCommentCount,
-} from "./post";
+} from './post';
 
 // Like operations
 export {
@@ -65,7 +65,7 @@ export {
   getLikesByUser,
   deleteLike,
   getUserLikedPostsFromList,
-} from "./like";
+} from './like';
 
 // Comment operations
 export {
@@ -76,7 +76,7 @@ export {
   updateComment,
   deleteComment,
   deleteCommentById,
-} from "./comment";
+} from './comment';
 
 // Follow operations
 export {
@@ -86,7 +86,7 @@ export {
   getFollowing,
   getFollowers,
   deleteFollow,
-} from "./follow";
+} from './follow';
 
 // Composite operations (recommended for consistency)
 export {
@@ -96,4 +96,4 @@ export {
   removeComment,
   followUser,
   unfollowUser,
-} from "./operations";
+} from './operations';

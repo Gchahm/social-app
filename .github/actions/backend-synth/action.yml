@@ -27,7 +27,7 @@ runs:
   steps:
     - name: Synthesize CDK
       shell: bash
-      working-directory: apps/be
+      working-directory: apps/social-be
       run: |
         if [[ -n "${{ inputs.domain-name }}" ]]; then
           echo "Synthesizing with domain configuration..."

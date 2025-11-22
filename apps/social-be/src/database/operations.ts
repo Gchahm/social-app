@@ -3,16 +3,17 @@
  * These ensure data consistency across related entities
  */
 
-import { createLike, deleteLike, checkUserLikedPost } from "./like";
-import { incrementLikeCount } from "./post";
-import { createComment, deleteCommentById } from "./comment";
-import { incrementCommentCount } from "./post";
-import { createFollow, deleteFollow, checkIsFollowing } from "./follow";
-import {
-  incrementFollowerCount,
-  incrementFollowingCount,
-} from "./user";
-import type { CreateLikeInput, CreateCommentInput, CreateFollowInput } from "./types";
+import { createLike, deleteLike, checkUserLikedPost } from './like';
+import { incrementLikeCount } from './post';
+import { createComment, deleteCommentById } from './comment';
+import { incrementCommentCount } from './post';
+import { createFollow, deleteFollow, checkIsFollowing } from './follow';
+import { incrementFollowerCount, incrementFollowingCount } from './user';
+import type {
+  CreateLikeInput,
+  CreateCommentInput,
+  CreateFollowInput,
+} from './types';
 
 /**
  * Like a post (creates like + updates post like count)
@@ -21,7 +22,7 @@ export async function likePost(input: CreateLikeInput): Promise<void> {
   // Check if already liked
   const alreadyLiked = await checkUserLikedPost(input.postId, input.userId);
   if (alreadyLiked) {
-    throw new Error("Post already liked by user");
+    throw new Error('Post already liked by user');
   }
 
   // Create like entity
@@ -41,7 +42,7 @@ export async function unlikePost(
   // Check if actually liked
   const isLiked = await checkUserLikedPost(postId, userId);
   if (!isLiked) {
-    throw new Error("Post not liked by user");
+    throw new Error('Post not liked by user');
   }
 
   // Delete like entity
@@ -88,12 +89,12 @@ export async function followUser(input: CreateFollowInput): Promise<void> {
     input.followingId
   );
   if (alreadyFollowing) {
-    throw new Error("Already following user");
+    throw new Error('Already following user');
   }
 
   // Prevent self-follow
   if (input.followerId === input.followingId) {
-    throw new Error("Cannot follow yourself");
+    throw new Error('Cannot follow yourself');
   }
 
   // Create follow entity
@@ -116,7 +117,7 @@ export async function unfollowUser(
   // Check if actually following
   const isFollowing = await checkIsFollowing(followerId, followingId);
   if (!isFollowing) {
-    throw new Error("Not following user");
+    throw new Error('Not following user');
   }
 
   // Delete follow entity

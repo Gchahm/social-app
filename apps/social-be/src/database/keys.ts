@@ -7,11 +7,11 @@
  */
 export const userKeys = {
   pk: (userId: string) => `USER#${userId}`,
-  sk: () => "PROFILE",
+  sk: () => 'PROFILE',
   gsi1pk: (username: string) => `USERNAME#${username}`,
-  gsi1sk: () => "USER",
+  gsi1sk: () => 'USER',
   gsi2pk: (email: string) => `EMAIL#${email}`,
-  gsi2sk: () => "USER",
+  gsi2sk: () => 'USER',
 };
 
 /**
@@ -19,10 +19,10 @@ export const userKeys = {
  */
 export const postKeys = {
   pk: (postId: string) => `POST#${postId}`,
-  sk: () => "METADATA",
+  sk: () => 'METADATA',
   gsi1pk: (userId: string) => `USER#${userId}`,
   gsi1sk: (timestamp: string) => `POST#${timestamp}`,
-  gsi3pk: () => "FEED",
+  gsi3pk: () => 'FEED',
   gsi3sk: (timestamp: string) => `POST#${timestamp}`,
 };
 
@@ -41,10 +41,12 @@ export const likeKeys = {
  */
 export const commentKeys = {
   pk: (postId: string) => `POST#${postId}`,
-  sk: (timestamp: string, commentId: string) => `COMMENT#${timestamp}#${commentId}`,
+  sk: (timestamp: string, commentId: string) =>
+    `COMMENT#${timestamp}#${commentId}`,
   gsi1pk: (userId: string) => `USER#${userId}`,
-  gsi1sk: (timestamp: string, postId: string) => `COMMENT#${timestamp}#${postId}`,
-  skPrefix: () => "COMMENT#",
+  gsi1sk: (timestamp: string, postId: string) =>
+    `COMMENT#${timestamp}#${postId}`,
+  skPrefix: () => 'COMMENT#',
 };
 
 /**
@@ -55,8 +57,8 @@ export const followKeys = {
   sk: (followingId: string) => `FOLLOWING#${followingId}`,
   gsi1pk: (followingId: string) => `USER#${followingId}`,
   gsi1sk: (followerId: string) => `FOLLOWER#${followerId}`,
-  followingPrefix: () => "FOLLOWING#",
-  followerPrefix: () => "FOLLOWER#",
+  followingPrefix: () => 'FOLLOWING#',
+  followerPrefix: () => 'FOLLOWER#',
 };
 
 /**
@@ -70,7 +72,7 @@ export const generateTimestamp = (): string => {
  * Utility function to parse timestamp from sort key
  */
 export const parseTimestampFromSK = (sk: string): string | null => {
-  const parts = sk.split("#");
+  const parts = sk.split('#');
   if (parts.length >= 2) {
     return parts[1];
   }

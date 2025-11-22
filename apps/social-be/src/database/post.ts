@@ -8,15 +8,15 @@ import {
   UpdateCommand,
   DeleteCommand,
   QueryCommand,
-} from "./client";
-import { postKeys, generateTimestamp } from "./keys";
+} from './client';
+import { postKeys, generateTimestamp } from './keys';
 import type {
   PostEntity,
   CreatePostInput,
   UpdatePostInput,
   QueryResult,
   PaginationOptions,
-} from "./types";
+} from './types';
 
 /**
  * Create a new post
@@ -32,7 +32,7 @@ export async function createPost(input: CreatePostInput): Promise<PostEntity> {
     GSI1SK: postKeys.gsi1sk(timestamp),
     GSI3PK: postKeys.gsi3pk(),
     GSI3SK: postKeys.gsi3sk(timestamp),
-    entityType: "POST",
+    entityType: 'POST',
     likeCount: 0,
     commentCount: 0,
     createdAt: timestamp,
@@ -43,7 +43,7 @@ export async function createPost(input: CreatePostInput): Promise<PostEntity> {
     new PutCommand({
       TableName: TABLE_NAME,
       Item: post,
-      ConditionExpression: "attribute_not_exists(PK)",
+      ConditionExpression: 'attribute_not_exists(PK)',
     })
   );
 
@@ -81,10 +81,10 @@ export async function getPostsByUser(
       TableName: TABLE_NAME,
       IndexName: GSI1_NAME,
       KeyConditionExpression:
-        "GSI1PK = :gsi1pk AND begins_with(GSI1SK, :prefix)",
+        'GSI1PK = :gsi1pk AND begins_with(GSI1SK, :prefix)',
       ExpressionAttributeValues: {
-        ":gsi1pk": postKeys.gsi1pk(userId),
-        ":prefix": "POST#",
+        ':gsi1pk': postKeys.gsi1pk(userId),
+        ':prefix': 'POST#',
       },
       ScanIndexForward: false, // newest first
       Limit: limit,
@@ -111,10 +111,10 @@ export async function getGlobalFeed(
       TableName: TABLE_NAME,
       IndexName: GSI3_NAME,
       KeyConditionExpression:
-        "GSI3PK = :gsi3pk AND begins_with(GSI3SK, :prefix)",
+        'GSI3PK = :gsi3pk AND begins_with(GSI3SK, :prefix)',
       ExpressionAttributeValues: {
-        ":gsi3pk": postKeys.gsi3pk(),
-        ":prefix": "POST#",
+        ':gsi3pk': postKeys.gsi3pk(),
+        ':prefix': 'POST#',
       },
       ScanIndexForward: false, // newest first
       Limit: limit,
@@ -139,15 +139,15 @@ export async function updatePost(
   const expressionAttributeValues: Record<string, any> = {};
 
   if (input.caption !== undefined) {
-    updateExpressions.push("#caption = :caption");
-    expressionAttributeNames["#caption"] = "caption";
-    expressionAttributeValues[":caption"] = input.caption;
+    updateExpressions.push('#caption = :caption');
+    expressionAttributeNames['#caption'] = 'caption';
+    expressionAttributeValues[':caption'] = input.caption;
   }
 
   // Always update the updatedAt timestamp
-  updateExpressions.push("#updatedAt = :updatedAt");
-  expressionAttributeNames["#updatedAt"] = "updatedAt";
-  expressionAttributeValues[":updatedAt"] = generateTimestamp();
+  updateExpressions.push('#updatedAt = :updatedAt');
+  expressionAttributeNames['#updatedAt'] = 'updatedAt';
+  expressionAttributeValues[':updatedAt'] = generateTimestamp();
 
   if (updateExpressions.length === 1) {
     // Only updatedAt, no actual updates
@@ -161,11 +161,11 @@ export async function updatePost(
         PK: postKeys.pk(input.postId),
         SK: postKeys.sk(),
       },
-      UpdateExpression: `SET ${updateExpressions.join(", ")}`,
+      UpdateExpression: `SET ${updateExpressions.join(', ')}`,
       ExpressionAttributeNames: expressionAttributeNames,
       ExpressionAttributeValues: expressionAttributeValues,
-      ConditionExpression: "attribute_exists(PK)",
-      ReturnValues: "ALL_NEW",
+      ConditionExpression: 'attribute_exists(PK)',
+      ReturnValues: 'ALL_NEW',
     })
   );
 
@@ -202,11 +202,11 @@ export async function incrementLikeCount(
         SK: postKeys.sk(),
       },
       UpdateExpression:
-        "SET likeCount = if_not_exists(likeCount, :zero) + :inc, updatedAt = :updatedAt",
+        'SET likeCount = if_not_exists(likeCount, :zero) + :inc, updatedAt = :updatedAt',
       ExpressionAttributeValues: {
-        ":inc": increment,
-        ":zero": 0,
-        ":updatedAt": generateTimestamp(),
+        ':inc': increment,
+        ':zero': 0,
+        ':updatedAt': generateTimestamp(),
       },
     })
   );
@@ -227,11 +227,11 @@ export async function incrementCommentCount(
         SK: postKeys.sk(),
       },
       UpdateExpression:
-        "SET commentCount = if_not_exists(commentCount, :zero) + :inc, updatedAt = :updatedAt",
+        'SET commentCount = if_not_exists(commentCount, :zero) + :inc, updatedAt = :updatedAt',
       ExpressionAttributeValues: {
-        ":inc": increment,
-        ":zero": 0,
-        ":updatedAt": generateTimestamp(),
+        ':inc': increment,
+        ':zero': 0,
+        ':updatedAt': generateTimestamp(),
       },
     })
   );

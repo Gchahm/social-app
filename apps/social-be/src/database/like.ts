@@ -7,14 +7,14 @@ import {
   DeleteCommand,
   QueryCommand,
   BatchGetCommand,
-} from "./client";
-import { likeKeys, generateTimestamp } from "./keys";
+} from './client';
+import { likeKeys, generateTimestamp } from './keys';
 import type {
   LikeEntity,
   CreateLikeInput,
   QueryResult,
   PaginationOptions,
-} from "./types";
+} from './types';
 
 /**
  * Create a new like (with duplicate prevention)
@@ -28,7 +28,7 @@ export async function createLike(input: CreateLikeInput): Promise<LikeEntity> {
     SK: likeKeys.sk(input.userId),
     GSI1PK: likeKeys.gsi1pk(input.userId),
     GSI1SK: likeKeys.gsi1sk(timestamp, input.postId),
-    entityType: "LIKE",
+    entityType: 'LIKE',
     createdAt: timestamp,
   };
 
@@ -36,7 +36,7 @@ export async function createLike(input: CreateLikeInput): Promise<LikeEntity> {
     new PutCommand({
       TableName: TABLE_NAME,
       Item: like,
-      ConditionExpression: "attribute_not_exists(PK)",
+      ConditionExpression: 'attribute_not_exists(PK)',
     })
   );
 
@@ -95,10 +95,10 @@ export async function getLikesByPost(
   const response = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,
-      KeyConditionExpression: "PK = :pk AND begins_with(SK, :prefix)",
+      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
       ExpressionAttributeValues: {
-        ":pk": likeKeys.pk(postId),
-        ":prefix": "LIKE#",
+        ':pk': likeKeys.pk(postId),
+        ':prefix': 'LIKE#',
       },
       Limit: limit,
       ExclusiveStartKey: lastEvaluatedKey,
@@ -125,10 +125,10 @@ export async function getLikesByUser(
       TableName: TABLE_NAME,
       IndexName: GSI1_NAME,
       KeyConditionExpression:
-        "GSI1PK = :gsi1pk AND begins_with(GSI1SK, :prefix)",
+        'GSI1PK = :gsi1pk AND begins_with(GSI1SK, :prefix)',
       ExpressionAttributeValues: {
-        ":gsi1pk": likeKeys.gsi1pk(userId),
-        ":prefix": "LIKE#",
+        ':gsi1pk': likeKeys.gsi1pk(userId),
+        ':prefix': 'LIKE#',
       },
       ScanIndexForward: false, // newest first
       Limit: limit,
@@ -188,7 +188,7 @@ export async function getUserLikedPostsFromList(
     new BatchGetCommand({
       RequestItems: {
         [TABLE_NAME]: {
-          Keys: postIds.map(postId => ({
+          Keys: postIds.map((postId) => ({
             PK: likeKeys.pk(postId),
             SK: likeKeys.sk(userId),
           })),
@@ -198,8 +198,8 @@ export async function getUserLikedPostsFromList(
   );
 
   // Add found likes to the set
-  const items = response.Responses?.[TABLE_NAME] as LikeEntity[] || [];
-  items.forEach(item => {
+  const items = (response.Responses?.[TABLE_NAME] as LikeEntity[]) || [];
+  items.forEach((item) => {
     // Extract postId from PK (format: "POST#postId")
     const postId = item.PK.replace('POST#', '');
     likedPostIds.add(postId);

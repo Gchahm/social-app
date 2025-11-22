@@ -7,15 +7,15 @@ import {
   UpdateCommand,
   DeleteCommand,
   QueryCommand,
-} from "./client";
-import { commentKeys, generateTimestamp } from "./keys";
+} from './client';
+import { commentKeys, generateTimestamp } from './keys';
 import type {
   CommentEntity,
   CreateCommentInput,
   UpdateCommentInput,
   QueryResult,
   PaginationOptions,
-} from "./types";
+} from './types';
 
 /**
  * Create a new comment
@@ -31,7 +31,7 @@ export async function createComment(
     SK: commentKeys.sk(timestamp, input.commentId),
     GSI1PK: commentKeys.gsi1pk(input.userId),
     GSI1SK: commentKeys.gsi1sk(timestamp, input.postId),
-    entityType: "COMMENT",
+    entityType: 'COMMENT',
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -58,10 +58,10 @@ export async function getCommentsByPost(
   const response = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,
-      KeyConditionExpression: "PK = :pk AND begins_with(SK, :prefix)",
+      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
       ExpressionAttributeValues: {
-        ":pk": commentKeys.pk(postId),
-        ":prefix": commentKeys.skPrefix(),
+        ':pk': commentKeys.pk(postId),
+        ':prefix': commentKeys.skPrefix(),
       },
       ScanIndexForward: true, // oldest first (chronological order)
       Limit: limit,
@@ -89,10 +89,10 @@ export async function getCommentsByUser(
       TableName: TABLE_NAME,
       IndexName: GSI1_NAME,
       KeyConditionExpression:
-        "GSI1PK = :gsi1pk AND begins_with(GSI1SK, :prefix)",
+        'GSI1PK = :gsi1pk AND begins_with(GSI1SK, :prefix)',
       ExpressionAttributeValues: {
-        ":gsi1pk": commentKeys.gsi1pk(userId),
-        ":prefix": "COMMENT#",
+        ':gsi1pk': commentKeys.gsi1pk(userId),
+        ':prefix': 'COMMENT#',
       },
       ScanIndexForward: false, // newest first
       Limit: limit,
@@ -150,17 +150,17 @@ export async function updateComment(
         PK: comment.PK,
         SK: comment.SK,
       },
-      UpdateExpression: "SET #content = :content, #updatedAt = :updatedAt",
+      UpdateExpression: 'SET #content = :content, #updatedAt = :updatedAt',
       ExpressionAttributeNames: {
-        "#content": "content",
-        "#updatedAt": "updatedAt",
+        '#content': 'content',
+        '#updatedAt': 'updatedAt',
       },
       ExpressionAttributeValues: {
-        ":content": input.content,
-        ":updatedAt": generateTimestamp(),
+        ':content': input.content,
+        ':updatedAt': generateTimestamp(),
       },
-      ConditionExpression: "attribute_exists(PK)",
-      ReturnValues: "ALL_NEW",
+      ConditionExpression: 'attribute_exists(PK)',
+      ReturnValues: 'ALL_NEW',
     })
   );
 
@@ -195,9 +195,7 @@ export async function deleteCommentById(
 ): Promise<boolean> {
   // Query to find the comment
   const commentsResult = await getCommentsByPost(postId, { limit: 100 });
-  const comment = commentsResult.items.find(
-    (c) => c.commentId === commentId
-  );
+  const comment = commentsResult.items.find((c) => c.commentId === commentId);
 
   if (!comment) {
     return false;

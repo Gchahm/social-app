@@ -42,4 +42,5 @@ export const handler = createApiHandler(createPostEvent).handler(
         post,
       },
     };
-  });
+  }
+);

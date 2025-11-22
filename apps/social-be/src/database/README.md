@@ -51,13 +51,7 @@ AWS_REGION=us-east-1         # AWS region
 ### User Operations
 
 ```typescript
-import {
-  createUser,
-  getUserById,
-  getUserByUsername,
-  getUserByEmail,
-  updateUser,
-} from './database';
+import { createUser, getUserById, getUserByUsername, getUserByEmail, updateUser } from './database';
 
 // Create a new user
 const user = await createUser({
@@ -88,13 +82,7 @@ const updatedUser = await updateUser({
 ### Post Operations
 
 ```typescript
-import {
-  createPost,
-  getPostById,
-  getPostsByUser,
-  getGlobalFeed,
-  updatePost,
-} from './database';
+import { createPost, getPostById, getPostsByUser, getGlobalFeed, updatePost } from './database';
 
 // Create a new post
 const post = await createPost({
@@ -142,12 +130,7 @@ await unlikePost('post123', 'user456');
 **Low-level operations** (use only if you know what you're doing):
 
 ```typescript
-import {
-  createLike,
-  checkUserLikedPost,
-  getLikesByPost,
-  getLikesByUser,
-} from './database';
+import { createLike, checkUserLikedPost, getLikesByPost, getLikesByUser } from './database';
 
 // Check if user liked a post
 const isLiked = await checkUserLikedPost('post123', 'user456');
@@ -181,11 +164,7 @@ await removeComment('post123', 'comment123');
 **Low-level operations**:
 
 ```typescript
-import {
-  getCommentsByPost,
-  getCommentsByUser,
-  updateComment,
-} from './database';
+import { getCommentsByPost, getCommentsByUser, updateComment } from './database';
 
 // Get all comments for a post
 const { items: comments } = await getCommentsByPost('post123', { limit: 20 });
@@ -221,11 +200,7 @@ await unfollowUser('user123', 'user456');
 **Low-level operations**:
 
 ```typescript
-import {
-  checkIsFollowing,
-  getFollowing,
-  getFollowers,
-} from './database';
+import { checkIsFollowing, getFollowing, getFollowers } from './database';
 
 // Check if userA follows userB
 const isFollowing = await checkIsFollowing('user123', 'user456');
@@ -289,6 +264,7 @@ try {
 4. **Type Safety**: Use TypeScript types exported from `types.ts` for type safety.
 
 5. **Denormalized Counts**: The following counts are automatically maintained:
+
    - `user.followerCount`, `user.followingCount`, `user.postCount`
    - `post.likeCount`, `post.commentCount`
 
@@ -318,17 +294,13 @@ async function getUserFeed(userId: string) {
   const { items: following } = await getFollowing(userId);
 
   // Fetch posts from each followed user
-  const postPromises = following.map((follow) =>
-    getPostsByUser(follow.followingId, { limit: 10 })
-  );
+  const postPromises = following.map((follow) => getPostsByUser(follow.followingId, { limit: 10 }));
 
   const results = await Promise.all(postPromises);
   const allPosts = results.flatMap((r) => r.items);
 
   // Sort by timestamp (newest first)
-  return allPosts.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  return allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 ```
 

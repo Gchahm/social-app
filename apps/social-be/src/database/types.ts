@@ -2,7 +2,7 @@
  * Database entity types and interfaces
  */
 
-export type EntityType = "USER" | "POST" | "LIKE" | "COMMENT" | "FOLLOW";
+export type EntityType = 'USER' | 'POST' | 'LIKE' | 'COMMENT' | 'FOLLOW';
 
 /**
  * Base DynamoDB item structure
@@ -25,7 +25,7 @@ export interface BaseItem {
  * User entity
  */
 export interface UserEntity extends BaseItem {
-  entityType: "USER";
+  entityType: 'USER';
   userId: string;
   email: string;
   username: string;
@@ -41,7 +41,7 @@ export interface UserEntity extends BaseItem {
  * Post entity
  */
 export interface PostEntity extends BaseItem {
-  entityType: "POST";
+  entityType: 'POST';
   postId: string;
   userId: string;
   imageUrl: string;
@@ -54,7 +54,7 @@ export interface PostEntity extends BaseItem {
  * Like entity
  */
 export interface LikeEntity extends BaseItem {
-  entityType: "LIKE";
+  entityType: 'LIKE';
   postId: string;
   userId: string;
 }
@@ -63,7 +63,7 @@ export interface LikeEntity extends BaseItem {
  * Comment entity
  */
 export interface CommentEntity extends BaseItem {
-  entityType: "COMMENT";
+  entityType: 'COMMENT';
   commentId: string;
   postId: string;
   userId: string;
@@ -74,7 +74,7 @@ export interface CommentEntity extends BaseItem {
  * Follow entity
  */
 export interface FollowEntity extends BaseItem {
-  entityType: "FOLLOW";
+  entityType: 'FOLLOW';
   followerId: string;
   followingId: string;
 }

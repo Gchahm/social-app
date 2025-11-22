@@ -5,7 +5,7 @@ This is required by the UploadImageForm component to POST base64 images to the b
 
 How to set it
 - Local development (SAM local)
-  1. In a terminal, from `apps/be`, run: `nx run be:dev` (or run the equivalent SAM command).
+  1. In a terminal, from `apps/social-be`, run: `nx run be:dev` (or run the equivalent SAM command).
   2. The local API will listen on `http://127.0.0.1:3000`. The upload route is `/spaces`.
   3. In `apps/photos-fe`, create a file named `.env.local` and add:
 

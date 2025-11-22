@@ -28,4 +28,3 @@ const metrics = new Metrics();
 export const getLogger = () => logger;
 export const getTracer = () => tracer;
 export const getMetrics = () => metrics;
-

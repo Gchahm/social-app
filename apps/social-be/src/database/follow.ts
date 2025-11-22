@@ -6,14 +6,14 @@ import {
   PutCommand,
   DeleteCommand,
   QueryCommand,
-} from "./client";
-import { followKeys, generateTimestamp } from "./keys";
+} from './client';
+import { followKeys, generateTimestamp } from './keys';
 import type {
   FollowEntity,
   CreateFollowInput,
   QueryResult,
   PaginationOptions,
-} from "./types";
+} from './types';
 
 /**
  * Create a new follow relationship (with duplicate prevention)
@@ -29,7 +29,7 @@ export async function createFollow(
     SK: followKeys.sk(input.followingId),
     GSI1PK: followKeys.gsi1pk(input.followingId),
     GSI1SK: followKeys.gsi1sk(input.followerId),
-    entityType: "FOLLOW",
+    entityType: 'FOLLOW',
     createdAt: timestamp,
   };
 
@@ -37,7 +37,7 @@ export async function createFollow(
     new PutCommand({
       TableName: TABLE_NAME,
       Item: follow,
-      ConditionExpression: "attribute_not_exists(PK)",
+      ConditionExpression: 'attribute_not_exists(PK)',
     })
   );
 
@@ -96,10 +96,10 @@ export async function getFollowing(
   const response = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,
-      KeyConditionExpression: "PK = :pk AND begins_with(SK, :prefix)",
+      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
       ExpressionAttributeValues: {
-        ":pk": followKeys.pk(userId),
-        ":prefix": followKeys.followingPrefix(),
+        ':pk': followKeys.pk(userId),
+        ':prefix': followKeys.followingPrefix(),
       },
       Limit: limit,
       ExclusiveStartKey: lastEvaluatedKey,
@@ -126,10 +126,10 @@ export async function getFollowers(
       TableName: TABLE_NAME,
       IndexName: GSI1_NAME,
       KeyConditionExpression:
-        "GSI1PK = :gsi1pk AND begins_with(GSI1SK, :prefix)",
+        'GSI1PK = :gsi1pk AND begins_with(GSI1SK, :prefix)',
       ExpressionAttributeValues: {
-        ":gsi1pk": followKeys.gsi1pk(userId),
-        ":prefix": followKeys.followerPrefix(),
+        ':gsi1pk': followKeys.gsi1pk(userId),
+        ':prefix': followKeys.followerPrefix(),
       },
       Limit: limit,
       ExclusiveStartKey: lastEvaluatedKey,

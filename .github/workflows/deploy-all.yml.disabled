@@ -301,14 +301,14 @@ jobs:
           HOSTED_ZONE_NAME: ${{ secrets.HOSTED_ZONE_NAME }}
           CERTIFICATE_ARN: ${{ secrets.CERTIFICATE_ARN }}
         run: |
-          cd apps/be
+          cd apps/social-be
           npx cdk synth --context environment=$ENVIRONMENT --context domainName=$DOMAIN_NAME --context hostedZoneId=$HOSTED_ZONE_ID --context hostedZoneName=$HOSTED_ZONE_NAME --context certificateArn=$CERTIFICATE_ARN
 
       - name: Upload CDK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: backend-cdk-artifacts-${{ github.sha }}
-          path: apps/be/cdk.out/
+          path: apps/social-be/cdk.out/
           retention-days: 1
 
   backend-deploy:
@@ -335,7 +335,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: backend-cdk-artifacts-${{ github.sha }}
-          path: apps/be/cdk.out/
+          path: apps/social-be/cdk.out/
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -349,7 +349,7 @@ jobs:
         env:
           ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
         run: |
-          cd apps/be
+          cd apps/social-be
 
           echo "Deploying to $ENVIRONMENT environment..."
 
@@ -368,7 +368,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-deployment-outputs-${{ needs.determine-environment.outputs.environment }}
-          path: apps/be/outputs.json
+          path: apps/social-be/outputs.json
           retention-days: 30
 
   backend-validate:

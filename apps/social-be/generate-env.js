@@ -11,7 +11,11 @@ try {
   const config = require('./env.config.js');
 
   // Read the synthesized CloudFormation template
-  const templatePath = path.join(__dirname, 'cdk.out', 'social-app-dev.template.json');
+  const templatePath = path.join(
+    __dirname,
+    'cdk.out',
+    'social-app-dev.template.json'
+  );
 
   if (!fs.existsSync(templatePath)) {
     console.error('✗ CloudFormation template not found!');
@@ -25,7 +29,7 @@ try {
   // Find all Lambda functions in the template
   const resources = template.Resources || {};
   const lambdaIds = Object.keys(resources).filter(
-    id => resources[id].Type === 'AWS::Lambda::Function'
+    (id) => resources[id].Type === 'AWS::Lambda::Function'
   );
 
   if (lambdaIds.length === 0) {
@@ -34,7 +38,7 @@ try {
   }
 
   // Apply shared variables to all Lambda functions
-  lambdaIds.forEach(lambdaId => {
+  lambdaIds.forEach((lambdaId) => {
     envJson[lambdaId] = { ...config.shared };
 
     // Apply any Lambda-specific overrides
@@ -49,7 +53,7 @@ try {
 
   console.log('✓ env.json generated successfully!');
   console.log(`  ${lambdaIds.length} Lambda function(s) configured:`);
-  lambdaIds.forEach(id => console.log(`    - ${id}`));
+  lambdaIds.forEach((id) => console.log(`    - ${id}`));
   console.log(`  Shared variables: ${Object.keys(config.shared).join(', ')}`);
 } catch (error) {
   console.error('✗ Failed to generate env.json:', error.message);

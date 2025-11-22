@@ -212,14 +212,14 @@ jobs:
 
       - name: Build backend
         run: |
-          cd apps/be
+          cd apps/social-be
           npm run build
 
       - name: Synthesize CDK
         env:
           ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
         run: |
-          cd apps/be
+          cd apps/social-be
           npx cdk synth --context environment=$ENVIRONMENT
 
       - name: Upload build artifacts
@@ -227,8 +227,8 @@ jobs:
         with:
           name: build-artifacts-${{ github.sha }}
           path: |
-            apps/be/dist/
-            apps/be/cdk.out/
+            apps/social-be/dist/
+            apps/social-be/cdk.out/
             node_modules/
           retention-days: 1
 
@@ -275,7 +275,7 @@ jobs:
         env:
           ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
         run: |
-          cd apps/be
+          cd apps/social-be
 
           echo "Deploying to $ENVIRONMENT environment..."
 
@@ -294,7 +294,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: deployment-outputs-${{ needs.determine-environment.outputs.environment }}
-          path: apps/be/outputs.json
+          path: apps/social-be/outputs.json
           retention-days: 30
 
       - name: Comment on PR with deployment info
@@ -402,12 +402,12 @@ jobs:
 
       - name: Build
         run: |
-          cd apps/be
+          cd apps/social-be
           npm run build
 
       - name: Deploy rollback
         run: |
-          cd apps/be
+          cd apps/social-be
           npx cdk deploy \
             --require-approval never \
             --context environment=${{ inputs.environment }}

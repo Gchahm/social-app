@@ -16,6 +16,7 @@ export interface PostsLambdas {
   addComment: NodejsFunction;
   getComments: NodejsFunction;
   deleteComment: NodejsFunction;
+  requestPhotoUploadUrl: NodejsFunction;
 }
 
 /**
@@ -91,6 +92,12 @@ export class PostsLambdaConstruct extends BaseLambdaConstruct {
         functionName: 'posts-delete-comment',
         description: 'Posts API: Delete a comment',
       },
+      {
+        id: 'RequestPhotoUploadUrl',
+        entry: 'src/lambda/posts/request-upload-url.ts',
+        functionName: 'request-upload-url',
+        description: 'Posts API: request upload url',
+      },
     ]);
 
     this.lambdas = {
@@ -104,6 +111,7 @@ export class PostsLambdaConstruct extends BaseLambdaConstruct {
       addComment: functions.AddComment,
       getComments: functions.GetComments,
       deleteComment: functions.DeleteComment,
+      requestPhotoUploadUrl: functions.RequestPhotoUploadUrl,
     };
   }
 }

@@ -7,15 +7,19 @@ import {
 } from '@chahm/ui-components';
 import { useCreatePost } from '../hooks';
 import { UploadPhotoPayload } from '@chahm/types';
+import { useNavigate } from 'react-router';
 
 export function MyFeed() {
   // Hooks for API calls
   const createPostMutation = useCreatePost();
+  const navigate = useNavigate();
 
   const handleUpload = async (formData: UploadPhotoPayload) => {
     // Convert base64 to File
 
     await createPostMutation.mutateAsync(formData);
+    // Redirect to feed after successful upload
+    navigate('/my/feed');
   };
 
   return (

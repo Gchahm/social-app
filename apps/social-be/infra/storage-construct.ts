@@ -20,6 +20,7 @@ export class StorageConstruct extends Construct {
       cors: [
         {
           allowedOrigins: props.corsOrigins,
+          maxAge: 3000,
           allowedMethods: [
             HttpMethods.GET,
             HttpMethods.PUT,

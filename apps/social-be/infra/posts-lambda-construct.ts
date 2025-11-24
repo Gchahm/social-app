@@ -97,6 +97,7 @@ export class PostsLambdaConstruct extends BaseLambdaConstruct {
         entry: 'src/lambda/posts/request-upload-url.ts',
         functionName: 'request-upload-url',
         description: 'Posts API: request upload url',
+        grantS3Write: true,
       },
     ]);
 

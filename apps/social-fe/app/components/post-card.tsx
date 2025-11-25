@@ -71,7 +71,7 @@ export function PostCard({ post }: PostCardProps) {
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
         <Link
-          to={`/users/${post.userId}`}
+          to={`/users/${post.username}`}
           className="flex items-center gap-2 mb-3 hover:opacity-80 transition-opacity"
         >
           <Avatar>

@@ -2,30 +2,30 @@ import { PostsContainer } from '../containers';
 import { type MetaFunction } from 'react-router';
 
 interface UserFeedProps {
-  params: { userId: string };
+  params: { username: string };
 }
 
 export const meta: MetaFunction = ({ params }) => {
-  const userId = params.userId || 'User';
+  const username = params.username || 'User';
   return [
     {
-      title: `${userId}'s Photos - Social Feed`,
+      title: `${username}'s Photos - Social Feed`,
     },
     {
       name: 'description',
-      content: `View photos shared by ${userId}. Explore their photo gallery and latest uploads.`,
+      content: `View photos shared by ${username}. Explore their photo gallery and latest uploads.`,
     },
     {
       property: 'og:title',
-      content: `${userId}'s Photos - Social Feed`,
+      content: `${username}'s Photos - Social Feed`,
     },
     {
       property: 'og:description',
-      content: `View photos shared by ${userId}.`,
+      content: `View photos shared by ${username}.`,
     },
   ];
 };
 
 export default function UserFeed({ params }: UserFeedProps) {
-  return <PostsContainer userId={params.userId} />;
+  return <PostsContainer username={params.username} />;
 }

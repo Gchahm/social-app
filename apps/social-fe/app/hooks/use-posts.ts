@@ -15,7 +15,7 @@ export function usePosts(props: GetPostsQueryParameters) {
         apiName: 'SocialApp',
         path: 'posts',
         options: {
-          queryParams: { userId: props.userId || '' },
+          queryParams: props as Record<string, string>,
         },
       });
 

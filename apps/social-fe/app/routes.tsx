@@ -4,7 +4,7 @@ export default [
   // Public routes (no authentication required)
   layout('./layout.tsx', [
     index('./routes/_index.tsx'),
-    route('users/:userId', './routes/users.$userId.tsx'),
+    route('users/:username', './routes/users.$username.tsx'),
     route('*', './routes/$.tsx'),
   ]),
 

@@ -15,7 +15,39 @@ import { configureAmplify } from './configure-amplify';
 
 export const meta: MetaFunction = () => [
   {
-    title: 'New Nx React Router App',
+    title: 'Social Feed - Share Your Moments',
+  },
+  {
+    name: 'description',
+    content: 'Share and discover amazing photos with our social photo sharing platform. Upload, view, and engage with photos from users around the world.',
+  },
+  {
+    name: 'keywords',
+    content: 'photo sharing, social media, image upload, photo feed, social network',
+  },
+  {
+    property: 'og:title',
+    content: 'Social Feed - Share Your Moments',
+  },
+  {
+    property: 'og:description',
+    content: 'Share and discover amazing photos with our social photo sharing platform.',
+  },
+  {
+    property: 'og:type',
+    content: 'website',
+  },
+  {
+    name: 'twitter:card',
+    content: 'summary_large_image',
+  },
+  {
+    name: 'twitter:title',
+    content: 'Social Feed - Share Your Moments',
+  },
+  {
+    name: 'twitter:description',
+    content: 'Share and discover amazing photos with our social photo sharing platform.',
   },
 ];
 
@@ -34,10 +66,13 @@ export const links: LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#f5ede1" />
+        <meta name="robots" content="index, follow" />
+        <meta name="author" content="Social Feed" />
         <Meta />
         <Links />
       </head>

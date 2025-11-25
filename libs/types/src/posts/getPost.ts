@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 export interface GetPostsQueryParameters {
   userId?: string;
+  username?: string;
 }
 
 export const getPostResponseSchema = z.object({

@@ -29,17 +29,19 @@ export class UiStack extends Stack {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
     });
 
-    // Deploy static assets to S3
-    new BucketDeployment(this, 'UIBucketDeployment', {
-      destinationBucket: uiCodeBucket,
-      sources: [Source.asset(uiDir)],
-    });
-
     // Create CloudFront distribution with optional custom domain
     const frontendDomain = new FrontendDomainConstruct(this, 'FrontendDomain', {
       bucket: uiCodeBucket,
       environment,
       ...customDomain,
+    });
+
+    // Deploy static assets to S3 with CloudFront cache invalidation
+    new BucketDeployment(this, 'UIBucketDeployment', {
+      destinationBucket: uiCodeBucket,
+      sources: [Source.asset(uiDir)],
+      distribution: frontendDomain.distribution,
+      distributionPaths: ['/*'], // Invalidate all paths on deployment
     });
 
     // Output the website URL (custom domain if configured, otherwise CloudFront)

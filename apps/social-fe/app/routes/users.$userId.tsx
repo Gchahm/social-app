@@ -5,7 +5,7 @@ interface UserFeedProps {
   params: { userId: string };
 }
 
-export const meta: MetaFunction<typeof loader> = ({ params }) => {
+export const meta: MetaFunction = ({ params }) => {
   const userId = params.userId || 'User';
   return [
     {
@@ -25,10 +25,6 @@ export const meta: MetaFunction<typeof loader> = ({ params }) => {
     },
   ];
 };
-
-export async function loader({ params }: { params: { userId: string } }) {
-  return { userId: params.userId };
-}
 
 export default function UserFeed({ params }: UserFeedProps) {
   return <PostsContainer userId={params.userId} />;
